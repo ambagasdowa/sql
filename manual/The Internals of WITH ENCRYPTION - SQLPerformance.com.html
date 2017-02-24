@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<!--[if IE 6]> <html id="ie6" lang="en-US" prefix="og: http://ogp.me/ns#"> <![endif]-->
+<!--[if IE 7]> <html id="ie7" lang="en-US" prefix="og: http://ogp.me/ns#"> <![endif]-->
+<!--[if IE 8]> <html id="ie8" lang="en-US" prefix="og: http://ogp.me/ns#"> <![endif]-->
+<!--[if !(IE 6) | !(IE 7) | !(IE 8)]><!-->
+<html prefix="og: http://ogp.me/ns#" lang="en-US"><!--<![endif]--><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<meta charset="UTF-8">
+	<link rel="pingback" href="http://sqlperformance.com/xmlrpc.php">
+
+<link rel="shortcut icon" href="http://cdn.sqlperformance.com/favicon.ico">
+	<!--[if lt IE 9]>
+	<script src="http://cdn.sqlperformance.com/wp-content/themes/suffusion/scripts/html5.js" type="text/javascript"></script>
+	<![endif]-->
+<title>The Internals of WITH ENCRYPTION - SQLPerformance.com</title>
+<style type="text/css">/**
+ * GeSHi (C) 2004 - 2007 Nigel McNie, 2007 - 2008 Benny Baumann
+ * (http://qbnz.com/highlighter/ and http://geshi.org/)
+ */
+.tsql .de1, .tsql .de2 {}
+.tsql  {font-family:consolas,monospace;}
+.tsql .imp {font-weight: bold; color: red;}
+.tsql li, .tsql .li1 {font-weight: normal; vertical-align:top;}
+.tsql .ln {width:1px;text-align:right;margin:0;padding:0 2px;vertical-align:top;}
+.tsql .li2 {font-weight: bold; vertical-align:top;}
+.tsql .kw1 {color: #FF99FF;}
+.tsql .kw2 {color: #9898FF;}
+.tsql .kw3 {color: #80FF80;}
+.tsql .kw4 {color: #80FF80;}
+.tsql .kw5 {color: #80FF80;}
+.tsql .kw6 {color: #80FF80;}
+.tsql .kw7 {color: #c3c3c3;}
+.tsql .co1 {color: #FFAF2D;}
+.tsql .coMULTI {color: #FFAF2D;}
+.tsql .es_h {color: #FFFF00;}
+.tsql .br0 {color: #c3c3c3;}
+.tsql .sy0 {color: #c3c3c3;}
+.tsql .st0 {color: #FFFF00;}
+.tsql .st_h {color: #FFFF00;}
+.tsql .nu0 {color: #fff;}
+.tsql .me1 {color: #ccc;}
+.tsql .me2 {color: #ccc;}
+.tsql .re0 {color: #ccc;}
+.tsql .re1 {color: #ccc;}
+.tsql .ln-xtra, .tsql li.ln-xtra, .tsql div.ln-xtra {background-color: #ffc;}
+.tsql span.xtra { display:block; }
+/**
+ * GeSHi (C) 2004 - 2007 Nigel McNie, 2007 - 2008 Benny Baumann
+ * (http://qbnz.com/highlighter/ and http://geshi.org/)
+ */
+.rexx .de1, .rexx .de2 {}
+.rexx  {font-family:consolas,monospace;}
+.rexx .imp {font-weight: bold; color: red;}
+.rexx li, .rexx .li1 {font-weight: normal; vertical-align:top;}
+.rexx .ln {width:1px;text-align:right;margin:0;padding:0 2px;vertical-align:top;}
+.rexx .li2 {font-weight: bold; vertical-align:top;}
+.rexx .kw1 {color: #eee;}
+.rexx .kw2 {color: #eee; font-weight: bold;}
+.rexx .kw3 {color: #eee; font-weight: bold;}
+.rexx .kw4 {color: #eee; font-weight: bold;}
+.rexx .kw5 {color: #eee; font-weight: bold;}
+.rexx .kw6 {color: #eee; font-weight: bold;}
+.rexx .co1 {color: #bbb;}
+.rexx .coMULTI {color: #bbb;}
+.rexx .es0 {color: #eee; font-weight: bold;}
+.rexx .br0 {color: #eee;}
+.rexx .sy0 {color: #eee;}
+.rexx .st0 {color: #eee;}
+.rexx .nu0 {color: #eee;}
+.rexx .me1 {color: #eee;}
+.rexx .me2 {color: #eee;}
+.rexx .ln-xtra, .rexx li.ln-xtra, .rexx div.ln-xtra {background-color: #ffc;}
+.rexx span.xtra { display:block; }
+</style>
+<!-- This site is optimized with the Yoast SEO plugin v3.3.4 - https://yoast.com/wordpress/plugins/seo/ -->
+<meta name="description" content="Paul White (@SQL_Kiwi) discusses the internals of the WITH ENCRYPTION clause, and explains why it is not as safe as you might think.">
+<meta name="robots" content="noodp">
+<link rel="canonical" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption">
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Internals of WITH ENCRYPTION - SQLPerformance.com">
+<meta property="og:description" content="Paul White (@SQL_Kiwi) discusses the internals of the WITH ENCRYPTION clause, and explains why it is not as safe as you might think.">
+<meta property="og:url" content="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption">
+<meta property="og:site_name" content="SQLPerformance.com">
+<meta property="article:tag" content="encryption">
+<meta property="article:tag" content="internals">
+<meta property="article:section" content="SQL Performance">
+<meta property="article:published_time" content="2016-05-20T09:47:13+00:00">
+<meta property="article:modified_time" content="2016-05-20T11:47:21+00:00">
+<meta property="og:updated_time" content="2016-05-20T11:47:21+00:00">
+<meta property="og:image" content="http://sqlperformance.com/wp-content/uploads/2016/05/image.png">
+<meta property="og:image" content="http://sqlperformance.com/wp-content/uploads/2016/05/image-1.png">
+<meta property="og:image" content="http://sqlperformance.com/wp-content/uploads/2016/05/image-2.png">
+<meta property="og:image" content="http://sqlperformance.com/wp-content/uploads/2016/05/image-3.png">
+<!-- / Yoast SEO plugin. -->
+
+<link rel="alternate" type="application/rss+xml" title="SQLPerformance.com » Feed" href="http://sqlperformance.com/feed">
+<link rel="alternate" type="application/rss+xml" title="SQLPerformance.com » Comments Feed" href="http://sqlperformance.com/comments/feed">
+<link rel="alternate" type="application/rss+xml" title="SQLPerformance.com » The Internals of WITH ENCRYPTION Comments Feed" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption/feed">
+		<script src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/analytics.js" async=""></script><script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/72x72\/","ext":".png","source":{"concatemoji":"http:\/\/sqlperformance.com\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.5.3"}};
+			!function(a,b,c){function d(a){var c,d,e,f=b.createElement("canvas"),g=f.getContext&&f.getContext("2d"),h=String.fromCharCode;if(!g||!g.fillText)return!1;switch(g.textBaseline="top",g.font="600 32px Arial",a){case"flag":return g.fillText(h(55356,56806,55356,56826),0,0),f.toDataURL().length>3e3;case"diversity":return g.fillText(h(55356,57221),0,0),c=g.getImageData(16,16,1,1).data,d=c[0]+","+c[1]+","+c[2]+","+c[3],g.fillText(h(55356,57221,55356,57343),0,0),c=g.getImageData(16,16,1,1).data,e=c[0]+","+c[1]+","+c[2]+","+c[3],d!==e;case"simple":return g.fillText(h(55357,56835),0,0),0!==g.getImageData(16,16,1,1).data[0];case"unicode8":return g.fillText(h(55356,57135),0,0),0!==g.getImageData(16,16,1,1).data[0]}return!1}function e(a){var c=b.createElement("script");c.src=a,c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var f,g,h,i;for(i=Array("simple","flag","unicode8","diversity"),c.supports={everything:!0,everythingExceptFlag:!0},h=0;h<i.length;h++)c.supports[i[h]]=d(i[h]),c.supports.everything=c.supports.everything&&c.supports[i[h]],"flag"!==i[h]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[i[h]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(g=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",g,!1),a.addEventListener("load",g,!1)):(a.attachEvent("onload",g),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),f=c.source||{},f.concatemoji?e(f.concatemoji):f.wpemoji&&f.twemoji&&(e(f.twemoji),e(f.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script><script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/wp-emoji-release.js"></script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel="stylesheet" id="responsive-lightbox-prettyphoto-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/prettyPhoto.css" type="text/css" media="all">
+<link rel="stylesheet" id="suffusion-theme-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/style.css" type="text/css" media="all">
+<link rel="stylesheet" id="suffusion-theme-skin-1-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/skin.css" type="text/css" media="all">
+<!--[if !IE]>--><link rel="stylesheet" id="suffusion-rounded-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/rounded-corners.css" type="text/css" media="all">
+<!--<![endif]-->
+<!--[if gt IE 8]><link rel='stylesheet' id='suffusion-rounded-css'  href='http://cdn.sqlperformance.com/wp-content/themes/suffusion/rounded-corners.css?ver=4.4.9' type='text/css' media='all' />
+<![endif]-->
+<!--[if lt IE 8]><link rel='stylesheet' id='suffusion-ie-css'  href='http://cdn.sqlperformance.com/wp-content/themes/suffusion/ie-fix.css?ver=4.4.9' type='text/css' media='all' />
+<![endif]-->
+<link rel="stylesheet" id="suffusion-generated-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/custom-styles.css" type="text/css" media="all">
+<link rel="stylesheet" id="suffusion-included-1-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/custom-include.css" type="text/css" media="all">
+<link rel="stylesheet" id="suffusion-included-2-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/css.css" type="text/css" media="all">
+<link rel="stylesheet" id="suffusion-included-3-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/css_002.css" type="text/css" media="all">
+<link rel="stylesheet" id="wp_geshi_wp-geshi-highlight-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/wp-geshi-highlight.css" type="text/css" media="all">
+<link rel="stylesheet" id="social-logos-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/social-logos.css" type="text/css" media="all">
+<link rel="stylesheet" id="jetpack_css-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/jetpack.css" type="text/css" media="all">
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/jquery.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/jquery-migrate.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/jquery_002.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var rlArgs = {"script":"prettyphoto","selector":"lightbox","customEvents":"","activeGalleries":"1","animationSpeed":"normal","slideshow":"0","slideshowDelay":"5000","slideshowAutoplay":"0","opacity":"0.75","showTitle":"1","allowResize":"1","allowExpand":"1","width":"1080","height":"720","separator":"\/","theme":"pp_default","horizontalPadding":"20","hideFlash":"0","wmode":"opaque","videoAutoplay":"0","modal":"0","deeplinking":"0","overlayGallery":"1","keyboardShortcuts":"1","social":"0"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/front.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var Suffusion_JS = {"wrapper_width_type_page_template_1l_sidebar_php":"fixed","wrapper_max_width_page_template_1l_sidebar_php":"1200","wrapper_min_width_page_template_1l_sidebar_php":"600","wrapper_orig_width_page_template_1l_sidebar_php":"75","wrapper_width_type_page_template_1r_sidebar_php":"fixed","wrapper_max_width_page_template_1r_sidebar_php":"1200","wrapper_min_width_page_template_1r_sidebar_php":"600","wrapper_orig_width_page_template_1r_sidebar_php":"75","wrapper_width_type_page_template_1l1r_sidebar_php":"fixed","wrapper_max_width_page_template_1l1r_sidebar_php":"1200","wrapper_min_width_page_template_1l1r_sidebar_php":"600","wrapper_orig_width_page_template_1l1r_sidebar_php":"75","wrapper_width_type_page_template_2l_sidebars_php":"fixed","wrapper_max_width_page_template_2l_sidebars_php":"1200","wrapper_min_width_page_template_2l_sidebars_php":"600","wrapper_orig_width_page_template_2l_sidebars_php":"75","wrapper_width_type_page_template_2r_sidebars_php":"fixed","wrapper_max_width_page_template_2r_sidebars_php":"1200","wrapper_min_width_page_template_2r_sidebars_php":"600","wrapper_orig_width_page_template_2r_sidebars_php":"75","wrapper_width_type":"fluid","wrapper_max_width":"1600","wrapper_min_width":"1000","wrapper_orig_width":"97","wrapper_width_type_page_template_no_sidebars_php":"fluid","wrapper_max_width_page_template_no_sidebars_php":"1600","wrapper_min_width_page_template_no_sidebars_php":"1000","wrapper_orig_width_page_template_no_sidebars_php":"97","suf_featured_interval":"4000","suf_featured_transition_speed":"1000","suf_featured_fx":"fade","suf_featured_pause":"Pause","suf_featured_resume":"Resume","suf_featured_sync":"0","suf_featured_pager_style":"numbers","suf_nav_delay":"500","suf_nav_effect":"fade","suf_navt_delay":"500","suf_navt_effect":"fade","suf_jq_masonry_enabled":"disabled","suf_fix_aspect_ratio":"preserve","suf_show_drop_caps":""};
+/* ]]> */
+</script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/suffusion.js"></script>
+<link rel="https://api.w.org/" href="http://sqlperformance.com/wp-json/">
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://sqlperformance.com/xmlrpc.php?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://sqlperformance.com/wp-includes/wlwmanifest.xml"> 
+<link rel="shortlink" href="http://wp.me/p2DCUl-27d">
+<link rel="alternate" type="application/json+oembed" href="http://sqlperformance.com/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fsqlperformance.com%2F2016%2F05%2Fsql-performance%2Fthe-internals-of-with-encryption">
+<link rel="alternate" type="text/xml+oembed" href="http://sqlperformance.com/wp-json/oembed/1.0/embed?url=http%3A%2F%2Fsqlperformance.com%2F2016%2F05%2Fsql-performance%2Fthe-internals-of-with-encryption&amp;format=xml">
+
+<link rel="dns-prefetch" href="http://v0.wordpress.com/">
+<style type="text/css">img#wpstats{display:none}</style><!-- Start Additional Feeds -->
+<!-- End Additional Feeds -->
+<style type="text/css" id="custom-background-css">
+body.custom-background { background-color: #ffffff; background-image: url('http://cdn.sqlperformance.com/wp-content/uploads/back-fade.gif'); background-repeat: repeat; background-position: top center; background-attachment: scroll; }
+</style>
+<!-- CSS styles constructed using option definitions -->
+<style type="text/css">
+/* <![CDATA[ */
+#wrapper #nav {float: left;}
+/* ]]> */
+</style>
+			<!-- Custom CSS styles defined in options -->
+		<style type="text/css">
+			/* <![CDATA[ */
+*{font-family:"Open Sans",Calibri,"Lucida Grande",Tahoma}@media print{.hidefromprint{display:none}}.entry,p.author-bio{font-size:14px}.entry .entry-content{padding-bottom:0}.entry img{margin-left:12px;margin-right:22px;padding:0;max-width:94%;height:auto}span.author{white-space:nowrap}header.post-header{margin-top:-10px}.entry b,.entry h1,.entry h2,.entry h3,.entry h4,.entry h5,.entry strong,h1.posttitle,h1.posttitle a,h2.author-title,h2.pagetitle,h2.posttitle,h2.posttitle a,h3.dbx-handle,table.shadow th,table.shadow th nobr{font-family:Lato,Calibri,"Lucida Grande",Tahoma;font-weight:700}table.nocaption{margin-bottom:22px}footer.post-footer{padding-bottom:3px;padding-right:5px;float:right}.post-footer{margin-top:-10x}div.hfeed footer.post-footer{margin-top:-25px;display:none}div.hfeed p.first-para{margin-bottom:5px}div.entry .entry-content .fix,div.entry-container .fix{padding-bottom:0;margin-bottom:0}.more-link{display:none}.entry h2,.entry h3,.entry h4,.entry h5{background:#fff url(http://cdn.sqlperformance.com/wp-content/uploads/tab-gradient-on.png) repeat-x top left;border-top:1px dotted #A33;padding:4px 0 0 1px;margin:32px 0 21px}h1.posttitle,h2.author-title,h2.posttitle{font-size:190%;font-weight:700}.entry h2{font-size:160%}.entry h3{font-size:144%}.entry h4{font-size:122%}.entry h5{font-size:110%}.entry a:hover{color:#C41230}.entry a,a.entry-title:hover,div.dbx-content a:hover,h1.posttitle a:hover,h2.posttitle a:hover{color:#D52341}.entry a.excerpt-more-append{float:left;color:#D52341;font-size:90%;font-weight:400;background:#eee;padding:4px 9px;-moz-border-radius:7px;-khtml-border-radius:7px;-webkit-border-radius:7px;border-radius:7px;margin-bottom:9px;margin-top:14px}.entry a.excerpt-more-append:hover{color:#C41230;background:#dfdfdf;text-decoration:underline}h3.dbx-handle{font-size:110%;background:0 0;border:0}.errorMsg *,.warningMsg *{padding:0;margin:0}div.powershell,div.tsql{margin:0}.errorMsg,.tsqlerror,.warningMsg,.wp-geshi-highlight,code,div.csharp *,div.errorMsg *,div.powershell *,div.rexx *,div.tsql *,div.warningMsg *,div.cmdPrompt,div.wp-geshi-highlight,div.xml *,pre.csharp *,pre.de1,pre.errorMsg *,pre.powershell *,pre.rexx *,pre.tsql *,pre.warningMsg *,pre.xml *{font-family:Consolas,Monaco,"Courier New",monospace;line-height:18px;vertical-align:bottom;font-size:14px!important}div.powershell pre.de1,div.powershell pre.de1 span,div.tsql pre.de1,div.tsql pre.de1 span{line-height:17px;vertical-align:bottom;background-color:#404040}code{background:#ececec;padding:4px 4px 2px;font-size:12.5px;line-height:auto}.errorMsg,.warningMsg,.wp-geshi-highlight,div.wp-geshi-highlight,.cmdPrompt{-moz-border-radius:5px;-khtml-border-radius:5px;-webkit-border-radius:5px;border-radius:5px;box-shadow:3px 3px 10px #888;-moz-box-shadow:3px 3px 10px #888;-khtml-box-shadow:3px 3px 10px #888;-webkit-box-shadow:3px 3px 10px #888}.errorMsg,.warningMsg,.wp-geshi-highlight,div.errorMsg,div.warningMsg,div.wp-geshi-highlight,pre.errorMsg,pre.warningMsg,div.cmdPrompt{width:94%;font-size:13px;line-height:18px;padding:9px;padding-left:11px;overflow-x:auto;overflow-y:hidden;margin:-6px 20px 20px 10px}.wp-geshi-highlight,div.wp-geshi-highlight{border:1px solid #303030;background-color:#404040}div.cmdPrompt,div.errorMsg,div.warningMsg,pre.errorMsg,pre.warningMsg{background:#f2f2f2;border:1px solid #888}.errorMsg{color:#c00}.wp-geshi-highlight pre{overflow:visible;padding:0;border:0}.wp-geshi-highlight ol{padding-right:0}.wp-geshi-highlight li{padding-left:2px}img.shadow,table.shadow{box-shadow:3px 3px 10px #888;-moz-box-shadow:3px 3px 10px #888;-khtml-box-shadow:3px 3px 10px #888;-webkit-box-shadow:3px 3px 10px #888}.indent{margin-left:12px}img.border,table.border{border:1px solid #000}table.shadow{border-collapse:collapse;border-spacing:0;width:auto;max-width:94%}table.shadow td,th{padding:2px 10px;font-size:12px;border:1px solid #000}table.shadow th{padding:2px 16px;text-align:center;background:#f2f2f2;font-size:14px}table.shadow td.rt,td.right{text-align:right}table.shadow td.cen,td.ceny,td.center{text-align:center}table.shadow td.ceny{background-color:#ffa}em.caption,em.table-caption,em.code-caption,em.image-caption{display:block;color:#888;margin-left:12px;margin-top:-6px;font-size:12px}em.table-caption{margin-top:0}em.code-caption{margin-top:-17px!important}.noindent{margin-left:0}.entry-container,.textarea,a.comment-reply-link,div.suf-flat-widget,p.logged-in-as,span.author *,span.category *,span.comments *,span.edit *,span.entry-title,span.next-entries *,span.permalink *,span.previous-entries *,span.tags,td.cred-left,td.next,td.previous,textarea{font-size:11px}.post .date span.month{font-size:10px}.post .date span.day{font-size:18px}.post .date span.year{font-size:11px}p.first-para{margin-top:10px}#cred a:hover,.cred-left a:hover{color:red}#cred td.cred-right a{display:none}.entry ol,ul{padding:0 0 6px 20px}#subscribe-reloaded-select-all-p.label{float:left;display:inline;width:99%}.comment-subscription-form{display:none}span.st_facebook_hcount,span.st_twitter_hcount{display:block;margin-top:20px;float:right;margin-bottom:2px}div.tsql,pre.de1{background-color:#404040}#wrapper.fix{background-color:#fff}body{background:#fff;background-image:none}#nav-top ul li a{text-align:center}div.author-description img.avatar{display:none}p.author-bio a{color:#D52341}#wrapper #nav{float:left}img#wpstats{display:none}input[type=submit]{cursor:pointer}
+#comments * a { color:#C41230}
+h3.sd-title { border-top:0px;background:"";background-image:none; }
+img.round { 	border-radius: 20px;
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px; }
+	
+	.wp-geshi-highlight pre, .wp-geshi-highlight span {
+	font-size: 14px !important;
+	-webkit-font-smoothing: subpixel-antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.tsql .de1, .csharp .de1, .powershell .de1 {
+	color: #ccc;
+}
+
+.xml .de1, .rexx .de1 {
+	color: #fff;
+}
+
+div.answer {
+	font: 13px tahoma, arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+div.cmdPrompt {
+	background-color: #000;
+	color: #fff;
+	font-size: 14px;
+}
+pre.script {
+	visibility: hidden;
+	display: none;
+}			/* ]]> */
+		</style>
+		<!-- /Custom CSS styles defined in options -->
+<!-- location header -->
+<!-- Start Google Analytics -->
+<script type="text/javascript">
+ 
+(function () {
+    var customUserId = getCustomUserId();
+
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+            (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date(); a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-403212-3', 'auto');
+    ga('require', 'displayfeatures');
+    ga('set', '&uid', customUserId);
+    ga('set', 'dimension1', customUserId);                   // Set a `customUserId` dimension at User level
+    ga('send', 'pageview');
+
+    function generateUUID() {
+        var d = new Date().getTime();
+        var uuid = 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = (d + Math.random() * 16) % 16 | 0;
+            d = Math.floor(d / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    };
+
+    function getCustomUserId() {
+        var customUserId;
+
+        if (getCookie("customUserId") == null) {
+            //set id cookie
+            var key = "customUserId";
+            var value = generateUUID();
+            var expirationDays = 365;
+            setCookie(key, value, expirationDays);
+            customUserId = value;
+        }
+        else {
+            customUserId = getCookie("customUserId");
+        }
+
+        return customUserId;
+    }
+
+    function getCookie(key) {
+
+        var name = key + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1);
+            if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+        }
+        return null;
+
+    }
+
+    function setCookie(key, value, expirationDays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = key + "=" + value + "; " + expires + "; domain=sqlsentry.com";
+    }
+}());
+ 
+</script>
+<!-- End Google Analytics -->
+</head>
+
+<body class="single single-post postid-8135 single-format-standard custom-background light-theme-red suffusion-custom device-desktop">
+    			<nav id="nav-top" class="tab fix">
+		<div class="col-control left">
+<ul class="sf-menu l_tinynav1">
+<li id="menu-item-3251" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3251 regular-tab"><a href="http://www.sqlperformance.com/">Home</a></li>
+<li id="menu-item-3250" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3250 regular-tab"><a href="http://answers.sqlperformance.com/">Q &amp; A</a></li>
+
+</ul><select class="tinynav tinynav1"><option value="http://www.sqlperformance.com/">Home</option><option selected="selected" value="http://answers.sqlperformance.com">Q &amp; A</option></select>
+		</div><!-- /.col-control -->
+	</nav><!-- /#nav-top -->
+		<div id="wrapper" class="fix">
+					<div id="header-container" class="custom-header fix">
+					<header id="header" class="fix">
+			<h2 class="blogtitle left"><a href="http://sqlperformance.com/"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/performance-logo.png" alt="SQLPerformance.com"></a></h2>
+		<div class="description hidden">powered by SQL Sentry</div>
+    </header><!-- /header -->
+	<!-- #header-widgets -->
+	<div id="header-widgets" class="warea">
+<!-- widget start --><div id="text-4" class="widget_text suf-widget suf-widget-1c">			<div class="textwidget"><a href="http://www.sqlsentry.com/download-trial/trial?utm_source=sqlperformance&amp;utm_medium=banner&amp;utm_term=468x60&amp;utm_content=hyper-v-vmware-trial&amp;utm_campaign=201511-complete-performance-solution" target="_blank"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/new468x60.png" style="border: #ddd solid 1px;" height="60" width="468" border="0"></a></div>
+		</div><!-- widget end -->	</div>
+	<!-- /#header-widgets -->
+ 	<nav id="nav" class="tab fix">
+		<div class="col-control left">
+<ul class="sf-menu l_tinynav2">
+<li id="menu-item-3216" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3216 regular-tab"><a href="http://sqlperformance.com/about-sqlperformance">About</a></li>
+<li id="menu-item-3218" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3218 regular-tab"><a href="mailto:contact@sqlperformance.com">Contact</a></li>
+<li id="menu-item-3217" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3217 regular-tab"><a href="http://www.sqlperformance.com/feed">RSS Feed</a></li>
+
+</ul><select class="tinynav tinynav2"><option value="http://sqlperformance.com/about-sqlperformance">About</option><option value="mailto:contact@sqlperformance.com">Contact</option><option selected="selected" value="http://www.sqlperformance.com/feed">RSS Feed</option></select>
+		</div><!-- /col-control -->
+	</nav><!-- /nav -->
+			</div><!-- //#header-container -->
+			<div id="container" class="fix">
+				    <div id="main-col">
+		  	<div id="content">
+	<article class="post-8135 post type-post status-publish format-standard hentry category-sql-performance tag-encryption tag-internals category-44-id full-content meta-position-corners fix" id="post-8135">
+<header class="post-header title-container fix">
+	<div class="title">
+		<h1 class="posttitle"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption" class="entry-title" rel="bookmark" title="The Internals of WITH ENCRYPTION">The Internals of WITH ENCRYPTION</a></h1>
+		<div class="postdata fix">
+		<span class="author"><span class="icon">&nbsp;</span>Posted by <span class="vcard"><a href="http://sqlperformance.com/author/paulwhitenzgmail-com" class="url fn" rel="author">Paul White</a></span> on May 20, 2016</span>				<span class="comments"><span class="icon">&nbsp;</span><a href="#respond">Add comments</a></span>
+					</div><!-- /.postdata -->
+		</div><!-- /.title -->
+		<div class="date"><span class="month">May</span> <span class="day">20</span><span class="year">2016</span></div>
+	</header><!-- /.title-container -->
+	<span class="post-format-icon">&nbsp;</span><span class="updated" title="2016-05-20T09:47:13+00:00"></span>		<div class="entry-container fix">
+			<div class="entry fix">
+<p class="first-para">It is pretty easy for a SQL Server administrator 
+to recover the text of stored procedures, views, functions, and triggers
+ protected using <code>WITH ENCRYPTION</code>. Many articles have been 
+written about this, and several commercial tools are available. The 
+basic outline of the common method is to:</p>
+<ol>
+<li>Obtain the encrypted form (A) using the Dedicated Administrator Connection.
+</li><li>Start a transaction.
+</li><li>Replace the object definition with known text (B) of at least the same length as the original.
+</li><li>Obtain the encrypted form for the known text (C).
+</li><li>Roll back the transaction to leave the target object in its initial state.
+</li><li>Obtain the unencrypted original by applying an exclusive-or to each character: <code>A XOR (B XOR C)</code></li>
+</ol>
+<p>That is all pretty straightforward, but seems a bit like magic: It does not explain much about <em>how and why it works</em>.
+ This article covers that aspect for those of you that find these sorts 
+of details interesting, and provides an alternative method for 
+decryption that is more illustrative of the process.</p>
+<h2>The Stream Cipher</h2>
+<p>The underlying encryption algorithm SQL Server uses for <em>module encryption</em> is the <a href="https://en.wikipedia.org/wiki/RC4" target="_blank">RC4</a>™ stream cipher. An outline of the encryption process is:</p>
+<ol>
+<li>Initialize the RC4 cipher with a cryptographic key.
+</li><li>Generate a pseudorandom stream of bytes.
+</li><li>Combine the module plain text with the byte stream using exclusive-or.</li>
+</ol>
+<p>We can see this process occurring using a debugger and public 
+symbols. For example, the stack trace below shows SQL Server 
+initializing the RC4 key while preparing to encrypt the module text:</p>
+<p><img title="Key init trace" style="border-left-width: 0px;border-right-width: 0px;border-bottom-width: 0px;padding-top: 0px;padding-left: 0px;padding-right: 0px;border-top-width: 0px" alt="Key init trace" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/image.png" width="336" border="0"></p>
+<p>This next one shows SQL Server encrypting the text using the RC4 pseudorandom byte stream:</p>
+<p><img title="PRNG trace" style="border-left-width: 0px;border-right-width: 0px;border-bottom-width: 0px;padding-top: 0px;padding-left: 0px;padding-right: 0px;border-top-width: 0px" alt="PRNG trace" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/image-1.png" width="338" border="0"></p>
+<p>Like most stream ciphers, the process of decryption is the same as 
+encryption, making use of the fact that exclusive-or is reversible (<code>A XOR B XOR B = A</code>).</p>
+<p>The use of a stream cipher is the reason <em>exclusive-or</em> is 
+used in the method described at the start of the article. There is 
+nothing inherently unsafe about using exclusive-or, provided that a 
+secure encryption method is used, the initialization key is kept secret,
+ and the key is not reused.</p>
+<p>RC4 is not particularly strong, but that is not the main issue here. 
+That said, it is worth noting that encryption using RC4 is being 
+gradually <a href="https://msdn.microsoft.com/en-us/library/ms143729.aspx" target="_blank">removed from SQL Server</a>, and is deprecated (or disabled, depending on version and database compatibility level) for user operations like creating a <a href="https://msdn.microsoft.com/en-us/library/ms188357.aspx" target="_blank">symmetric key</a>.</p>
+<h3>The RC4 Initialization Key</h3>
+<p>SQL Server uses three pieces of information to generate the key used to initialize the RC4 stream cipher:</p>
+<ol>
+<li>The database family GUID.<p></p>
+<p>This can be obtained most easily by querying <a href="https://msdn.microsoft.com/en-nz/library/ms178575.aspx" target="_blank"><em>sys.database_recovery_status</em></a>. It is also visible in undocumented commands like <code>DBCC DBINFO</code> and <code>DBCC DBTABLE</code>.<br> 
+</p></li><li>The target module's object ID.<p></p>
+<p>This is just the familiar object ID. Note that not all modules that 
+allow encryption are schema-scoped. You will need to use metadata views (<em><a href="https://msdn.microsoft.com/en-us/library/ms188746.aspx" target="_blank">sys.triggers</a></em> or <em><a href="https://msdn.microsoft.com/en-us/library/ms176054.aspx" target="_blank">sys.server_triggers</a></em>) to get the object ID for DDL and server-scoped triggers, rather than <em>sys.objects</em> or <code>OBJECT_ID</code>, since these only work with schema-scoped objects.<br> 
+</p></li><li>The target module's sub-object ID.<p></p>
+<p>This is the procedure number for numbered stored procedures. It is 1 
+for an unnumbered stored procedure, and zero in all other cases.</p></li>
+</ol>
+<p>Using the debugger again, we can see the family GUID being retrieved during key initialization:</p>
+<p><img title="Family GUID" style="border-left-width: 0px;border-right-width: 0px;border-bottom-width: 0px;padding-top: 0px;padding-left: 0px;padding-right: 0px;border-top-width: 0px" alt="Family GUID" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/image-2.png" width="337" border="0"></p>
+<p>The database family GUID is typed <em>uniqueidentifier</em>, object ID is <em>integer</em>, and sub-object ID is <em>smallint</em>.</p>
+<p>Each part of the key <strong>must</strong> be converted to a specific binary format. For the database family GUID, converting the <em>uniqueidentifier</em> type to <em>binary(16)</em>
+ produces the correct binary representation. The two IDs must be 
+converted to binary in little-endian representation (least significant 
+byte first).</p>
+<p><strong>Note:</strong> Be very careful not to accidentally provide the GUID as a string! It must be typed <em>uniqueidentifier</em>.</p>
+<p>The code snippet below shows correct conversion operations for some sample values:</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="tsql"><pre class="de1"><span class="kw2">DECLARE</span> 
+   <span class="re0"> @family_guid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">16</span><span class="br0">)</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">16</span><span class="br0">)</span><span class="sy0">,</span> <span class="br0">{</span>guid <span class="st0">'B1FC892E-5824-4FD3-AC48-FBCD91D57763'</span><span class="br0">}</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @objid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span><span class="sy0">,</span> <span class="kw1">REVERSE</span><span class="br0">(</span><span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span><span class="sy0">,</span> <span class="nu0">800266156</span><span class="br0">)</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @subobjid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">,</span> <span class="kw1">REVERSE</span><span class="br0">(</span><span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">,</span> <span class="nu0">0</span><span class="br0">)</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span></pre></div></div></div></div></div></div></div>
+
+
+<p>The final step to generate the RC4 initialization key is to 
+concatenate the three binary values above into a single binary(22), and 
+compute the <a href="https://en.wikipedia.org/wiki/SHA-1" target="_blank">SHA-1</a> hash of the result:</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="tsql"><pre class="de1"><span class="kw2">DECLARE</span> 
+   <span class="re0"> @RC4key</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">20</span><span class="br0">)</span> <span class="sy0">=</span> <span class="kw1">HASHBYTES</span><span class="br0">(</span><span class="st0">'SHA1'</span><span class="sy0">,</span><span class="re0"> @family_guid</span> <span class="sy0">+</span><span class="re0"> @objid</span> <span class="sy0">+</span><span class="re0"> @subobjid</span><span class="br0">)</span><span class="sy0">;</span></pre></div></div></div></div></div></div></div>
+
+
+<p>For the sample data given above, the final initialization key is:</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="rexx"><pre class="de1">0x6C914908E041A08DD8766A0CFEDC113585D69AF8</pre></div></div></div></div></div></div></div>
+
+
+<p>The contribution of the target module's object ID and sub-object ID 
+to the SHA-1 hash are hard to see in a single debugger screenshot, but 
+the interested reader can refer to the disassembly of a portion of <em>initspkey</em> below:</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="rexx"><pre class="de1">call    sqllang!A_SHAInit
+lea     rdx,<span class="br0">[</span>rsp+40h<span class="br0">]</span>
+lea     rcx,<span class="br0">[</span>rsp+50h<span class="br0">]</span>
+mov     r8d,10h
+call    sqllang!A_SHAUpdate
+lea     rdx,<span class="br0">[</span>rsp+24h<span class="br0">]</span>
+lea     rcx,<span class="br0">[</span>rsp+50h<span class="br0">]</span>
+mov     r8d,<span class="nu0">4</span>
+call    sqllang!A_SHAUpdate
+lea     rdx,<span class="br0">[</span>rsp+20h<span class="br0">]</span>
+lea     rcx,<span class="br0">[</span>rsp+50h<span class="br0">]</span>
+mov     r8d,<span class="nu0">2</span>
+call    sqllang!A_SHAUpdate
+lea     rdx,<span class="br0">[</span>rsp+0D0h<span class="br0">]</span>
+lea     rcx,<span class="br0">[</span>rsp+50h<span class="br0">]</span>
+call    sqllang!A_SHAFinal
+lea     r8,<span class="br0">[</span>rsp+0D0h<span class="br0">]</span>
+mov     edx,14h
+mov     rcx,rbx
+call    sqllang!rc4_key <span class="br0">(</span>00007fff`<span class="nu0">89672090</span><span class="br0">)</span></pre></div></div></div></div></div></div></div>
+
+
+<p>The <em>SHAInit</em> and <em>SHAUpdate</em> calls add components to the SHA hash, which is eventually computed by a call to <em>SHAFinal</em>.</p>
+<p>The <em>SHAInit</em> call contributes 10h bytes (16 decimal) stored at [rsp+40h], which is the <strong>family GUID</strong>. The first <em>SHAUpdate</em> call adds 4 bytes (as indicated in the r8d register), stored at [rsp+24h], which is the <strong>object </strong>ID. The second <em>SHAUpdate</em> call adds 2 bytes, stored at [rsp+20h], which is the <strong>subobjid</strong>.</p>
+<p>The final instructions pass the computed SHA-1 hash to the RC4 key initialization routine <em>rc4_key</em>. The length of the hash is stored in register edx: 14h (20 decimal) bytes, which is the <a href="https://msdn.microsoft.com/en-us/library/ms174415.aspx" target="_blank">defined hash length</a> for SHA and SHA-1 (160 bits).</p>
+<h3>The RC4 Implementation</h3>
+<p>The core <a href="https://en.wikipedia.org/wiki/RC4#Description" target="_blank">RC4 algorithm</a>
+ is well-known, and relatively simple. It would be better implemented in
+ a .Net language for efficiency and performance reasons, but there is a 
+T-SQL implementation below.</p>
+<p>These two T-SQL functions implement the RC4 key-scheduling algorithm and pseudorandom number generator, and were <a href="http://www.sqlteam.com/forums/topic.asp?TOPIC_ID=76258" target="_blank">originally written</a>
+ by SQL Server MVP Peter Larsson. I have a made some minor modifications
+ to improve performance a little, and allow LOB-length binaries to be 
+encoded and decoded. This part of the process could be replaced by any 
+standard RC4 implementation.</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="tsql"><pre class="de1"><span class="coMULTI">/*
+** RC4 functions
+** Based on http://www.sqlteam.com/forums/topic.asp?TOPIC_ID=76258
+** by Peter Larsson (SwePeso)
+*/</span>
+<span class="kw2">IF</span> <span class="kw1">OBJECT_ID</span><span class="br0">(</span><span class="st_h">N'dbo.fnEncDecRc4'</span><span class="sy0">,</span> <span class="st_h">N'FN'</span><span class="br0">)</span> <span class="kw2">IS</span> <span class="kw7">NOT</span> <span class="kw7">NULL</span>
+    <span class="kw2">DROP</span> <span class="kw2">FUNCTION</span> dbo<span class="sy0">.</span><span class="me1">fnEncDecRc4</span><span class="sy0">;</span>
+<span class="kw2">GO</span>
+<span class="kw2">IF</span> <span class="kw1">OBJECT_ID</span><span class="br0">(</span><span class="st_h">N'dbo.fnInitRc4'</span><span class="sy0">,</span> <span class="st_h">N'TF'</span><span class="br0">)</span> <span class="kw2">IS</span> <span class="kw7">NOT</span> <span class="kw7">NULL</span>
+    <span class="kw2">DROP</span> <span class="kw2">FUNCTION</span> dbo<span class="sy0">.</span><span class="me1">fnInitRc4</span><span class="sy0">;</span>
+<span class="kw2">GO</span>
+<span class="kw2">CREATE</span> <span class="kw2">FUNCTION</span> dbo<span class="sy0">.</span><span class="me1">fnInitRc4</span>
+    <span class="re0"><span class="br0">(</span>@Pwd</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="nu0">256</span><span class="br0">)</span><span class="br0">)</span>
+<span class="kw2">RETURNS</span><span class="re0"> @Box</span> <span class="kw2">table</span>
+    <span class="br0">(</span>
+        i <span class="kw2">tinyint</span> <span class="kw2">PRIMARY</span> <span class="kw2">KEY</span><span class="sy0">,</span> 
+        v <span class="kw2">tinyint</span> <span class="kw7">NOT</span> <span class="kw7">NULL</span>
+    <span class="br0">)</span>
+<span class="kw2">WITH</span> <span class="kw2">SCHEMABINDING</span>
+<span class="kw2">AS</span>
+<span class="kw2">BEGIN</span>
+    <span class="kw2">DECLARE</span><span class="re0"> @Key</span> <span class="kw2">table</span>
+    <span class="br0">(</span>
+        i <span class="kw2">tinyint</span> <span class="kw2">PRIMARY</span> <span class="kw2">KEY</span><span class="sy0">,</span>
+        v <span class="kw2">tinyint</span> <span class="kw7">NOT</span> <span class="kw7">NULL</span>
+    <span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">DECLARE</span>
+       <span class="re0"> @Index</span> <span class="kw2">smallint</span> <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">,</span>
+       <span class="re0"> @PwdLen</span> <span class="kw2">tinyint</span> <span class="sy0">=</span> <span class="kw1">DATALENGTH</span><span class="re0"><span class="br0">(</span>@Pwd</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">WHILE</span><span class="re0"> @Index</span> <span class="sy0">&lt;=</span> <span class="nu0">255</span>
+    <span class="kw2">BEGIN</span>
+        <span class="kw2">INSERT</span><span class="re0"> @Key</span>
+            <span class="br0">(</span>i<span class="sy0">,</span> v<span class="br0">)</span>
+        <span class="kw2">VALUES</span>
+            <span class="re0"><span class="br0">(</span>@Index</span><span class="sy0">,</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">tinyint</span><span class="sy0">,</span> <span class="kw1">SUBSTRING</span><span class="re0"><span class="br0">(</span>@Pwd</span><span class="sy0">,</span><span class="re0"> @Index</span> <span class="sy0">%</span><span class="re0"> @PwdLen</span> <span class="sy0">+</span> <span class="nu0">1</span><span class="sy0">,</span> <span class="nu0">1</span><span class="br0">)</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">INSERT</span><span class="re0"> @Box</span> <span class="br0">(</span>i<span class="sy0">,</span> v<span class="br0">)</span>
+        <span class="kw2">VALUES</span> <span class="re0"><span class="br0">(</span>@Index</span><span class="sy0">,</span><span class="re0"> @Index</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SET</span><span class="re0"> @Index</span> <span class="sy0">+=</span> <span class="nu0">1</span><span class="sy0">;</span>
+    <span class="kw2">END</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">DECLARE</span>
+       <span class="re0"> @t</span> <span class="kw2">tinyint</span> <span class="sy0">=</span> <span class="kw7">NULL</span><span class="sy0">,</span>
+       <span class="re0"> @b</span> <span class="kw2">smallint</span> <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">SET</span><span class="re0"> @Index</span> <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">WHILE</span><span class="re0"> @Index</span> <span class="sy0">&lt;=</span> <span class="nu0">255</span>
+    <span class="kw2">BEGIN</span>
+        <span class="kw2">SELECT</span><span class="re0"> @b</span> <span class="sy0">=</span> <span class="re0"><span class="br0">(</span>@b</span> <span class="sy0">+</span> b<span class="sy0">.</span><span class="me1">v</span> <span class="sy0">+</span> k<span class="sy0">.</span><span class="me1">v</span><span class="br0">)</span> <span class="sy0">%</span> <span class="nu0">256</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw7">JOIN</span><span class="re0"> @Key</span> <span class="kw2">AS</span> k
+            <span class="kw2">ON</span> k<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span> b<span class="sy0">.</span><span class="me1">i</span>
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @Index</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span><span class="re0"> @t</span> <span class="sy0">=</span> b<span class="sy0">.</span><span class="me1">v</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @Index</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">UPDATE</span> b1
+        <span class="kw2">SET</span> b1<span class="sy0">.</span><span class="me1">v</span> <span class="sy0">=</span> <span class="br0">(</span><span class="kw2">SELECT</span> b2<span class="sy0">.</span><span class="me1">v</span> <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b2 <span class="kw2">WHERE</span> b2<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @b</span><span class="br0">)</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b1
+        <span class="kw2">WHERE</span> b1<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @Index</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">UPDATE</span><span class="re0"> @Box</span>
+        <span class="kw2">SET</span> v <span class="sy0">=</span><span class="re0"> @t</span>
+        <span class="kw2">WHERE</span> i <span class="sy0">=</span><span class="re0"> @b</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SET</span><span class="re0"> @Index</span> <span class="sy0">+=</span> <span class="nu0">1</span><span class="sy0">;</span>
+    <span class="kw2">END</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">RETURN</span><span class="sy0">;</span>
+<span class="kw2">END</span><span class="sy0">;</span>
+<span class="kw2">GO</span>
+<span class="kw2">CREATE</span> <span class="kw2">FUNCTION</span> dbo<span class="sy0">.</span><span class="me1">fnEncDecRc4</span>
+<span class="br0">(</span>
+   <span class="re0"> @Pwd</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="nu0">256</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @Text</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="kw1">MAX</span><span class="br0">)</span>
+<span class="br0">)</span>
+<span class="kw2">RETURNS</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="kw1">MAX</span><span class="br0">)</span>
+<span class="kw2">WITH</span> 
+    <span class="kw2">SCHEMABINDING</span><span class="sy0">,</span> 
+    <span class="kw2">RETURNS</span> <span class="kw7">NULL</span> <span class="kw2">ON</span> <span class="kw7">NULL</span> <span class="kw2">INPUT</span>
+<span class="kw2">AS</span>
+<span class="kw2">BEGIN</span>
+    <span class="kw2">DECLARE</span><span class="re0"> @Box</span> <span class="kw2">AS</span> <span class="kw2">table</span> 
+    <span class="br0">(</span>
+        i <span class="kw2">tinyint</span> <span class="kw2">PRIMARY</span> <span class="kw2">KEY</span><span class="sy0">,</span> 
+        v <span class="kw2">tinyint</span> <span class="kw7">NOT</span> <span class="kw7">NULL</span>
+    <span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">INSERT</span><span class="re0"> @Box</span>
+        <span class="br0">(</span>i<span class="sy0">,</span> v<span class="br0">)</span>
+    <span class="kw2">SELECT</span>
+        FIR<span class="sy0">.</span><span class="me1">i</span><span class="sy0">,</span> FIR<span class="sy0">.</span><span class="me1">v</span>
+    <span class="kw2">FROM</span> dbo<span class="sy0">.</span><span class="me1">fnInitRc4</span><span class="re0"><span class="br0">(</span>@Pwd</span><span class="br0">)</span> <span class="kw2">AS</span> FIR<span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">DECLARE</span>
+       <span class="re0"> @Index</span> <span class="kw2">integer</span> <span class="sy0">=</span> <span class="nu0">1</span><span class="sy0">,</span>
+       <span class="re0"> @i</span> <span class="kw2">smallint</span> <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">,</span>
+       <span class="re0"> @j</span> <span class="kw2">smallint</span> <span class="sy0">=</span> <span class="nu0">0</span><span class="sy0">,</span>
+       <span class="re0"> @t</span> <span class="kw2">tinyint</span> <span class="sy0">=</span> <span class="kw7">NULL</span><span class="sy0">,</span>
+       <span class="re0"> @k</span> <span class="kw2">smallint</span> <span class="sy0">=</span> <span class="kw7">NULL</span><span class="sy0">,</span>
+       <span class="re0"> @CipherBy</span> <span class="kw2">tinyint</span> <span class="sy0">=</span> <span class="kw7">NULL</span><span class="sy0">,</span>
+       <span class="re0"> @Cipher</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="kw1">MAX</span><span class="br0">)</span> <span class="sy0">=</span> 0x<span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">WHILE</span><span class="re0"> @Index</span> <span class="sy0">&lt;=</span> <span class="kw1">DATALENGTH</span><span class="re0"><span class="br0">(</span>@Text</span><span class="br0">)</span>
+    <span class="kw2">BEGIN</span>
+        <span class="kw2">SET</span><span class="re0"> @i</span> <span class="sy0">=</span> <span class="re0"><span class="br0">(</span>@i</span> <span class="sy0">+</span> <span class="nu0">1</span><span class="br0">)</span> <span class="sy0">%</span> <span class="nu0">256</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span>
+           <span class="re0"> @j</span> <span class="sy0">=</span> <span class="re0"><span class="br0">(</span>@j</span> <span class="sy0">+</span> b<span class="sy0">.</span><span class="me1">v</span><span class="br0">)</span> <span class="sy0">%</span> <span class="nu0">256</span><span class="sy0">,</span>
+           <span class="re0"> @t</span> <span class="sy0">=</span> b<span class="sy0">.</span><span class="me1">v</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @i</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">UPDATE</span> b
+        <span class="kw2">SET</span> b<span class="sy0">.</span><span class="me1">v</span> <span class="sy0">=</span> <span class="br0">(</span><span class="kw2">SELECT</span> w<span class="sy0">.</span><span class="me1">v</span> <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> w <span class="kw2">WHERE</span> w<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @j</span><span class="br0">)</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @i</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">UPDATE</span><span class="re0"> @Box</span>
+        <span class="kw2">SET</span> v <span class="sy0">=</span><span class="re0"> @t</span>
+        <span class="kw2">WHERE</span> i <span class="sy0">=</span><span class="re0"> @j</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span><span class="re0"> @k</span> <span class="sy0">=</span> b<span class="sy0">.</span><span class="me1">v</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @i</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span><span class="re0"> @k</span> <span class="sy0">=</span> <span class="re0"><span class="br0">(</span>@k</span> <span class="sy0">+</span> b<span class="sy0">.</span><span class="me1">v</span><span class="br0">)</span> <span class="sy0">%</span> <span class="nu0">256</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @j</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span><span class="re0"> @k</span> <span class="sy0">=</span> b<span class="sy0">.</span><span class="me1">v</span>
+        <span class="kw2">FROM</span><span class="re0"> @Box</span> <span class="kw2">AS</span> b
+        <span class="kw2">WHERE</span> b<span class="sy0">.</span><span class="me1">i</span> <span class="sy0">=</span><span class="re0"> @k</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SELECT</span>
+           <span class="re0"> @CipherBy</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">tinyint</span><span class="sy0">,</span> <span class="kw1">SUBSTRING</span><span class="re0"><span class="br0">(</span>@Text</span><span class="sy0">,</span><span class="re0"> @Index</span><span class="sy0">,</span> <span class="nu0">1</span><span class="br0">)</span><span class="br0">)</span> <span class="sy0">^</span><span class="re0"> @k</span><span class="sy0">,</span>
+           <span class="re0"> @Cipher</span> <span class="sy0">=</span><span class="re0"> @Cipher</span> <span class="sy0">+</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">1</span><span class="br0">)</span><span class="sy0">,</span><span class="re0"> @CipherBy</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+        <span class="kw2">SET</span><span class="re0"> @Index</span> <span class="sy0">+=</span> <span class="nu0">1</span><span class="sy0">;</span>
+    <span class="kw2">END</span><span class="sy0">;</span>
+&nbsp;
+    <span class="kw2">RETURN</span><span class="re0"> @Cipher</span><span class="sy0">;</span>
+<span class="kw2">END</span><span class="sy0">;</span>
+<span class="kw2">GO</span></pre></div></div></div></div></div></div></div>
+
+
+<h3>The Encrypted Module Text</h3>
+<p>The easiest way for a SQL Server administrator to get this is to read the <em>varbinary(max)</em> value stored in the <em>imageval</em> column of <em>sys.sysobjvalues</em>, which is only accessible via the <a href="https://msdn.microsoft.com/en-NZ/library/ms189595.aspx" target="_blank">Dedicated Administrator Connection</a> (DAC).</p>
+<p>This is the same idea as the routine method described in the introduction, though we add a filter on <em>valclass</em> = 1. This internal table is also a convenient place to get the <em>subobjid</em>. Otherwise, we would need to check <em><a href="https://msdn.microsoft.com/en-NZ/library/ms179865.aspx" target="_blank">sys.numbered_procedures</a></em> when the target object is a procedure, use 1 for an unnumbered procedure, or zero for anything else, as described previously.</p>
+<p>It is possible to <strong>avoid using the DAC</strong> by reading the <em>imageval</em> from <em>sys.sysobjvalues</em> directly, using multiple <code>DBCC PAGE</code> calls. This involves a bit more work to locate the pages from metadata, follow the <em>imageval</em>
+ LOB chain, and read the target binary data from each page. The latter 
+step is a lot easier to do in a programming language other than T-SQL. 
+Note that <code>DBCC PAGE</code> will work, even though the base object 
+is not normally readable from a non-DAC connection. If the page is not 
+in memory, it will be read in from persistent storage as normal.</p>
+<p>The extra effort to avoid the DAC requirement pays off by allowing 
+multiple users to use the decrypting process concurrently. I will use 
+the DAC approach in this article for simplicity and space reasons.</p>
+<h2>Worked Example</h2>
+<p>The following code creates a test encrypted scalar function:</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="tsql"><pre class="de1"><span class="kw2">CREATE</span> <span class="kw2">FUNCTION</span> dbo<span class="sy0">.</span><span class="me1">FS</span><span class="br0">(</span><span class="br0">)</span>
+<span class="kw2">RETURNS</span> <span class="kw2">varchar</span><span class="br0">(</span><span class="nu0">255</span><span class="br0">)</span>
+<span class="kw2">WITH</span> <span class="kw2">ENCRYPTION</span><span class="sy0">,</span> <span class="kw2">SCHEMABINDING</span> <span class="kw2">AS</span>
+<span class="kw2">BEGIN</span>
+    <span class="kw2">RETURN</span> 
+    <span class="br0">(</span>
+        <span class="kw2">SELECT</span> <span class="st0">'My code is so awesome is needs to be encrypted!'</span>
+    <span class="br0">)</span><span class="sy0">;</span>
+<span class="kw2">END</span><span class="sy0">;</span></pre></div></div></div></div></div></div></div>
+
+
+<p>The complete decryption implementation is below. The only parameter 
+that needs changing to work for other objects is the initial value of <code>@objectid</code> set in the first <code>DECLARE</code> statement.</p>
+
+
+<div class="wp-geshi-highlight-wrap5"><div class="wp-geshi-highlight-wrap4"><div class="wp-geshi-highlight-wrap3"><div class="wp-geshi-highlight-wrap2"><div class="wp-geshi-highlight-wrap"><div class="wp-geshi-highlight"><div class="tsql"><pre class="de1"><span class="co1">-- *** DAC connection required! ***</span>
+<span class="co1">-- Make sure the target database is the context</span>
+<span class="kw2">USE</span> Sandpit<span class="sy0">;</span>
+&nbsp;
+<span class="kw2">DECLARE</span>
+    <span class="co1">-- Note: OBJECT_ID only works for schema-scoped objects</span>
+   <span class="re0"> @objectid</span> <span class="kw2">integer</span> <span class="sy0">=</span> <span class="kw1">OBJECT_ID</span><span class="br0">(</span><span class="st_h">N'dbo.FS'</span><span class="sy0">,</span> <span class="st_h">N'FN'</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @family_guid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">16</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @objid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @subobjid</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @imageval</span> <span class="kw2">varbinary</span><span class="br0">(</span><span class="kw1">MAX</span><span class="br0">)</span><span class="sy0">,</span>
+   <span class="re0"> @RC4key</span> <span class="kw2">binary</span><span class="br0">(</span><span class="nu0">20</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+<span class="co1">-- Find the database family GUID</span>
+<span class="kw2">SELECT</span><span class="re0"> @family_guid</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">16</span><span class="br0">)</span><span class="sy0">,</span> DRS<span class="sy0">.</span><span class="me1">family_guid</span><span class="br0">)</span>
+<span class="kw2">FROM</span> <span class="kw4">sys</span><span class="sy0">.</span><span class="me1">database_recovery_status</span> <span class="kw2">AS</span> DRS
+<span class="kw2">WHERE</span> DRS<span class="sy0">.</span><span class="me1">database_id</span> <span class="sy0">=</span> <span class="kw1">DB_ID</span><span class="br0">(</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+<span class="co1">-- Convert object ID to little-endian binary(4)</span>
+<span class="kw2">SET</span><span class="re0"> @objid</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span><span class="sy0">,</span> <span class="kw1">REVERSE</span><span class="br0">(</span><span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">4</span><span class="br0">)</span><span class="sy0">,</span><span class="re0"> @objectid</span><span class="br0">)</span><span class="br0">)</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+<span class="kw2">SELECT</span>
+    <span class="co1">-- Read the encrypted value</span>
+   <span class="re0"> @imageval</span> <span class="sy0">=</span> SOV<span class="sy0">.</span><span class="me1">imageval</span><span class="sy0">,</span>
+    <span class="co1">-- Get the subobjid and convert to little-endian binary</span>
+   <span class="re0"> @subobjid</span> <span class="sy0">=</span> <span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">,</span> <span class="kw1">REVERSE</span><span class="br0">(</span><span class="kw1">CONVERT</span><span class="br0">(</span><span class="kw2">binary</span><span class="br0">(</span><span class="nu0">2</span><span class="br0">)</span><span class="sy0">,</span> SOV<span class="sy0">.</span><span class="me1">subobjid</span><span class="br0">)</span><span class="br0">)</span><span class="br0">)</span>
+<span class="kw2">FROM</span> <span class="kw4">sys</span><span class="sy0">.</span><span class="kw4">sysobjvalues</span> <span class="kw2">AS</span> SOV
+<span class="kw2">WHERE</span> 
+    SOV<span class="sy0">.</span><span class="re1"><span class="br0">[</span>objid<span class="br0">]</span></span> <span class="sy0">=</span><span class="re0"> @objectid</span>
+    <span class="kw7">AND</span> SOV<span class="sy0">.</span><span class="me1">valclass</span> <span class="sy0">=</span> <span class="nu0">1</span><span class="sy0">;</span>
+&nbsp;
+<span class="co1">-- Compute the RC4 initialization key</span>
+<span class="kw2">SET</span><span class="re0"> @RC4key</span> <span class="sy0">=</span> <span class="kw1">HASHBYTES</span><span class="br0">(</span><span class="st0">'SHA1'</span><span class="sy0">,</span><span class="re0"> @family_guid</span> <span class="sy0">+</span><span class="re0"> @objid</span> <span class="sy0">+</span><span class="re0"> @subobjid</span><span class="br0">)</span><span class="sy0">;</span>
+&nbsp;
+<span class="co1">-- Apply the standard RC4 algorithm and</span>
+<span class="co1">-- convert the result back to nvarchar</span>
+<span class="kw2">PRINT</span> <span class="kw1">CONVERT</span>
+    <span class="br0">(</span>
+        <span class="kw2">nvarchar</span><span class="br0">(</span><span class="kw1">MAX</span><span class="br0">)</span><span class="sy0">,</span>
+        dbo<span class="sy0">.</span><span class="me1">fnEncDecRc4</span>
+        <span class="br0">(</span>
+           <span class="re0"> @RC4key</span><span class="sy0">,</span>
+           <span class="re0"> @imageval</span>
+        <span class="br0">)</span>
+    <span class="br0">)</span><span class="sy0">;</span></pre></div></div></div></div></div></div></div>
+
+
+<p>Note the final conversion to <em>nvarchar</em> because module text is typed as <em>nvarchar(max)</em>.</p>
+<p>The output is:</p>
+<p><img title="SSMS Messages Tab Output" style="border-left-width: 0px;border-right-width: 0px;border-bottom-width: 0px;padding-top: 0px;padding-left: 0px;padding-right: 0px;border-top-width: 0px" alt="SSMS Messages Tab Output" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/image-3.png" width="485" border="0"></p>
+<h2>Conclusion</h2>
+<p>The reasons the method described in the introduction works are:</p>
+<ul>
+<li>SQL Server uses the RC4 stream cipher to reversibly exclusive-or the source text.
+</li><li>The RC4 key depends only on the database family guid, object id, and subobjid.
+</li><li>Temporarily replacing the module text means the same (SHA-1 hashed) RC4 key is generated.
+</li><li>With the same key, the same RC4 stream is generated, allowing exclusive-or decryption.</li>
+</ul>
+<p>Users that do not have access to system tables, database files, or 
+other admin-level access, cannot retrieve encrypted module text. Since 
+SQL Server itself needs to be able to decrypt the module, there is no 
+way to prevent suitably privileged users from doing the same.</p>
+<div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon-text sd-sharing"><h3 class="sd-title">Share this post:</h3><div class="sd-content"><ul><li class="share-facebook"><a rel="nofollow" data-shared="sharing-facebook-8135" class="share-facebook sd-button share-icon" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?share=facebook&amp;nb=1" target="_blank" title="Click to share on Facebook"><span>Facebook<span class="share-count">20</span></span></a></li><li class="share-twitter"><a rel="nofollow" data-shared="sharing-twitter-8135" class="share-twitter sd-button share-icon" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?share=twitter&amp;nb=1" target="_blank" title="Click to share on Twitter"><span>Twitter</span></a></li><li class="share-google-plus-1"><a rel="nofollow" data-shared="sharing-google-8135" class="share-google-plus-1 sd-button share-icon" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?share=google-plus-1&amp;nb=1" target="_blank" title="Click to share on Google+"><span>Google</span></a></li><li class="share-linkedin"><a rel="nofollow" data-shared="sharing-linkedin-8135" class="share-linkedin sd-button share-icon" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?share=linkedin&amp;nb=1" target="_blank" title="Click to share on LinkedIn"><span>LinkedIn<span class="share-count">36</span></span></a></li><li class="share-end"></li></ul></div></div></div>			</div><!--/entry -->
+		</div><!-- .entry-container -->
+<footer class="post-footer postdata fix">
+		<span class="tags tax"><span class="icon">&nbsp;</span>Tagged with: <a href="http://sqlperformance.com/tag/encryption" rel="tag">encryption</a>, <a href="http://sqlperformance.com/tag/internals" rel="tag">internals</a></span>
+	</footer><!-- .post-footer -->
+<section id="comments">
+<h3 class="comments"><span class="icon">&nbsp;</span>
+	7 Responses to “The Internals of WITH ENCRYPTION”</h3>
+<ol class="commentlist">
+	<li id="comment-119784" class="comment even thread-even depth-1 plain-nested">
+				<div id="div-comment-119784" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn">tobi</cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-119784">
+				May 20, 2016 at 6:51 PM</a>				</div>
+
+			</div>
+	
+			<p>What is `{guid 'B1FC892E-5824-4FD3-AC48-FBCD91D57763'}`? I do not recognize that syntax.</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=119784#respond" onclick='return addComment.moveForm( "comment-119784", "119784", "respond", "8135" )' aria-label="Reply to tobi">Reply</a>			</div>
+
+
+
+		
+	<ul class="children">
+	<li id="comment-119788" class="comment byuser comment-author-paulwhitenzgmail-com bypostauthor odd alt depth-2 plain-nested">
+				<div id="div-comment-119788" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn"><a href="http://sqlblog.com/blogs/paul_white/default.aspx" rel="external nofollow" class="url">Paul White</a></cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-119788">
+				May 20, 2016 at 9:16 PM</a>				</div>
+
+			</div>
+	
+			<p>It is the <a href="https://msdn.microsoft.com/en-us/library/ms712494.aspx" rel="nofollow">ODBC escape sequence</a> for a GUID literal. You can see the same thing in execution plans, for example look at the Compute Scalar's Defined Values for:</p>
+<pre><code>SELECT TOP (1) CONVERT(uniqueidentifier, '986FF056-A1C7-444B-B8C0-184AFB1311BA');</code></pre>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=119788#respond" onclick='return addComment.moveForm( "comment-119788", "119788", "respond", "8135" )' aria-label="Reply to Paul White">Reply</a>			</div>
+
+
+
+		
+	</li><!-- #comment-## -->
+	<li id="comment-119887" class="comment even depth-2 plain-nested">
+				<div id="div-comment-119887" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn">Coyote Ugly</cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-119887">
+				May 23, 2016 at 6:46 PM</a>				</div>
+
+			</div>
+	
+			<p>Same e.g. for datetime – try<br>
+select {ts '2016-05-22 03:00:00'}<br>
+straight from SSMS</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=119887#respond" onclick='return addComment.moveForm( "comment-119887", "119887", "respond", "8135" )' aria-label="Reply to Coyote Ugly">Reply</a>			</div>
+
+
+
+		
+	</li><!-- #comment-## -->
+</ul><!-- .children -->
+</li><!-- #comment-## -->
+	<li id="comment-120070" class="comment odd alt thread-odd thread-alt depth-1 plain-nested">
+				<div id="div-comment-120070" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn">Rodrigo</cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-120070">
+				May 31, 2016 at 2:14 PM</a>				</div>
+
+			</div>
+	
+			<p>Great article, Paul!</p>
+<p>Thanks!</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=120070#respond" onclick='return addComment.moveForm( "comment-120070", "120070", "respond", "8135" )' aria-label="Reply to Rodrigo">Reply</a>			</div>
+
+
+
+		
+	</li><!-- #comment-## -->
+	<li id="comment-121204" class="comment even thread-even depth-1 plain-nested">
+				<div id="div-comment-121204" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn">Tom Groszko</cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-121204">
+				June 20, 2016 at 10:16 PM</a>				</div>
+
+			</div>
+	
+			<p>Are you aware of any T-SQL that does the extra work without using the DAC connection that is available to use.</p>
+<p>Great article.</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=121204#respond" onclick='return addComment.moveForm( "comment-121204", "121204", "respond", "8135" )' aria-label="Reply to Tom Groszko">Reply</a>			</div>
+
+
+
+		
+	<ul class="children">
+	<li id="comment-121225" class="comment byuser comment-author-paulwhitenzgmail-com bypostauthor odd alt depth-2 plain-nested">
+				<div id="div-comment-121225" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn"><a href="http://sqlblog.com/blogs/paul_white/default.aspx" rel="external nofollow" class="url">Paul White</a></cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-121225">
+				June 21, 2016 at 7:54 AM</a>				</div>
+
+			</div>
+	
+			<p>Hi Tom,</p>
+<p>No, I'm not aware of any public scripts that use metadata and <code>DBCC PAGE</code> to avoid using the DAC. Tools like Redgate's SQLPrompt do it, but that's a commercial product of course.</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=121225#respond" onclick='return addComment.moveForm( "comment-121225", "121225", "respond", "8135" )' aria-label="Reply to Paul White">Reply</a>			</div>
+
+
+
+		
+	</li><!-- #comment-## -->
+</ul><!-- .children -->
+</li><!-- #comment-## -->
+	<li id="comment-121643" class="comment even thread-odd thread-alt depth-1 plain-nested">
+				<div id="div-comment-121643" class="comment-body">
+			<div class="comment-author fix vcard">
+							<div class="comment-author-link">
+					<cite class="fn">Peter Larsson</cite> <span class="says">says:</span>				</div>
+				<div class="comment-meta commentmetadata"><a href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#comment-121643">
+				July 6, 2016 at 9:23 PM</a>				</div>
+
+			</div>
+	
+			<p>Thank you for keeping me attributed.</p>
+
+			</div>
+
+			<div class="reply">
+			<a rel="nofollow" class="comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption?replytocom=121643#respond" onclick='return addComment.moveForm( "comment-121643", "121643", "respond", "8135" )' aria-label="Reply to Peter Larsson">Reply</a>			</div>
+
+
+
+		
+	</li><!-- #comment-## -->
+</ol>
+<div class="navigation fix">
+	<div class="alignleft"></div>
+	<div class="alignright"></div>
+</div>
+				<div id="respond" class="comment-respond">
+			<h3 id="reply-title" class="comment-reply-title"><span class="icon">&nbsp;</span>Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="http://sqlperformance.com/2016/05/sql-performance/the-internals-of-with-encryption#respond" style="display:none;">Cancel reply</a></small></h3>				<form action="http://sqlperformance.com/wp-comments-post.php?wpe-comment-post=sqlperformance" method="post" id="commentform" class="comment-form">
+					<span></span>
+					<p>
+						<label for="comment" class="textarea suf-comment-label">Your Comment</label>
+						<textarea name="comment" id="comment" cols="60" rows="10" tabindex="4" class="textarea"></textarea>
+					</p>
+					<p>
+						<label for="author" class="suf-comment-label">Name</label>
+						<input name="author" id="author" class="textarea" size="28" tabindex="1" type="text"> (required)
+					</p>
+
+					<p>
+						<label for="email" class="suf-comment-label">E-mail</label>
+						<input name="email" id="email" size="28" tabindex="2" class="textarea" type="text"> (required)
+					</p>
+
+					<p>
+						<label for="url" class="suf-comment-label">URI</label>
+						<input name="url" id="url" size="28" tabindex="3" class="textarea" type="text">
+					</p>
+<p class="form-submit"><input name="submit" id="submit" class="submit" value="Submit Comment" type="submit"> <input name="comment_post_ID" value="8135" id="comment_post_ID" type="hidden">
+<input name="comment_parent" id="comment_parent" value="0" type="hidden">
+</p><p style="display: none;"><input id="akismet_comment_nonce" name="akismet_comment_nonce" value="a4924f3bb8" type="hidden"></p><!-- Subscribe to Comments Reloaded version160115 --><!-- BEGIN: subscribe to comments reloaded --><label class="plain" for="subscribe-reloaded"><input name="subscribe-reloaded" id="subscribe-reloaded" value="yes" type="checkbox"> Notify me of followup comments via e-mail. You can also <a href="http://sqlperformance.com/comment-subscriptions?srp=8135&amp;srk=a4ae1e429b3fab6780311ff888e02630&amp;sra=s">subscribe</a> without commenting.</label><!-- END: subscribe to comments reloaded --><p style="display: none;"></p>				<input id="ak_js" name="ak_js" value="1468533146099" type="hidden"></form>
+					</div><!-- #respond -->
+		</section>   <!-- #comments -->	</article><!--/post -->
+<nav class="post-nav fix">
+<table>
+<tbody><tr>
+	<td class="previous"><a href="http://sqlperformance.com/2016/04/sql-performance/surprises-dateadd" rel="prev"><span class="icon">&nbsp;</span> Performance Surprises and Assumptions : DATEADD()</a></td>
+	<td class="next"><a href="http://sqlperformance.com/2016/05/sql-statistics/parallel-rebuilds" rel="next"><span class="icon">&nbsp;</span> Improved Support for Parallel Statistics Rebuilds</a></td>
+</tr>
+</tbody></table>
+</nav>
+      </div><!-- content -->
+    </div><!-- main col -->
+<div id="sidebar-shell-1" class="sidebar-shell sidebar-shell-right">
+<div class="dbx-group right boxed warea" id="sidebar">
+<!--widget start --><aside id="search-6" class="dbx-box suf-widget search"><h3 class="dbx-handle plain">Search SQLPerformance.com</h3><div class="dbx-content">
+<form method="get" class="searchform " action="http://sqlperformance.com/">
+	<input name="s" class="searchfield" value="Search" onfocus="if (this.value == 'Search') {this.value = '';}" onblur="if (this.value == '') {this.value = 'Search';}" type="text">
+	<input class="searchsubmit" value="" name="searchsubmit" type="submit">
+</form>
+</div></aside><!--widget end --><!--widget start --><aside id="text-14" class="dbx-box suf-widget widget_text"><div class="dbx-content">			<div class="textwidget"><a target="_blank" href="http://www.sqlsentry.com/bootcamp?utm_source=sqlperformance&amp;utm_medium=banner&amp;utm_campaign=performance-boot-camp"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/sp-bc16.png" style="width:232px;height:232px;border:0;margin:6px 8px -3px 3px;border-radius:6px"></a></div>
+		</div></aside><!--widget end --><!--widget start --><aside id="text-13" class="dbx-box suf-widget widget_text"><h3 class="dbx-handle plain">Authors</h3><div class="dbx-content">			<div class="textwidget"><ul><li><a href="http://sqlperformance.com/author/abertrand" title="Posts by Aaron Bertrand">Aaron Bertrand</a> </li>
+
+<li><a href="http://sqlperformance.com/author/erinsqlskills-com" title="Posts by Erin Stellato">Erin Stellato</a> </li>
+<li><a href="http://sqlperformance.com/author/glennberry" title="Posts by Glenn Berry">Glenn Berry</a> </li>
+<li><a href="http://sqlperformance.com/author/jhall" title="Posts by Jason Hall">Jason Hall</a> </li>
+<li><a href="http://sqlperformance.com/author/joesqlskills-com" title="Posts by Joe Sack">Joe Sack</a> </li>
+<li><a href="http://sqlperformance.com/author/jonathansqlskills-com" title="Posts by Jonathan Kehayias">Jonathan Kehayias</a> </li>
+<li><a href="http://sqlperformance.com/author/kkline" title="Posts by Kevin Kline">Kevin Kline</a> </li>
+<li><a href="http://sqlperformance.com/author/paulrandal" title="Posts by Paul Randal">Paul Randal</a> </li>
+<li><a href="http://sqlperformance.com/author/paulwhitenzgmail-com" title="Posts by Paul White">Paul White</a> </li>
+<li><a href="http://sqlperformance.com/author/rpittser" title="Posts by Rick Pittser">Rick Pittser</a> </li>
+<li><a href="http://sqlperformance.com/author/robfarley" title="Posts by Rob Farley">Rob Farley</a></li>
+<li><a href="http://sqlperformance.com/author/timradney" title="Posts by Tim Radney">Tim Radney</a> </li>
+<li><a href="http://sqlperformance.com/author/GuestPosts" title="Guest Posts">Guest Posts</a> </li>
+</ul>	
+</div>
+		</div></aside><!--widget end --><!--widget start --><aside id="categories-8" class="dbx-box suf-widget widget_categories"><h3 class="dbx-handle plain">Categories</h3><div class="dbx-content">		<ul>
+	<li class="cat-item cat-item-469"><a href="http://sqlperformance.com/category/azure">Azure</a> (6)
+</li>
+	<li class="cat-item cat-item-162"><a href="http://sqlperformance.com/category/database-design">Database Design</a> (12)
+</li>
+	<li class="cat-item cat-item-48"><a href="http://sqlperformance.com/category/error-handling">Error Handling</a> (1)
+</li>
+	<li class="cat-item cat-item-97"><a href="http://sqlperformance.com/category/extended-events">Extended Events</a> (12)
+</li>
+	<li class="cat-item cat-item-142"><a href="http://sqlperformance.com/category/installation">Installation</a> (6)
+</li>
+	<li class="cat-item cat-item-19"><a href="http://sqlperformance.com/category/io-subsystem">IO Subsystem</a> (32)
+</li>
+	<li class="cat-item cat-item-369"><a href="http://sqlperformance.com/category/monitoring">Monitoring</a> (9)
+</li>
+	<li class="cat-item cat-item-318"><a href="http://sqlperformance.com/category/service-broker">Service Broker</a> (2)
+</li>
+	<li class="cat-item cat-item-21"><a href="http://sqlperformance.com/category/sql-alert">SQL Alert</a> (1)
+</li>
+	<li class="cat-item cat-item-22"><a href="http://sqlperformance.com/category/sql-indexes">SQL Indexes</a> (45)
+</li>
+	<li class="cat-item cat-item-23"><a href="http://sqlperformance.com/category/sql-job">SQL Job</a> (1)
+</li>
+	<li class="cat-item cat-item-24"><a href="http://sqlperformance.com/category/sql-lock-block-deadlock">SQL Lock/Block/Deadlock</a> (5)
+</li>
+	<li class="cat-item cat-item-229"><a href="http://sqlperformance.com/category/sql-maintenance">SQL Maintenance</a> (7)
+</li>
+	<li class="cat-item cat-item-25"><a href="http://sqlperformance.com/category/sql-memory">SQL Memory</a> (6)
+</li>
+	<li class="cat-item cat-item-180"><a href="http://sqlperformance.com/category/sql-optimizer">SQL Optimizer</a> (45)
+</li>
+	<li class="cat-item cat-item-44"><a href="http://sqlperformance.com/category/sql-performance">SQL Performance</a> (174)
+</li>
+	<li class="cat-item cat-item-26"><a href="http://sqlperformance.com/category/sql-plan">SQL Plan</a> (76)
+</li>
+	<li class="cat-item cat-item-412"><a href="http://sqlperformance.com/category/sql-server-2016">SQL Server 2016</a> (13)
+</li>
+	<li class="cat-item cat-item-228"><a href="http://sqlperformance.com/category/sql-statistics">SQL Statistics</a> (17)
+</li>
+	<li class="cat-item cat-item-27"><a href="http://sqlperformance.com/category/sql-trace">SQL Trace</a> (5)
+</li>
+	<li class="cat-item cat-item-29"><a href="http://sqlperformance.com/category/system-configuration">System Configuration</a> (50)
+</li>
+	<li class="cat-item cat-item-15"><a href="http://sqlperformance.com/category/t-sql-queries">T-SQL Queries</a> (102)
+</li>
+	<li class="cat-item cat-item-135"><a href="http://sqlperformance.com/category/transaction-log-2">Transaction Log</a> (12)
+</li>
+	<li class="cat-item cat-item-410"><a href="http://sqlperformance.com/category/virtualization">Virtualization</a> (1)
+</li>
+	<li class="cat-item cat-item-132"><a href="http://sqlperformance.com/category/waits-2">Waits</a> (16)
+</li>
+		</ul>
+</div></aside><!--widget end --><!--widget start --><aside id="archives-5" class="dbx-box suf-widget widget_archive"><h3 class="dbx-handle plain">Archives</h3><div class="dbx-content">		<ul>
+			<li><a href="http://sqlperformance.com/2016/07">July 2016</a>&nbsp;(2)</li>
+	<li><a href="http://sqlperformance.com/2016/06">June 2016</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2016/05">May 2016</a>&nbsp;(3)</li>
+	<li><a href="http://sqlperformance.com/2016/04">April 2016</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2016/03">March 2016</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2016/02">February 2016</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2016/01">January 2016</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2015/12">December 2015</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2015/11">November 2015</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2015/10">October 2015</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2015/09">September 2015</a>&nbsp;(3)</li>
+	<li><a href="http://sqlperformance.com/2015/08">August 2015</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2015/07">July 2015</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2015/06">June 2015</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2015/05">May 2015</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2015/04">April 2015</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2015/03">March 2015</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2015/02">February 2015</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2015/01">January 2015</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2014/12">December 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/11">November 2014</a>&nbsp;(3)</li>
+	<li><a href="http://sqlperformance.com/2014/10">October 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/09">September 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/08">August 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/07">July 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/06">June 2014</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2014/05">May 2014</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2014/04">April 2014</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2014/03">March 2014</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2014/02">February 2014</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2014/01">January 2014</a>&nbsp;(9)</li>
+	<li><a href="http://sqlperformance.com/2013/12">December 2013</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2013/11">November 2013</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2013/10">October 2013</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2013/09">September 2013</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2013/08">August 2013</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2013/07">July 2013</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2013/06">June 2013</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2013/05">May 2013</a>&nbsp;(5)</li>
+	<li><a href="http://sqlperformance.com/2013/04">April 2013</a>&nbsp;(8)</li>
+	<li><a href="http://sqlperformance.com/2013/03">March 2013</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2013/02">February 2013</a>&nbsp;(9)</li>
+	<li><a href="http://sqlperformance.com/2013/01">January 2013</a>&nbsp;(6)</li>
+	<li><a href="http://sqlperformance.com/2012/12">December 2012</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2012/11">November 2012</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2012/10">October 2012</a>&nbsp;(7)</li>
+	<li><a href="http://sqlperformance.com/2012/09">September 2012</a>&nbsp;(4)</li>
+	<li><a href="http://sqlperformance.com/2012/08">August 2012</a>&nbsp;(9)</li>
+	<li><a href="http://sqlperformance.com/2012/07">July 2012</a>&nbsp;(2)</li>
+		</ul>
+		</div></aside><!--widget end --><!--widget start --><aside id="text-10" class="dbx-box suf-widget widget_text"><div class="dbx-content">			<div class="textwidget"><a href="http://bit.ly/1rFBQHU" target="_blank"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/sqlsentryTV-ad.jpg" style="border:0;margin:4px 0px -5px 6px" height="244" width="226"></a></div>
+		</div></aside><!--widget end --><!--widget start --><aside id="text-11" class="dbx-box suf-widget widget_text"><div class="dbx-content">			<div class="textwidget"><a href="http://www.sqlsentry.com/?ad=201302-logo-sqlperformancecom" target="_blank"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/sidebar-sqlsentry.png" style="border:0;margin:4px 0px -5px 6px" height="75" width="226"></a></div>
+		</div></aside><!--widget end --><!--widget start --><aside id="text-12" class="dbx-box suf-widget widget_text"><div class="dbx-content">			<div class="textwidget"><a href="http://www.sqlskills.com/" target="_blank"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/sidebar-sql-skills.png" style="border:0;margin:5px 0px -10px 12px" height="90" width="214"></a></div>
+		</div></aside><!--widget end --></div><!--/sidebar -->
+</div>
+	</div><!-- /container -->
+
+<footer>
+	<div id="cred">
+		<table>
+			<tbody><tr>
+				<td class="cred-left">Logo and site design © SQL Sentry, LLC <br>User contributions are licensed under <a href="http://creativecommons.org/licenses/by-sa/3.0/" target="_blank">cc-sa with attribution required</a>.</td>
+				<td class="cred-center"><a href="http://www.sqlsentry.com/download-trial/trial?utm_source=sqlperformance&amp;utm_medium=banner&amp;utm_term=468x60&amp;utm_content=hyper-v-vmware-trial&amp;utm_campaign=201511-complete-performance-solution" target="_blank"><img src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/new468x60.png" style="border: #ddd solid 1px;" border="0"></a></td>
+				<td class="cred-right"><a href="http://aquoid.com/news/themes/suffusion/">Suffusion theme by Sayontan Sinha</a></td>
+			</tr>
+		</tbody></table>
+	</div>
+</footer>
+<!-- 69 queries, 9MB in 0.862 seconds. -->
+</div><!--/wrapper -->
+<!-- location footer -->
+	<div style="display:none">
+	</div>
+
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"http:\/\/sqlperformance.com\/2016\/05\/sql-performance\/the-internals-of-with-encryption":8135};
+	</script>
+		<script type="text/javascript">
+			var windowOpen;
+		jQuery(document).on( 'ready post-load', function(){
+			jQuery( 'a.share-facebook' ).on( 'click', function() {
+				if ( 'undefined' !== typeof windowOpen ){ // If there's another sharing window open, close it.
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery(this).attr( 'href' ), 'wpcomfacebook', 'menubar=1,resizable=1,width=600,height=400' );
+				return false;
+			});
+		});
+		</script>
+				<script type="text/javascript">
+			var windowOpen;
+		jQuery(document).on( 'ready post-load', function(){
+			jQuery( 'a.share-twitter' ).on( 'click', function() {
+				if ( 'undefined' !== typeof windowOpen ){ // If there's another sharing window open, close it.
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery(this).attr( 'href' ), 'wpcomtwitter', 'menubar=1,resizable=1,width=600,height=350' );
+				return false;
+			});
+		});
+		</script>
+				<script type="text/javascript">
+			var windowOpen;
+		jQuery(document).on( 'ready post-load', function(){
+			jQuery( 'a.share-google-plus-1' ).on( 'click', function() {
+				if ( 'undefined' !== typeof windowOpen ){ // If there's another sharing window open, close it.
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery(this).attr( 'href' ), 'wpcomgoogle-plus-1', 'menubar=1,resizable=1,width=480,height=550' );
+				return false;
+			});
+		});
+		</script>
+				<script type="text/javascript">
+			var windowOpen;
+		jQuery(document).on( 'ready post-load', function(){
+			jQuery( 'a.share-linkedin' ).on( 'click', function() {
+				if ( 'undefined' !== typeof windowOpen ){ // If there's another sharing window open, close it.
+					windowOpen.close();
+				}
+				windowOpen = window.open( jQuery(this).attr( 'href' ), 'wpcomlinkedin', 'menubar=1,resizable=1,width=580,height=450' );
+				return false;
+			});
+		});
+		</script>
+		<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/form.js"></script>
+<link rel="stylesheet" id="stcr-plugin-style-css" href="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/stcr-plugin-style.css" type="text/css" media="all">
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/comment-reply.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/devicepx-jetpack.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/wp-embed.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/stcr-plugin.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var sharing_js_options = {"lang":"en","counts":"1"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/sharing.js"></script>
+<script type="text/javascript" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/e-201628.js" async="" defer="defer"></script>
+<script type="text/javascript">
+	_stq = window._stq || [];
+	_stq.push([ 'view', {v:'ext',j:'1:4.1.1',blog:'38997029',post:'8135',tz:'0',srv:'sqlperformance.com'} ]);
+	_stq.push([ 'clickTrackerInit', '38997029', '8135' ]);
+</script>
+
+
+
+<img id="wpstats" alt=":)" src="The%20Internals%20of%20WITH%20ENCRYPTION%20-%20SQLPerformance.com_files/g.gif" height="5" width="6"></body></html>

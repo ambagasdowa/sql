@@ -1,0 +1,227 @@
+/*suffusion XX overrides*/
+
+#header-widgets {
+	border: 0px solid blue;
+	width: 100% !important;
+	margin: -70px auto 5px;
+	padding:0;
+}
+
+#header-widgets .suf-widget {
+	display: block;
+	border: 0px solid red;
+	border-radius: 0px;
+	width:1030px;
+	margin: 0 auto;
+	padding-left:0;
+	text-align:center;
+}
+
+#nav-top a, #nav-top a:visited {
+	font-size: 100%;
+	}
+
+
+/* change this to -40px when there is top nav links*/
+#wrapper {
+	border:#777 solid 0px;
+	margin-top: -40px;}
+
+#header {
+	min-height: 55px;
+	padding: 0px;
+}
+.blogtitle {
+	float: left;
+	position: relative;
+	margin: 0;
+	line-height: 0px;
+	padding: 10px 0px 0px 12px;
+}
+
+#content {
+	margin-top: 0px;
+}
+
+#sidebar-shell-1 {
+	margin-top: -15px;
+}
+
+#content .post, article.page {
+	-moz-border-radius: 5px 0px 5px 5px;
+	-webkit-border-radius: 5px 0px 5px 5px;
+    border-radius: 5px 0px 5px 5px;
+}
+
+#nav-top {
+	position: relative;
+	top:0px;
+	padding: 0;
+	border: 0px;
+	background: none;
+	z-index: 100;
+	font-size:16px;
+}
+	 
+#nav-top ul {
+    float: right;
+    margin: 0px 0px 0 0;
+}
+#nav-top ul li {
+	margin: 0 0 0 6px;
+    border: 0;
+}
+#nav-top ul li a {
+	background: #e5e5e5 url(/wp-content/uploads/tab-gradient.png) repeat-x bottom left;
+	min-width: 88px;
+	padding: 2px 5px 0px 5px;
+	text-decoration: none;
+	display: inline-block;
+	font-weight: normal;
+	text-align: right;
+	height: 28px;
+	line-height: 28px;
+	color: #666;
+	border-top:  0px;
+	border-right: #ccc solid 1px;
+	border-bottom: #ccc solid 1px;
+	border-left: #ccc solid 1px;
+	margin:0;
+	-moz-border-radius: 0px 0px 8px 8px;
+	-webkit-border-radius: 0px 0px 8px 8px;
+    border-radius: 0px 0px 8px 8px;
+}
+
+#nav-top a.current, #nav-top a.current:visited, #nav-top a.current:hover, #nav-top a.current:active {
+	color: #c41230;
+	background: #fff url(/wp-content/uploads/tab-gradient-on.png) repeat-x top left;
+}
+
+#nav-top ul li a:hover {
+	background: #e5e5e5 url(/wp-content/uploads/tab-gradient.png) repeat-x bottom left;
+	color: #c41230;
+}
+
+#nav {
+     border: 0px;
+     margin-bottom: 0px;
+}
+
+#nav ul {
+	float:right; padding-right: 269px;}
+
+#nav ul li {
+	margin: 0 6px 0 0;
+}
+
+#nav ul li a {
+	background: #ccc url(/wp-content/uploads/tab-gradient.png) repeat-x top left;
+	padding: 2px 9px 0px 9px;
+	text-decoration: none;
+	display: inline-block;
+	font-weight:normal;
+	height: 20px;
+	line-height: 20px;
+	color: #666;
+	border-bottom: #ccc solid 1px;
+	margin-bottom: -1px;
+}
+
+#nav a.current, #nav a.current:visited, #nav a.current:hover, #nav a.current:active {
+	color: #c41230;
+	background: #fff url(/wp-content/uploads/tab-gradient-on.png) repeat-x top left;
+	border-bottom: #fff solid 1px;
+	margin-bottom: -1px;
+}
+
+#nav ul li a:hover {
+	background: #ccc url(/wp-content/uploads/tab-gradient.png) repeat-x bottom left;
+	color: #c41230;
+}
+
+.button, input[type="submit"], .submit {
+	font-weight: normal;
+	border: solid 1px #c41230;
+	margin:0;
+	padding:3px 15px 3px 15px;
+}
+
+.button:hover, input[type="submit"]:hover,
+.button:active, input[type="submit"]:active {
+	border: solid 1px #f00;
+	font-weight: normal;
+
+}
+
+input[type="submit"].searchsubmit {
+border: none;
+padding-top: 3px;
+}
+
+input.searchfield, .dir-search input {
+border-radius: 10px;
+border: solid 1px #c41230;
+}
+
+input.searchfield, .dir-search input {
+border-radius: 10px;
+border: solid 1px silver;
+
+}
+
+input[type="submit"].searchsubmit {
+height: 24px;
+width: 24px;
+border: none;
+cursor: pointer;
+text-indent: -999%;
+margin: 0;
+padding: 0 3px 7px 3px;
+}
+
+.dbx-content .searchform {
+text-align: left;
+width:287px;
+}
+
+textarea:focus, input[type="text"]:focus {
+border: solid 1px red;
+}
+
+.page-nav {
+clear: both;
+padding: 5px 0 5px 0;
+margin-bottom: .6em;
+background-color: white;
+border: 0px solid silver !important;
+}
+
+.post-nav {
+clear: both;
+padding: 5px;
+margin: 0 0 15px 0;
+font-size: 100%;
+background-color: white;
+border: 0px solid silver !important;
+}
+
+
+.suf-page-nav span.current {
+background-color: #aaa;
+color: white;
+}
+
+.page-nav a:hover,
+.navigation .suf-page-nav a:hover {
+	text-decoration: none;
+background-color: #c41230;
+
+}
+
+#cred td.cred-right a {display:none}
+
+#cred td.cred-right {
+	text-align: left;
+}
+
+

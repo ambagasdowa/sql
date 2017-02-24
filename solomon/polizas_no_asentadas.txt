@@ -1,0 +1,15 @@
+select * from GLTran
+where BatNbr='054065' and CpnyID='TEICUA'AND Module='GL' AND AccT='0201050300'
+
+
+UPDATE  GLTran
+SET CurydrAmt=7840, DrAmt=7840
+where BatNbr='054065' and CpnyID='TEICUA' AND Module='GL' AND AccT='0101040400'
+
+
+select * from Batch
+where BatNbr='054046' and JrnlType='RE'
+
+UPDATE Batch
+SET CrTot=7840, CtrlTot=7840, CuryCrTot=7840, CuryCtrlTot=7840, CuryDrTot=7840,DrTot=7840
+where BatNbr='054065'  and JrnlType='RE'

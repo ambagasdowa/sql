@@ -1,0 +1,25 @@
+================================================================================================================
+                            Cambios para el modulo de Conciliación Teisa
+================================================================================================================
+--> 1
+
+-modificar desarrollo para que en la busqueda se filtre la fecha asociada al periodo de iave () --> done
+ --> para detectar cuando iave cobre un cruce de otro periodo
+-modificar la base de datos de cambiando las fechas algunos registros de iave  -->  done
+ --> Probar que realmente se detecta este cruce modificando la fecha de un cruce conciliado para pasarlo a no conciliado
+ 
+ 
+--> 2
+-base de datos con cruces de cto ext mexiquense para probar el cambio de columna --> done
+
+-crear una base de datos para realizar una conciliacion manual cruces iave no conciliados --> pending
+
+--> 3
+-revisar los nombres en la conciliacion manual via db  --> pending
+ --> en la conciliacion manual detectar que el nombre sea el mismo en lis y en iave , y si no es asi, no conciliar 
+
+--> 4
+-exportar a excel o pdf o anything --> super pending
+ --> ....
+
+================================================================================================================
