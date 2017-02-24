@@ -237,7 +237,11 @@ exec sp_projections_log_lv9 'start the cursor'
 					   )
 						begin
 							--(select right('00'+convert(varchar(2),MONTH(dateadd(month,1,cl.projections_closed_periods))), 2))
-							print 'IN 1 current month is 1 '
+							if @debug = 1
+								begin
+									print 'IN 1 current month is 1 '
+									select @master_projections_corporations_id, @master_id_area, @master_name, @master_projections_closed_periods
+								end
 							--print 'IN 1 => current month ' + @current_month + ' and CurrentYear => ' + @current_year + ' date from closedPeriods => ' + cast(@master_projections_closed_periods as nvarchar(10))
 							--print 'period from view => ' + right('00'+convert(varchar(2),MONTH(dateadd(month,1,@master_projections_closed_periods))), 2) + ' and cpny ' + @master_name 
 
@@ -371,6 +375,17 @@ exec sp_projections_log_lv9 'start the cursor'
 				--	@tbNextDate
 				--where 
 				--	period is not null
+				
+								 
+-- check the geminus_cursor
+			select 'checking the geminus_cursor data'
+							select
+								cyear,period
+							from 
+								@tbNextDate
+							where 
+								period is not null
+							group by cyear,period
 
 ---- ==================================================================================================================================================
 ----													start the cursor
@@ -424,29 +439,32 @@ exec sp_projections_log_lv9 'start the cursor'
 								year(fecha_cancelacion) = @qry_cyear 
 						and 
 								month(fecha_cancelacion) in (select cast(item as int) from sistemas.dbo.fnSplit(@qry_period,'|'))
-						print 'data from sistemas.dbo.projections_dissmiss_cancelations with year ' + @qry_cyear + ' and period ' + @qry_period + ' are deleted '
-								
+--						print 'data from sistemas.dbo.projections_dissmiss_cancelations with year ' + @qry_cyear + ' and period ' + @qry_period + ' are deleted '
+						exec sp_projections_log_lv9 select('data from sistemas.dbo.projections_dissmiss_cancelations with year ' + (cast(@qry_cyear as nvarchar(10))) + ' and period ' + (cast(@qry_period as nvarchar(100))) + ' are deleted ')
+
 						delete from 
 								sistemas.dbo.projections_closed_period_datas  
 						where 
 								year(fecha_guia) = @qry_cyear 
 						and 
 								month(fecha_guia) in (select cast(item as int) from sistemas.dbo.fnSplit(@qry_period,'|'))
-						print 'data from sistemas.dbo.projections_closed_period_datas ' + @qry_cyear + ' and period ' + @qry_period + ' are deleted '  
+--						print 'data from sistemas.dbo.projections_closed_period_datas ' + @qry_cyear + ' and period ' + @qry_period + ' are deleted '  
+						exec sp_projections_log_lv9 (select 'data from sistemas.dbo.projections_closed_period_datas ' + (cast(@qry_cyear as nvarchar(10))) + ' and period ' + (cast(@qry_period as nvarchar(100))) + ' are deleted ' )
 				end
 			if @debug = 1
 				begin
-					print 'periods for procedure'
-					print @qry_cyear
-					print @qry_period
+					exec sp_projections_log_lv9 'periods for procedure'
+--					print @qry_cyear
+--					print @qry_period
 					exec sp_projections_log_lv9 'start insert of the canceled and accepted'
+					exec sp_projections_log_lv9 @qry_period
 				end
 			
 				insert into @geminusx
 					exec sistemas.dbo.sp_xd3e_getFullCompanyOperations  @qry_cyear , @qry_period , 0 , 0 , 0 , 0 , 0 ---> TODO this must change
 
---				insert into @cancelationsx
---					exec sistemas.dbo.sp_xd3e_getFullCompanyOperations  @qry_cyear , @qry_period , 0 , 0 , 4 , 0 , 0 ---> TODO this must change
+				insert into @cancelationsx
+					exec sistemas.dbo.sp_xd3e_getFullCompanyOperations  @qry_cyear , @qry_period , 0 , 0 , 4 , 0 , 0 ---> TODO this must change
 			-- ===============================================================================================================
 			--	  									   end the fecthing
 			-- ===============================================================================================================
@@ -457,6 +475,7 @@ exec sp_projections_log_lv9 'start the cursor'
 	close geminuscursor  
 	deallocate geminuscursor  
 
+	exec sp_projections_log_lv9 'are you getting over hir ?'
 	-- ========================================================================================== --
 	-- 									query modes
 	-- ========================================================================================== --
@@ -465,15 +484,24 @@ exec sp_projections_log_lv9 'start the cursor'
 	--> 2 = view current defined date accepted
 	--> 3 = view current defined date canceled
 	
+	select * from @cancelationsx
+	
+	select * from @geminusx
+	
+	
+	
 	if @query_mode = 0 
 		begin
+
 			truncate table sistemas.dbo.projections_upt_cancelations
 		
 			insert into sistemas.dbo.projections_upt_cancelations
 				select * from @cancelationsx
 		
 			truncate table sistemas.dbo.projections_upt_indops
-		
+
+			exec sp_projections_log_lv9 'start insert the to upt_indops and upt_cancelations --> @query_mode 0'
+			
 			insert into sistemas.dbo.projections_upt_indops
 				select 
 						--id,
@@ -524,7 +552,7 @@ exec sp_projections_log_lv9 'start the cursor'
 			
 			insert into sistemas.dbo.projections_dissmiss_cancelations
 				select * from @cancelationsx
-			print 'data from sistemas.dbo.projections_dissmiss_cancelations are inserted '	
+			exec sp_projections_log_lv9 'start insert the to dissmiss_cancelations and closed_period_datas --> @query_mode 1'
 --			delete from sistemas.dbo.projections_closed_period_datas  
 --			where year(fecha_guia) = @current_year and month(fecha_guia) = @current_month
 			
@@ -567,7 +595,7 @@ exec sp_projections_log_lv9 'start the cursor'
 							and nd.period = month(gx.fecha_guia)
 							and nd.projections_corporations_id = gx.company
 							and nd.id_area = gx.id_area
-			print 'data from sistemas.dbo.projections_closed_period_datas are inserted '
+			exec sp_projections_log_lv9 'data from sistemas.dbo.projections_closed_period_datas are inserted '
 		end
 	-- ========================== use with @date_mode = 0 (set to manual) ================================= --
 	if @query_mode = 2
@@ -610,6 +638,7 @@ exec sp_projections_log_lv9 'start the cursor'
 							and nd.period = month(gx.fecha_guia)
 							and nd.projections_corporations_id = gx.company
 							and nd.id_area = gx.id_area
+			exec sp_projections_log_lv9 'print data of geminuszx '
 		end
 	if @query_mode = 3 
 		begin

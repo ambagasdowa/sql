@@ -59,8 +59,8 @@ exec sistemas.dbo.sp_xd3e_getFullCompanyOperations
 exec sistemas.dbo.sp_xd4e_fullByMonthCompanyOperations 
 														'2017',
 														'02',
-														 1,		-- 1 means auto take date with current_timestamp , 0 means manual 2016-01 set inside of proc
-														 0		-- 1 --> snaptshot mode 0 --> normal mode
+														 1,		--@date_mode 1 means auto take date with current_timestamp , 0 means manual 2016-01 set inside of proc
+														 0		--@query_mode  1 --> snaptshot mode 0 --> normal mode // query_mode
 --- =========== WARNING use with precaution
 
 
