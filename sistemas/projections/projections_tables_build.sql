@@ -246,8 +246,103 @@ set ansi_padding off
 -- go
 
 
+--================================================================================================================================================================================
+-- Config set the core definitions -- Define the type of data
+--================================================================================================================================================================================
+
+use [sistemas]
+-- go
+IF OBJECT_ID('dbo.projections_type_configs', 'U') IS NOT NULL 
+  DROP TABLE dbo.projections_type_configs; 
+-- go
+set ansi_nulls on
+-- go
+set quoted_identifier on
+-- go
+set ansi_padding on
+-- go
+ 
+create table dbo.projections_type_configs(
+		id										int identity(1,1),
+		user_id									int, --> the user is set the definition
+		module									nvarchar(50),
+		module_type_int							NVARCHAR(50),
+		module_lenght							nvarchar(50),
+		created									datetime,
+		modified								datetime,
+		_status									tinyint default 1 null  --and 0 must be close
+) on [primary]
+-- go
+
+set ansi_padding off
+
+	insert into sistemas.dbo.projections_type_configs values('1','document_type_accepted','char','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)
+	insert into sistemas.dbo.projections_type_configs values('1','document_type_canceled','char','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)
+	
+select * from sistemas.dbo.projections_type_configs
+--================================================================================================================================================================================
+-- Config set the core definitions
+--================================================================================================================================================================================
+
+use [sistemas]
+-- go
+IF OBJECT_ID('dbo.projections_configs', 'U') IS NOT NULL 
+  DROP TABLE dbo.projections_configs; 
+-- go
+set ansi_nulls on
+-- go
+set quoted_identifier on
+-- go
+set ansi_padding on
+-- go
+ 
+create table dbo.projections_configs(
+		id										int identity(1,1),
+		user_id									int, --> the user is set the definition
+		projections_type_configs_id				int,
+		module_data_definition					nvarchar(4000) collate SQL_Latin1_General_CP1_CI_AS,
+		created									datetime,
+		modified								datetime,
+		_status									tinyint default 1 null  --and 0 must be close
+) on [primary]
 
 
+set ansi_padding off
+
+
+	insert into sistemas.dbo.projections_configs values
+							('1',1,'R',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),
+							('1',1,'T',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),							
+							('1',1,'C',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),
+							('1',1,'A',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1),
+							('1',2,'B',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1)
+							
+	
+--================================================================================================================================================================================
+-- View for Core Configurations
+--================================================================================================================================================================================
+						
+use sistemas;
+
+IF OBJECT_ID ('projections_view_configurations', 'V') IS NOT NULL
+    DROP VIEW projections_view_configurations;
+    
+create view projections_view_configurations
+with encryption
+as
+
+	select 
+			 types.id
+			,types.user_id
+			,types.module
+			,config.module_data_definition
+			,types.module_type_int + '(' + types.module_lenght +')' as 'type'
+	from 
+			sistemas.dbo.projections_configs as config
+		inner join sistemas.dbo.projections_type_configs as types 
+			on types.id = config.projections_type_configs_id and types."_status" = 1
+	where 
+			config."_status" = 1
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Controls ProjectionsClosedPeriodControls /* Core */
@@ -537,15 +632,15 @@ use sistemas;
 -- go
 IF OBJECT_ID ('projections_view_indicators_periods', 'V') IS NOT NULL		
     DROP VIEW projections_view_indicators_periods;
--- go
-SET ANSI_NULLS ON
--- go
-SET QUOTED_IDENTIFIER ON
--- go
+
 create view projections_view_indicators_periods
 
 with encryption
 as
+
+--SET ANSI_NULLS ON
+
+--SET QUOTED_IDENTIFIER ON
 
 WITH operations_ind
 					(  
@@ -559,44 +654,63 @@ WITH operations_ind
 					)
 	as (
 			select 
-					company,id_area,area
+					indupt.company,indupt.id_area,indupt.area
 					--,id_flota,flota,
-					,id_fraccion,fraccion
-					,year(fecha_guia) as 'cyear'
-					,mes
+					,indupt.id_fraccion,indupt.fraccion
+					,year(indupt.fecha_guia) as 'cyear'
+					,indupt.mes
 					--,tipo_de_operacion
 					,case
-						when trip_count = 1
-							then sum(kms_real)
+						when indupt.trip_count = 1
+							then sum(indupt.kms_real)
 						else
 							cast ((select '0') as int)
 					end as 'kms_real'
 					--,sum(kms_real) as 'kms-real'
 					,case
-						when trip_count = 1
-							then sum(kms_viaje)
+						when indupt.trip_count = 1
+							then sum(indupt.kms_viaje)
 						else
 							cast ((select '0') as int)
 					end as 'kms_viaje'
 					--,sum(kms_viaje) as 'kms-viaje'
-					,sum(subtotal) as 'subtotal',sum(peso) as 'peso'
+					,sum(indupt.subtotal) as 'subtotal',sum(indupt.peso) as 'peso'
 					,case
-						when trip_count = 1
-							then count(trip_count)
+						when indupt.trip_count = 1
+							then count(indupt.trip_count)
 						else
 							cast ((select '0') as int)
 					end as 'non_zero'
 			from
 					sistemas.dbo.projections_upt_indops as indupt
-					--left join	
-					--	sistemas.dbo.projections_upt_cancelations as uptc
-					--openquery(local, 'exec sistemas.dbo.sp_xd4e_fullByMonthCompanyOperations "xxxx","xx",0')
+				inner join 
+					(
+						select
+								 projections_corporations_id
+								,id_area
+								,name
+								,projections_closed_periods
+								,(dateadd(month,1,projections_closed_periods)) as 'newdate'
+								,year(dateadd(month,1,projections_closed_periods)) as 'newyear'
+								,month((dateadd(month,1,projections_closed_periods))) as 'newmonth'
+						from 
+								sistemas.dbo.projections_view_closed_period_units
+					) as closed_periods 
+						on 
+							indupt.company = closed_periods.projections_corporations_id 
+						and 
+							indupt.id_area = closed_periods.id_area
+						and 
+							year(indupt.fecha_guia) = closed_periods.newyear
+						and	
+							month(indupt.fecha_guia) = closed_periods.newmonth
+							
 			group by
-					company,id_area,area
-					,id_fraccion,fraccion
-					,year(fecha_guia)
-					,mes
-					,trip_count
+					indupt.company,indupt.id_area,indupt.area
+					,indupt.id_fraccion,indupt.fraccion
+					,year(indupt.fecha_guia)
+					,indupt.mes
+					,indupt.trip_count
 			union all
 			select 
 					company,id_area,area
@@ -690,7 +804,7 @@ select
 										uptc.company,uptc.id_area
 										,uptc.Area as 'area'
 										,uptc.id_fraccion
-										,(select desc_producto from dbo.projections_view_fractions as fr where fr.projections_corporations_id = uptc.company and fr.id_fraccion = uptc.id_fraccion) as 'fraccion'
+										,(select desc_producto from sistemas.dbo.projections_view_fractions as fr where fr.projections_corporations_id = uptc.company and fr.id_fraccion = uptc.id_fraccion) as 'fraccion'
 										,year(uptc.fecha_cancelacion) as 'cyear'
 										,uptc.mes
 										,(select NULL) as 'kms'
@@ -712,7 +826,7 @@ select
 										disstc.company,disstc.id_area
 										,disstc.Area as 'area'
 										,disstc.id_fraccion
-										,(select desc_producto from dbo.projections_view_fractions as fr where fr.projections_corporations_id = disstc.company and fr.id_fraccion = disstc.id_fraccion) as 'fraccion'
+										,(select desc_producto from sistemas.dbo.projections_view_fractions as fr where fr.projections_corporations_id = disstc.company and fr.id_fraccion = disstc.id_fraccion) as 'fraccion'
 										,year(disstc.fecha_cancelacion) as 'cyear'
 										,disstc.mes
 										,(select NULL) as 'kms'

@@ -46,7 +46,7 @@ exec sistemas.dbo.sp_xd3e_getFullCompanyOperations
 													'01',	-- month or months (char) ex: '01|02|03|04|05|06|07|08|09|10'
 													 0,		-- companies (int) id's ex: 1(tbk) or 2(amt) or 3(tei) or 0 (zero means all companies)
 													'0',	-- bussiness unit (char) like 1 for orizaba or cuatitlan and 3 for ramos whats is true for tbk but not case of teisa or atm 0 = zero mean all bases
-													 4,		-- mode 0 = queryAccepted ;1 = insert Accepted in period ; 3 = insertQueryCancel ; 4 printQueryCancel
+													 0,		-- mode 0 = queryAccepted ;1 = insert Accepted in period ; 3 = insertQueryCancel ; 4 printQueryCancel
 													 0,		-- user_id when mode is set to 0 this can be empty ''
 													 0      -- projections_closed_period_controls_id when mode is set to 0 this can be empty ''
 --- =========== WARNING use with precaution 
@@ -58,8 +58,8 @@ exec sistemas.dbo.sp_xd3e_getFullCompanyOperations
 --- =========== WARNING use with precaution		  
 exec sistemas.dbo.sp_xd4e_fullByMonthCompanyOperations 
 														'2017',
-														'02',
-														 1,		--@date_mode 1 means auto take date with current_timestamp , 0 means manual 2016-01 set inside of proc
+														'01',
+														 0,		--@date_mode 1 means auto take date with current_timestamp , 0 means manual 2016-01 set inside of proc
 														 0		--@query_mode  1 --> snaptshot mode 0 --> normal mode // query_mode
 --- =========== WARNING use with precaution
 
@@ -122,31 +122,37 @@ union
 select 'projections_closed_period_controls' as 'table', count(id) as 'count' from "sistemas"."dbo"."projections_closed_period_controls"
 
 --4780 2017-feb Accepted // 64 2017-feb Canceled
+	select * from sistemas.dbo.projections_systems_logs
+
+
+select * from sistemas.dbo.projections_view_indicators_periods where area = 'GUADALAJARA'
+
+
 
 select * from sistemas.dbo.projections_closed_period_datas
 
 
 select * from sistemas.dbo.projections_cancelations
-
-select * from sistemas.dbo.projections_view_indicators_periods
 select * from sistemas.dbo.projections_view_closed_period_units
 
 select * from "sistemas"."dbo"."projections_dissmiss_cancelations"		--	44
 select * from "sistemas"."dbo"."projections_upt_cancelations"			--	4
 
 
+
+
 -- ============================================================ --
 -- 						    testing 		 					--
 -- ============================================================ --
 
-truncate table sistemas.dbo.projections_upt_indops
-truncate table sistemas.dbo.projections_upt_cancelations
-truncate table sistemas.dbo.projections_dissmiss_cancelations
-truncate table sistemas.dbo.projections_closed_period_datas
-truncate table sistemas.dbo.projections_cancelations
-
-
-truncate table sistemas.dbo.projections_closed_period_controls
+--truncate table sistemas.dbo.projections_upt_indops
+--truncate table sistemas.dbo.projections_upt_cancelations
+--truncate table sistemas.dbo.projections_dissmiss_cancelations
+--truncate table sistemas.dbo.projections_closed_period_datas
+--truncate table sistemas.dbo.projections_cancelations
+--
+--
+--truncate table sistemas.dbo.projections_closed_period_controls
 
 
 
