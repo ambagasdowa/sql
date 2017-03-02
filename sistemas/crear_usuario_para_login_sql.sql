@@ -344,8 +344,10 @@ where
 		GRANT SELECT   ON "dbo"."projections_view_indicadores_temporal" TO "projections"
 		GRANT SELECT   ON "dbo"."projections_view_closed_periods" TO "projections"      
 		GRANT SELECT   ON "dbo"."projections_view_closed_period_units" TO "projections" 
-		GRANT SELECT   ON "dbo"."projections_view_fractions" TO "projections"           
-		
+		GRANT SELECT   ON "dbo"."projections_view_fractions" TO "projections"
+		grant select 	on	"dbo"."projections_view_canceled_periods" to "projections"
+		grant select	on "sistemas"."dbo"."view_xd3e_getFullCompanyOperations" to "projections"
+
 		-- set rw on tables use sistemas
 
 		GRANT INSERT, UPDATE, SELECT, DELETE, ALTER ON "dbo"."projections_upt_indops" TO "projections"             
@@ -362,7 +364,9 @@ where
 		GRANT INSERT, UPDATE, SELECT, DELETE, ALTER ON "dbo"."projections_closed_period_datas" TO "projections"    
 		GRANT INSERT, UPDATE, SELECT, DELETE ON "dbo"."projections_logs" TO "projections"                   
 		GRANT INSERT, UPDATE, SELECT, DELETE ON "dbo"."projections_fraccion_defs" TO "projections"          
-		GRANT INSERT, UPDATE, SELECT, DELETE ON "dbo"."projections_fraccion_groups" TO "projections"        
+		GRANT INSERT, UPDATE, SELECT, DELETE ON "dbo"."projections_fraccion_groups" TO "projections"     
+		GRANT INSERT, UPDATE, SELECT, DELETE, ALTER ON 	"sistemas"."dbo"."projections_configs" to "projections"
+		GRANT INSERT, UPDATE, SELECT, DELETE, ALTER ON 	"sistemas"."dbo"."projections_type_configs" to "projections"
 		
 		-- Alter in table is the minimal for truncate it
 		
@@ -370,6 +374,7 @@ where
 		GRANT EXECUTE ON "dbo"."sp_xd3e_getFullCompanyOperations" TO "projections"
 		GRANT EXECUTE ON "dbo"."sp_xd4e_fullByMonthCompanyOperations" TO "projections"
 		GRANT EXECUTE ON "dbo"."sp_projections_log_lv9" TO "projections"
+		grant execute on "dbo"."spview_xd3e_getFullCompanyOperations" to "projections"
 		-- set execution permissions on table function
 		GRANT SELECT ON "dbo"."fnSplit" TO "projections"
 		

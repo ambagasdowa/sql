@@ -42,7 +42,7 @@ USE sistemas;
 			
 	set @year = '2017' set  @month = '01'  set @Company = 0 set @bunit = 0 set @mode = 0 set @user_id = 0 set @period_id = 0
 	
-	select @year, @month, @Company, @bunit, @mode, @user_id, @period_id
+--	select @year, @month, @Company, @bunit, @mode, @user_id, @period_id
 
 -- ============================================================================================== --
 
@@ -85,7 +85,7 @@ declare @document table	(
 							)
 --	select * from @document
 
-	if (@mode = 0 or @mode = 1 or @mode = 2 or @mode = 5)
+	if (@mode = 0 or @mode = 1 or @mode = 2 or @mode = 5 or @mode = 8)
 		begin
 			insert into @document
 				select cast(module_data_definition as char(1)) from sistemas.dbo.projections_view_configurations where module = 'document_type_accepted' -- ?? acepted
@@ -96,7 +96,7 @@ declare @document table	(
 				select cast( module_data_definition as char(1)) from sistemas.dbo.projections_view_configurations where module = 'document_type_canceled' --Cancelations
 		end
 		
-  select doc_type from @document
+--  select doc_type from @document
 
 -- ====================================== CANCELATIONS ================================================
 
@@ -399,8 +399,43 @@ set language spanish
 					bonampakdb.dbo.mtto_unidades as manto
 						on manto.id_unidad = viaje.id_unidad
 		where 
-				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
-			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode != 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    guia.fecha_guia between dateadd(month,-3,cast((current_timestamp) as date)) and dateadd(month,1,cast((current_timestamp) as date))
+					 )
+--				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+--			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Set Inserts
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -688,8 +723,43 @@ set language spanish
 					tespecializadadb.dbo.mtto_unidades as manto
 						on manto.id_unidad = viaje.id_unidad
 		where 
-				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
-			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode != 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    guia.fecha_guia between dateadd(month,-3,cast((current_timestamp) as date)) and dateadd(month,1,cast((current_timestamp) as date))
+					 )
+--				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+--			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Set o
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -978,8 +1048,43 @@ set language spanish
 					macuspanadb.dbo.mtto_unidades as manto
 						on manto.id_unidad = viaje.id_unidad
 		where 
-				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
-			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode = 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
+					 )
+				and
+					(
+						1 = (
+						case 
+							when @mode != 8
+									then 1
+								else 0
+							end
+					    )
+					    or 
+						    guia.fecha_guia between dateadd(month,-3,cast((current_timestamp) as date)) and dateadd(month,1,cast((current_timestamp) as date))
+					 )
+--				year(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@year, '|'))
+--			and month(guia.fecha_guia) in (select item from sistemas.dbo.fnSplit(@month, '|'))
 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Set o
@@ -1111,14 +1216,6 @@ set language spanish
 
 	insert into @indicators
 		select * from @geminus
-
--- ================================================ this one =========================================== --	
-	select * from @indicators
--- ================================================ this one =========================================== --
-
-	
-	
-	
 	
 	if( @mode = 0) --means query
 		begin
@@ -1133,6 +1230,13 @@ set language spanish
 				end
 
 		end
+-- ================================================ this one =========================================== --	
+	else if(@mode = 8)
+		begin
+			select * from @indicators
+		end		
+-- ================================================ this one =========================================== --
+
 	else if (@mode = 1 OR @mode = 5) -- means insert because is a closed period
 		begin
 			print @mode
