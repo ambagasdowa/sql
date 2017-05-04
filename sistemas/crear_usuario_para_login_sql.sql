@@ -347,6 +347,7 @@ where
 		GRANT SELECT   ON "dbo"."projections_view_fractions" TO "projections"
 		grant select 	on	"dbo"."projections_view_canceled_periods" to "projections"
 		grant select	on "sistemas"."dbo"."view_xd3e_getFullCompanyOperations" to "projections"
+		grant select	on "sistemas"."dbo"."projections_view_configurations" to "projections"
 
 		-- set rw on tables use sistemas
 

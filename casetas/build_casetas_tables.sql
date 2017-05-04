@@ -2,7 +2,7 @@
 -- Struct for tables on tollbooth
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Catalog CasetasCompanies
@@ -10,13 +10,13 @@ go
 
 IF OBJECT_ID('dbo.casetas_corporations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_corporations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_corporations](
 		id						int identity(1,1),
@@ -29,10 +29,10 @@ create table [dbo].[casetas_corporations](
 		casetas_parents_id		int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 insert into dbo.casetas_corporations values	('TBK','Bonampak',CURRENT_TIMESTAMP,null,'1',null,null,1),
 											('ATM','Macuspana',CURRENT_TIMESTAMP,null,'1',null,null,1),
 											('TEISA','Teisa',CURRENT_TIMESTAMP,null,'1',null,null,1);
@@ -41,16 +41,16 @@ insert into dbo.casetas_corporations values	('TBK','Bonampak',CURRENT_TIMESTAMP,
 -- Catalog CasetasUnits
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_units', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_units; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_units](
 		id						int identity(1,1),
@@ -64,10 +64,10 @@ create table [dbo].[casetas_units](
 		casetas_parents_id		int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into dbo.casetas_units values	('1','TBKGDL','Unidad de Negocio Guadalajara',CURRENT_TIMESTAMP,null,'1',null,null,1),
 										('1','TBKHER','Unidad de Negocio Hermosillo',CURRENT_TIMESTAMP,null,'1',null,null,1),
@@ -85,14 +85,14 @@ insert into dbo.casetas_units values	('1','TBKGDL','Unidad de Negocio Guadalajar
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 IF OBJECT_ID('dbo.casetas_events', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_events; 
-go
+-- go
 
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
 
 create table [dbo].[casetas_events](
 		id						int identity(1,1),
@@ -102,10 +102,10 @@ create table [dbo].[casetas_events](
 		user_id					int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 --SET IDENTITY_INSERT sistemas.dbo.casetas_events ON
 insert into dbo.casetas_events values ('Conciliacion',CURRENT_TIMESTAMP,null,1,1),('FileUpload',CURRENT_TIMESTAMP,null,1,1),
@@ -118,16 +118,16 @@ insert into dbo.casetas_events values ('Conciliacion',CURRENT_TIMESTAMP,null,1,1
 -- Catalog Status 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_parents', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_parents; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_parents](
 		id						int identity(1,1),
@@ -137,10 +137,10 @@ create table [dbo].[casetas_parents](
 		user_id					int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into dbo.casetas_parents values	  
 										  ('Conciliacion',CURRENT_TIMESTAMP,null,1,1)									-- 1
@@ -162,17 +162,17 @@ insert into dbo.casetas_parents values
 -- Catalog Status Parents
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 
 IF OBJECT_ID('dbo.casetas_standings', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_standings;  
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_standings](
 		id						int identity(1,1),
@@ -183,10 +183,10 @@ create table [dbo].[casetas_standings](
 		user_id					int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into dbo.casetas_standings values	(1,'Conciliado',CURRENT_TIMESTAMP,null,1,1),											-- 1
 											(1,'No Conciliado',CURRENT_TIMESTAMP,null,1,1),											-- 2
@@ -207,16 +207,16 @@ insert into dbo.casetas_standings values	(1,'Conciliado',CURRENT_TIMESTAMP,null,
 -- Catalog IavePeriods -- NEW --
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_iave_periods', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_iave_periods; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_iave_periods](
 		id							int identity(1,1),
@@ -231,10 +231,10 @@ create table [dbo].[casetas_iave_periods](
 		modified					datetime,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into sistemas.dbo.casetas_iave_periods values	
                 ('1','375','Mayo 21 al 31','2016-05-21 00:00:00.000','2016-05-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
@@ -251,24 +251,43 @@ insert into sistemas.dbo.casetas_iave_periods values
 				('1','396','Diciembre 21 al 31','2016-12-21 00:00:00.000','2016-12-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','397','Enero 01 al 10','2017-01-01 00:00:00.000','2017-01-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','398','Enero 11 al 20','2017-01-11 00:00:00.000','2017-01-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
-				('1','399','Enero 21 al 31','2017-01-21 00:00:00.000','2017-01-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1');
-
-
+				('1','399','Enero 21 al 31','2017-01-21 00:00:00.000','2017-01-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','400','Febrero 01 al 10','2017-02-01 00:00:00.000','2017-02-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','401','Febrero 11 al 20','2017-02-11 00:00:00.000','2017-02-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','402','Febrero 21 al 28','2017-02-21 00:00:00.000','2017-02-28 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','403','Marzo 01 al 10','2017-03-01 00:00:00.000','2017-03-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','404','Marzo 11 al 20','2017-03-11 00:00:00.000','2017-03-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','405','Marzo 21 al 31','2017-03-21 00:00:00.000','2017-03-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','406','Abril 01 al 10','2017-04-01 00:00:00.000','2017-04-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','407','Abril 11 al 20','2017-04-11 00:00:00.000','2017-04-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','408','Abril 21 al 30','2017-04-21 00:00:00.000','2017-04-30 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1');
+--insert into sistemas.dbo.casetas_iave_periods values
+				('1','409','Mayo 1 al 10','2017-05-01 00:00:00.000','2017-05-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','410','Mayo 11 al 10','2017-05-11 00:00:00.000','2017-05-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
+--insert into sistemas.dbo.casetas_iave_periods values
+				('1','411','Mayo 21 al 31','2017-05-21 00:00:00.000','2017-05-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','412','Junio 01 al 10','2017-06-01 00:00:00.000','2017-06-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','413','Junio 11 al 20','2017-06-11 00:00:00.000','2017-06-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','414','Junio 21 al 30','2017-06-21 00:00:00.000','2017-06-30 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','415','Julio 01 al 10','2017-07-01 00:00:00.000','2017-07-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','416','Julio 11 al 20','2017-07-11 00:00:00.000','2017-07-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','417','Julio 21 al 31','2017-07-21 00:00:00.000','2017-07-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
+--select * from sistemas.dbo.casetas_iave_periods
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Catalog IavePeriods -- NEW -- add the id in iave when change column caseta to carril
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_iave_caseta_descriptions', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_iave_caseta_descriptions; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_iave_caseta_descriptions](
 		id							int identity(1,1),
@@ -279,10 +298,10 @@ create table [dbo].[casetas_iave_caseta_descriptions](
 		modified					datetime,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into sistemas.dbo.casetas_iave_caseta_descriptions values 
 										 ('1','316','Casetas del circuito Mexiquense',current_timestamp,current_timestamp,1)
@@ -302,16 +321,16 @@ insert into sistemas.dbo.casetas_iave_caseta_descriptions values
 -- Core Casetasoptions
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_options', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_options; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_options](
 		id							int identity(1,1),
@@ -323,10 +342,10 @@ create table [dbo].[casetas_options](
 		modified					datetime,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 insert into sistemas.dbo.casetas_options values ('next_period',1,null,'activate the next period mode',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,1);
 
@@ -338,16 +357,16 @@ Insert into sistemas.dbo.casetas_options ("option_name","switch","data","_descri
 -- Controls CasetasControlsUsers
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_controls_users', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_controls_users; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_controls_users](
 		id						int identity(1,1),
@@ -359,26 +378,26 @@ create table [dbo].[casetas_controls_users](
 		_status					tinyint default 1 null
 --		,constraint ak_user_id unique(user_id)
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 -- select * from casetas_controls_users
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Controls CasetasControlsEvents
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_controls_events', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_controls_events; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_controls_events](
 		id						int identity(1,1),
@@ -395,25 +414,25 @@ create table [dbo].[casetas_controls_events](
 		casetas_parents_id		int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Controls CasetasControlsFiles
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_controls_files', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_controls_files; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_controls_files](
 		id						int identity(1,1),
@@ -441,25 +460,25 @@ create table [dbo].[casetas_controls_files](
 		casetas_parents_id		int,
 		_status					tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Controls CasetasControlsConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_controls_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_controls_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_controls_conciliations](
 		id							int identity(1,1),
@@ -472,25 +491,25 @@ create table [dbo].[casetas_controls_conciliations](
 		casetas_parents_id			int,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Views CasetasViews This is limited by the query so need a rebuild
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_views', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_views; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_views](
 		id							int identity(1,1),
@@ -522,25 +541,25 @@ create table [dbo].[casetas_views](
 		casetas_parents_id			int,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Core CasetasViajesLisNotConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_lis_not_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_lis_not_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_lis_not_conciliations](
 		 id										int identity(1,1)
@@ -554,7 +573,7 @@ create table [dbo].[casetas_lis_not_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
 		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
@@ -570,7 +589,7 @@ create table [dbo].[casetas_lis_not_conciliations](
 		,no_de_ejes								int
 		,monto_iave								decimal(18,6)
 		,tarifas								decimal(18,6)
-		,liq_tipo_pago							int
+		,liq_tipo_pa-- go							int
 		,liq_paso								nvarchar(1)
 		,liq_id_caseta							int
 		,liq_monto_caseta						decimal(18,6)
@@ -585,10 +604,10 @@ create table [dbo].[casetas_lis_not_conciliations](
 		,_modified								datetime default current_timestamp
 		,_status								tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 
 
@@ -596,16 +615,16 @@ go
 -- Core CasetasViajesLisFullConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_lis_full_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_lis_full_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_lis_full_conciliations](
 		 id										int identity(1,1)
@@ -619,7 +638,7 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
 		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
@@ -635,7 +654,7 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,no_de_ejes								int
 		,monto_iave								decimal(18,6)
 		,tarifas								decimal(18,6)
-		,liq_tipo_pago							int
+		,liq_tipo_pa-- go							int
 		,liq_paso								nvarchar(1)
 		,liq_id_caseta							int
 		,liq_monto_caseta						decimal(18,6)
@@ -650,26 +669,26 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,_modified								datetime default current_timestamp
 		,_status								tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Core CasetasViajesLisNextConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_lis_next_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_lis_next_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_lis_next_conciliations](
 		 id										int identity(1,1)
@@ -684,7 +703,7 @@ create table [dbo].[casetas_lis_next_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
 		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
@@ -700,7 +719,7 @@ create table [dbo].[casetas_lis_next_conciliations](
 		,no_de_ejes								int
 		,monto_iave								decimal(18,6)
 		,tarifas								decimal(18,6)
-		,liq_tipo_pago							int
+		,liq_tipo_pa-- go							int
 		,liq_paso								nvarchar(1)
 		,liq_id_caseta							int
 		,liq_monto_caseta						decimal(18,6)
@@ -715,26 +734,26 @@ create table [dbo].[casetas_lis_next_conciliations](
 		,_modified								datetime default current_timestamp
 		,_status								tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Historical CasetasHistoricalConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_historical_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_historical_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_historical_conciliations](
 		id							int identity(1,1),
@@ -748,26 +767,26 @@ create table [dbo].[casetas_historical_conciliations](
 		casetas_parents_id			int,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Historical Views CasetasPendings
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_pendings', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_pendings; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_pendings](
 		id							int identity(1,1),
@@ -778,25 +797,25 @@ create table [dbo].[casetas_pendings](
 		casetas_parents_id			int,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Historical Views CasetasConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_conciliations](
 		id							int identity(1,1),
@@ -807,25 +826,25 @@ create table [dbo].[casetas_conciliations](
 		casetas_parents_id			int,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Historical Views CasetasNotConciliations
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_not_conciliations', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_not_conciliations; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_not_conciliations](
 		id								int identity(1,1),
@@ -836,25 +855,25 @@ create table [dbo].[casetas_not_conciliations](
 		casetas_parents_id				int,
 		_status							tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Logs CasetasLogs
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_logs', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_logs; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_logs](
 		id							int identity(1,1),
@@ -862,10 +881,10 @@ create table [dbo].[casetas_logs](
 		data						nvarchar(3000)		collate		sql_latin1_general_cp1_ci_as,
 		created						datetime,
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 
 
@@ -879,7 +898,7 @@ go
 use sistemas;
 IF OBJECT_ID ('casetas_view_not_conciliations', 'V') IS NOT NULL
     DROP VIEW casetas_view_not_conciliations;
-GO
+-- go
 
 create view casetas_view_not_conciliations
 with encryption
@@ -896,7 +915,7 @@ as
 		,notcot.fecha_real_viaje
 		,notcot.fecha_real_fin_viaje
 		,notcot.id_unidad
-		,notcot.iave_catalogo
+		,notcot.iave_catalo-- go
 		,notcot.id_ruta
 		,notcot.desc_ruta
 		,notcot.id_caseta
@@ -917,7 +936,7 @@ as
 	where 
 		notcot.casetas_controls_files_id is not null and notcot.casetas_historical_conciliations_id is not null
 
- go
+ -- go
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -928,7 +947,7 @@ as
 use sistemas;
 IF OBJECT_ID ('casetas_view_resumes', 'V') IS NOT NULL
     DROP VIEW casetas_view_resumes;
-GO
+-- go
 
 create view casetas_view_resumes
 --with encryption
@@ -1038,7 +1057,7 @@ select
 			evnt.casetas_event_name,parent.casetas_parents_name,stand.casetas_standings_name,
 			conctrl.conciliations_count,hist.monto_conciliado,hist.cruces_conciliados,hist.id,
 			ctrl._ctime,ctrl.casetas_standings_id,ctrl.casetas_parents_id,ctrl.casetas_corporations_id,ctrl._status
- go
+ -- go
 
 
  
@@ -1050,7 +1069,7 @@ select
 use sistemas;
 IF OBJECT_ID ('casetas_view_resume_stands', 'V') IS NOT NULL
     DROP VIEW casetas_view_resume_stands;
-GO
+-- go
 
 create view casetas_view_resume_stands
 --with encryption
@@ -1143,7 +1162,7 @@ select
 		vcasetas.casetas_controls_files_id , vcasetas.casetas_historical_conciliations_id , vcasetas.casetas_standings_id,
 		vcasetas.cia,vcasetas._filename,ctrlfile._montos,ctrlfile.cruces,stand.casetas_standings_name
 
- go
+ -- go
 
  
 ------------------ Until hir -----------------------------------
@@ -1157,7 +1176,7 @@ select
 use sistemas;
 IF OBJECT_ID ('casetas_view_special_views', 'V') IS NOT NULL
     DROP VIEW casetas_view_special_views;
-GO
+-- go
 
 create view casetas_view_special_views
 with encryption
@@ -1222,7 +1241,7 @@ from
 			_views._status = 1
 		--and files.id in (180,184,183)
 		and files.id in (158,163,179,180,184,183)
-go
+-- go
 
 
 
@@ -1236,7 +1255,7 @@ go
 use sistemas;
 IF OBJECT_ID ('casetas_view_not_conciliations_grals', 'V') IS NOT NULL
     DROP VIEW casetas_view_not_conciliations_grals;
-GO
+-- go
 
 create view casetas_view_not_conciliations_grals
 with encryption
@@ -1266,7 +1285,7 @@ where
 group by 
 		not_.no_viaje ,not_.casetas_controls_files_id ,not_.casetas_historical_conciliations_id
 
-go
+-- go
 
 -- ==========================================================================================================================================
 --	view to get trips that are conciliated
@@ -1275,7 +1294,7 @@ go
 use sistemas;
 IF OBJECT_ID ('casetas_view_conciliated_trips', 'V') IS NOT NULL
     DROP VIEW casetas_view_conciliated_trips;
-GO
+-- go
 
 create view casetas_view_conciliated_trips
 with encryption
@@ -1346,11 +1365,11 @@ as
 --====================================================================================================================================================================================
 
 USE sistemas;
-GO
+-- go
 
 set ANSI_NULLS ON
 set QUOTED_IDENTIFIER ON
-GO
+-- go
 
 ALTER TRIGGER [dbo].[casetas_tiger_tollbooth] 
    ON  [dbo].[casetas_tiger_runs] 
@@ -1373,22 +1392,22 @@ BEGIN
     EXEC sp_tollbooth @bussines_unit,@casetas_controls_files_id,@user_id;
 
 END
-go
+-- go
 
 --====================================================================================================================================================================================
 -- Trigger-Table CasetasTigerRun
 --====================================================================================================================================================================================
 use [sistemas]
-go
+-- go
 IF OBJECT_ID('dbo.casetas_tiger_runs', 'U') IS NOT NULL 
   DROP TABLE dbo.casetas_tiger_runs; 
-go
+-- go
 set ansi_nulls on
-go
+-- go
 set quoted_identifier on
-go
+-- go
 set ansi_padding on
-go
+-- go
  
 create table [dbo].[casetas_tiger_runs](
 		id							int identity(1,1),
@@ -1398,25 +1417,25 @@ create table [dbo].[casetas_tiger_runs](
 		created						datetime,
 		_status						tinyint default 1 null
 ) on [primary]
-go
+-- go
 
 set ansi_padding off
-go
+-- go
 
 --====================================================================================================================================================================================
 -- Trigger-Table CasetasTigerRunBack
 --====================================================================================================================================================================================
 --use [sistemas]
---go
+---- go
 --IF OBJECT_ID('dbo.casetas_tiger_run_back', 'U') IS NOT NULL 
 --  DROP TABLE dbo.casetas_tiger_run_back; 
---go
+---- go
 --set ansi_nulls on
---go
+---- go
 --set quoted_identifier on
---go
+---- go
 --set ansi_padding on
---go
+---- go
  
 --create table [dbo].[casetas_tiger_run_back](
 --		id							int identity(1,1),
@@ -1426,10 +1445,10 @@ go
 --		created						datetime,
 --		_status						tinyint default 1 null
 --) on [primary]
---go
+---- go
 
 --set ansi_padding off
---go
+---- go
 
 
 --====================================================================================================================================================================================
@@ -1437,11 +1456,11 @@ go
 --====================================================================================================================================================================================
 
 --USE sistemas;
---GO
+---- go
 
 --set ANSI_NULLS ON
 --set QUOTED_IDENTIFIER ON
---GO
+---- go
 
 --CREATE TRIGGER [dbo].[casetas_tiger_tollbooth_back] 
 --   ON  [dbo].[casetas_tiger_run_back] 
@@ -1459,12 +1478,12 @@ go
 --    EXEC sp_tollbooth @bussines_unit,@casetas_controls_files_id,@user_id;
 
 --END
---go
+---- go
 
  --TEMPORAL *ing table
 
 --use [sistemas]
---go
+---- go
 --IF OBJECT_ID('dbo.casetas_forview', 'U') IS NOT NULL 
 --  DROP TABLE dbo.casetas_forview; 
---go
+---- go

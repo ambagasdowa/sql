@@ -39,7 +39,7 @@ FROM sys.master_files
 WHERE database_id = DB_ID(N'integraapp');
 --GO
 
-use integraapp;
+use integraapp
 --go
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
@@ -51,8 +51,7 @@ DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
 
 ALTER DATABASE integraapp SET RECOVERY FULL
 
---use integraapp;
---go
+--use integraapp
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 -- report the new file sizes
@@ -131,20 +130,15 @@ WHERE database_id = DB_ID(N'NOM2001');
 --WHERE database_id = DB_ID(N'sltestapp');
 -- GO
 
-use sltestapp;
--- go
+use integrasys
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
-ALTER DATABASE sltestapp SET RECOVERY SIMPLE
-DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+ALTER DATABASE integrasys SET RECOVERY SIMPLE
+DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
 --dbcc shrinkfile ('templog') -- shrink log file
 --ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
 --DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-
-ALTER DATABASE sltestapp SET RECOVERY FULL
-
---use sltestapp
---go
+ALTER DATABASE integrasys SET RECOVERY FULL
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 -- report the new file sizes
@@ -160,8 +154,7 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 --WHERE database_id = DB_ID(N'sistemas');
 --GO
 
-use sistemas;
---go
+use sistemas
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 ALTER DATABASE sistemas SET RECOVERY SIMPLE
@@ -171,9 +164,6 @@ DBCC SHRINKFILE('sistemas_log', 0, TRUNCATEONLY)
 --DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
 
 ALTER DATABASE sistemas SET RECOVERY FULL
-
---use sistemas
---go
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 -- report the new file sizes
@@ -191,7 +181,6 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 --GO
 
 use integra_fiscal;
---go
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 ALTER DATABASE integra_fiscal SET RECOVERY SIMPLE
@@ -201,10 +190,49 @@ DBCC SHRINKFILE('integra_fiscal_log', 0, TRUNCATEONLY)
 --DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
 
 ALTER DATABASE integra_fiscal SET RECOVERY FULL;
-
---use integra_fiscal;
---go
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+
+
+-- ===================================== Truncate log for sltestappdata ================================================ --
+
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'bonampakdb');
+-- GO
+
+use sltestapp;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE sltestapp SET RECOVERY SIMPLE
+
+DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+
+ALTER DATABASE sltestapp SET RECOVERY FULL;
+
+use sltestapp;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+-- report the new file sizes
+
+-- ===================================== Truncate log for sltestappdata ================================================ --
+
+use sltestsys;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE sltestsys SET RECOVERY SIMPLE
+
+DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
+
+ALTER DATABASE sltestsys SET RECOVERY FULL;
+
+use sltestsys;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+-- report the new file sizes
+
+
+
+
 
 -- =========================================== Check database storage ======================================================= --
 
@@ -215,4 +243,7 @@ SELECT RTRIM(name) AS [Segment Name], groupid AS [Group Id], filename AS [File N
             CAST([maxsize]/128.0-(FILEPROPERTY(name, 'SpaceUsed')/128.0) AS DECIMAL(10,2)) AS [Available Space in MB],
             CAST((CAST(FILEPROPERTY(name, 'SpaceUsed')/128.0 AS DECIMAL(10,2))/CAST([maxsize]/128.0 AS DECIMAL(10,2)))*100 AS DECIMAL(10,2)) AS [Percent Used]
          FROM sysfiles
-         ORDER BY groupid DESC
+         ORDER BY groupid desc
+         
+         
+

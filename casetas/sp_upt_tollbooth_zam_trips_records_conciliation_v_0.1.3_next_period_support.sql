@@ -1,4 +1,4 @@
-Use sistemas;
+Use sistemas
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,7 +16,7 @@ AS
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
-	SET NOCOUNT ON;
+	SET NOCOUNT ON
 
 	/*==========================================================================================================================================
 	 Authors        : JesusBaizabal (ProcedureProgramation&TableSquemaDesign and Core) and JavierGarcia (ConsultorAnalisis&baseStudyQuery)
@@ -62,13 +62,13 @@ BEGIN
 --										('391','Noviembre 01 al 10','2016-11-01 00:00:00.000','2016-11-10 23:59:00.000','5','1','1',CURRENT_TIMESTAMP,'1'),
 --										('392','Noviembre 11 al 20','2016-11-11 00:00:00.000','2016-11-20 23:59:00.000','5','1','1',CURRENT_TIMESTAMP,'1'),
 --										('393','Noviembre 21 al 30','2016-11-21 00:00:00.000','2016-11-30 23:59:00.000','5','1','1',CURRENT_TIMESTAMP,'1'),
---										('394','Diciembre 01 al 10','2016-12-01 00:00:00.000','2016-12-10 23:59:00.000','5','1','1',CURRENT_TIMESTAMP,'1');
+--										('394','Diciembre 01 al 10','2016-12-01 00:00:00.000','2016-12-10 23:59:00.000','5','1','1',CURRENT_TIMESTAMP,'1')
 
 --select * from sistemas.dbo.casetas_iave_periods
---	insert into sistemas.dbo.casetas_iave_periods values (1,'393','Noviembre 21 al 30','2016-11-21','2016-11-30','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1');
+--	insert into sistemas.dbo.casetas_iave_periods values (1,'393','Noviembre 21 al 30','2016-11-21','2016-11-30','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
 
-	--declare @_periods as int ; set @_periods = '394';
-	print 'updating ......';
+	--declare @_periods as int  set @_periods = '394'
+	print 'updating ......'
 
 	declare @tollbooth_no_trips table
 									  (
@@ -158,7 +158,7 @@ BEGIN
 									  )
 
 
-	;with ops (
+	with ops (
 				 period_iave_id,fecha_ini,fecha_fin
 				,no_viaje,f_despachado,id_area,company_id
 				,name
@@ -421,13 +421,13 @@ BEGIN
 			as file_period on op.period_iave_id = file_period.iave_period and (select cast(file_period.cia as nvarchar(10)) COLLATE SQL_Latin1_General_CP1_CI_AS) = op.cia
 			-- -
 			-- -
-		order by op.period_iave_id,file_period._filename,op.no_viaje,op.f_despachado,op.fecha_ini,op.cia,op.orden;
+		order by op.period_iave_id,file_period._filename,op.no_viaje,op.f_despachado,op.fecha_ini,op.cia,op.orden
 
-		--truncate table sistemas.dbo.casetas_lis_full_conciliations ;
+		--truncate table sistemas.dbo.casetas_lis_full_conciliations 
 		--insert into sistemas.dbo.casetas_lis_full_conciliations 
 	if ((select options.switch from sistemas.dbo.casetas_options as options where options.option_name = 'next_period') = 1)
 		begin
-		;with next_full as 
+		with next_full as 
 			(
 					select 
 							 _full.period_iave_id
@@ -530,20 +530,20 @@ BEGIN
 				--truncate table sistemas.dbo.casetas_lis_full_conciliations
 				insert into @tollbooth_next_full
 					select * from next_full 
-				;
+				
 			end
 		else 
 		   begin
 				insert into @tollbooth_next_full
-					select * from @tollbooth_no_trips 
-				;
+					select * from @tollbooth_no_trips where liq_paso = 'S' and liq_tipo_pago = '1' 
+				
 		   end
 
 		truncate table sistemas.dbo.casetas_lis_full_conciliations
 		insert into sistemas.dbo.casetas_lis_full_conciliations 
 			select * from @tollbooth_next_full
-		;
-		print 'updating are successfull';
+		
+		print 'updating are successfull'
  end
 go
 	-- select * from sistemas.dbo.casetas_iave_periods

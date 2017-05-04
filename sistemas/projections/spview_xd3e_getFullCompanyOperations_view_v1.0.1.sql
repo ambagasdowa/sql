@@ -171,7 +171,8 @@ declare @canceled table
 							peso decimal(18,6),
 							Area nvarchar(60) collate SQL_Latin1_General_CP1_CI_AS,
 							Tmov char(1) collate SQL_Latin1_General_CP1_CI_AS,
-							Cporte  nvarchar(60) collate SQL_Latin1_General_CP1_CI_AS
+							Cporte  nvarchar(60) collate SQL_Latin1_General_CP1_CI_AS,
+							id_tipo_operacion int
 						)
 
 --set @year = YEAR(CURRENT_TIMESTAMP)
@@ -1411,6 +1412,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									bonampakdb.dbo.trafico_guia as flete
 							inner join 
@@ -1476,6 +1478,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									macuspanadb.dbo.trafico_guia as flete
 							inner join 
@@ -1541,6 +1544,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									tespecializadadb.dbo.trafico_guia as flete
 							inner join 
@@ -1651,6 +1655,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									bonampakdb.dbo.trafico_guia as flete
 							inner join 
@@ -1716,6 +1721,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									macuspanadb.dbo.trafico_guia as flete
 							inner join 
@@ -1781,6 +1787,7 @@ set language spanish
 								) as 'Area',
 								zpol.Tmov,
 								zpol.Cporte
+								,flete.id_tipo_operacion
 							from 
 									tespecializadadb.dbo.trafico_guia as flete
 							inner join 

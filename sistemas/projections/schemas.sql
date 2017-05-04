@@ -86,7 +86,12 @@ select * from "sistemas"."dbo"."projections_fraccion_groups"				--	grouping frac
 
 select * from "sistemas"."dbo"."projections_type_configs"
 
-select module_data_definition from "sistemas"."dbo"."projections_configs" where projections_type_configs_id = 3
+select * from sistemas.dbo.projections_configs
+
+|
+
+
+select * from sistemas.dbo.projections_view_configurations
 
 
 
@@ -103,6 +108,9 @@ select * from "sistemas"."dbo"."projections_view_closed_period_units"   	--	sele
 select * from "sistemas"."dbo"."projections_view_fractions"				-- 	fractions by company
 
 
+select * from sistemas.dbo.projections_view_closed_period_units --closed periods
+
+
 
 select * from sistemas.dbo.projections_view_indicators_periods
 
@@ -111,22 +119,45 @@ where cyear ='2017' and mes = 'enero' and area = 'CUAUTITLAN' and fraccion = 'GR
 select * from sistemas.dbo.projections_view_indicators_periods
 where cyear ='2017' and mes = 'enero' and  area = 'ORIZABA' and fraccion = 'GRANEL'
 
+select * from sistemas.dbo.projections_view_bussiness_units
 
 
 
 
 
+-- ====================================== Detail ======================================= --
+
+select * from sistemas.dbo.projections_view_indicators_periods 
+where  cyear ='2017' and mes = 'Febrero' and  area = 'GUADALAJARA' --and dat.fraccion = 'PRODUCTOS VARIOS'
+
+select * from 
+		sistemas.dbo.projections_view_canceled_periods 
+where 
+		year(fecha_cancelacion) = '2017' and month(fecha_cancelacion) = '02'
+	and	
+		area = 'GUADALAJARA' and mes = 'Febrero' and id_fraccion = 5
+
+select no_viaje,no_guia,fecha_guia,fecha_confirmacion,num_guia,id_unidad,personalnombre,sustituye_documento,status_guia,kms_guia,subtotal from bonampakdb.dbo.trafico_guia 
+	where id_area = 2 
+	and id_fraccion = 5 
+	and year(fecha_guia) = '2017' 
+	and month(fecha_guia) = '02'
+	and status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|')) 
+	and prestamo <> 'P'
+	and tipo_doc = 2 
 
 
 
 
 
+-- fecth thge 
+--select
+--	top 0 *
+--from
+--	sistemas.dbo.projections_configs
 
 
-
-
-
-
+select * from sistemas.dbo.projections_view_indicators_periods_fleets
 
 
 
