@@ -1768,7 +1768,435 @@ select
 	,non_zero
 from operations_ind
 
-										
+						
+
+
+-- ==================================================================================================================== --	
+-- =============================      full dispatched indicators for all company    =================================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('projections_view_full_company_dispatched_indicators', 'V') IS NOT NULL		
+    DROP VIEW projections_view_full_company_dispatched_indicators;
+    
+create view projections_view_full_company_dispatched_indicators
+as 
+(
+	select 
+			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
+			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count 	
+	from 
+			sistemas.dbo.projections_view_full_dispatched_tbk_periods
+	union all
+	select 
+			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
+			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count 			
+	from 
+			sistemas.dbo.projections_view_full_dispatched_atm_periods
+	union all
+	select 
+			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
+			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count
+	from 
+			sistemas.dbo.projections_view_full_dispatched_tei_periods
+) 
+
+-- ==================================================================================================================== --	
+-- ===============================      full indicators DISPACHT?? for bonampakdb	     ============================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('projections_view_full_dispatched_tbk_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_full_dispatched_tbk_periods;
+create view projections_view_full_dispatched_tbk_periods
+with encryption
+as
+	with guia_tbk as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cast(viaje.f_despachado as date) as 'f_despachado'
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								descripcion
+						from
+								bonampakdb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								bonampakdb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								bonampakdb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								bonampakdb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							bonampakdb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'1' as 'company'
+					,year("viaje".f_despachado) as 'cyear'
+			from 
+						bonampakdb.dbo.trafico_viaje as "viaje"
+				left join 
+						bonampakdb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+--					and 
+--						guia.prestamo <> 'P'
+--					and 
+--						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				left join
+						bonampakdb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				left join
+						bonampakdb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				left join 
+						bonampakdb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(viaje.f_despachado) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+				,"guia".cyear
+	from 
+				guia_tbk as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia 
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+				,"guia".cyear
+
+-- ==================================================================================================================== --	
+-- ===============================      full indicators DISPACHT?? for macuspanadb	     ============================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('projections_view_full_dispatched_atm_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_full_dispatched_atm_periods;
+create view projections_view_full_dispatched_atm_periods
+with encryption
+as
+	with guia_atm as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cast(viaje.f_despachado as date) as 'f_despachado'
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								descripcion
+						from
+								macuspanadb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								macuspanadb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								macuspanadb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								macuspanadb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							macuspanadb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'2' as 'company'
+					,year("viaje".f_despachado) as 'cyear'
+			from 
+						macuspanadb.dbo.trafico_viaje as "viaje"
+				left join 
+						macuspanadb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+--					and 
+--						guia.prestamo <> 'P'
+--					and 
+--						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				left join
+						macuspanadb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				left join
+						macuspanadb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				left join 
+						macuspanadb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(viaje.f_despachado) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+				,"guia".cyear
+	from 
+				guia_atm as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia 
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+				,"guia".cyear
+				
+				
+-- ==================================================================================================================== --	
+-- ===============================      full indicators DISPACHT?? for tespecializadadb	 ============================== --
+-- ==================================================================================================================== --
+use sistemas
+IF OBJECT_ID ('projections_view_full_dispatched_tei_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_full_dispatched_tei_periods;
+create view projections_view_full_dispatched_tei_periods
+with encryption
+as
+	with guia_tei as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cast(viaje.f_despachado as date) as 'f_despachado'
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								descripcion
+						from
+								tespecializadadb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								tespecializadadb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								tespecializadadb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								tespecializadadb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							tespecializadadb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'3' as 'company'
+					,year("viaje".f_despachado) as 'cyear'
+			from 
+						tespecializadadb.dbo.trafico_viaje as "viaje"
+				left join 
+						tespecializadadb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+--					and 
+--						guia.prestamo <> 'P'
+--					and 
+--						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				left join
+						tespecializadadb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				left join
+						tespecializadadb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				left join 
+						tespecializadadb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(viaje.f_despachado) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".f_despachado) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+				,"guia".cyear
+	from 
+				guia_tei as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".fecha_guia 
+				,"guia".mes ,"guia".f_despachado ,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+				,"guia".cyear
+
 -- ======================================================================================================================================================================= --
 --  Full Query for monthy opsInd
 -- ====================================================================================================================================================================== --
@@ -2013,7 +2441,7 @@ WITH operations_ind
 							cast ((select '0') as int)
 					end as 'non_zero'
 
-			from
+			from	--sistemas.dbo.projections_view_full_company_dispatched_indicators
 					sistemas.dbo.view_sp_xd6z_getFullCompanyOperationsDispatch as indupt						
 			group by
 					 indupt.company,indupt.id_area,indupt.area
@@ -2115,194 +2543,193 @@ select
 -- FULL view againts a store by month
 --================================================================================================================================================================================
 
+
 		
 use sistemas
 	if OBJECT_ID('projections_view_indicators_dispatch_periods_full_ops', 'V') is not null
 		drop view projections_view_indicators_dispatch_periods_full_ops
 	create view projections_view_indicators_dispatch_periods_full_ops
-	
 	with encryption
-	
 	as
-
-WITH operations_ind
-					(  
-							 company,id_area,area
---							,id_flota,flota
-							,id_tipo_operacion
-							,id_fraccion
-							,fraccion
-							,cyear,mes
-							,kms_real
-							,kms_viaje
-							,subtotal
-							,peso
-							,non_zero
-					)
-	as (
-			select 
-					 indupt.company,indupt.id_area
-					 ,--indupt.area
---				case	
---				 	when indupt.id_tipo_operacion in 	(
---				 											select confi.module_data_definition from sistemas.dbo.projections_configs as confi
---				 											where confi.projections_type_configs_id = 5
---				 										)
---				 		then
---				 			(
---			 					select module_field_translation from sistemas.dbo.projections_configs as conf 
---			 					where conf.projections_type_configs_id = 5 and conf.module_data_definition = indupt.id_tipo_operacion
---				 			)
---				 	else
---				 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
---				  end as 'area'
-				  
-				case	
-				 	when indupt.id_tipo_operacion in 	(
-															12
-				 										)
-				 		then
-				 			(
-									'LA PAZ'
-				 			)
-				 	else
-				 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
-				  end as 'area'
-				  
---					,indupt.id_flota,indupt.flota
-					,indupt.id_tipo_operacion
-					,indupt.id_fraccion
---					,indupt.fraccion
-					,case
-						when indupt.trip_count is null
-							then 'VACIO'
-						else
-							indupt.fraccion
-					end as 'fraccion'
-					,year(indupt.f_despachado) as 'cyear'
-					,indupt.mes
-					--,tipo_de_operacion
-					,case
-						when indupt.trip_count = 1
-							then sum(indupt.kms_real)
-						when indupt.trip_count is null
-							then sum(isnull(indupt.kms_real,0))
-						else
-							cast ((select '0') as int)
-					end as 'kms_real'
---					,sum(kms_real) as 'kms_real'
-					,case
-						when indupt.trip_count = 1
-							then sum(indupt.kms_viaje)
-						when indupt.trip_count is null
-							then sum(isnull(indupt.kms_viaje,0))
-						else
-							cast ((select '0') as int)
-					end as 'kms_viaje'
-					--,sum(kms_viaje) as 'kms-viaje'
-					,sum(indupt.subtotal) as 'subtotal',sum(indupt.peso) as 'peso'
-					,case
-						when indupt.trip_count = 1
-							then count(indupt.trip_count)
-						when indupt.trip_count is null
-							then count(indupt.id_area)
-						else
-							cast ((select '0') as int)
-					end as 'non_zero'
-			from
-					sistemas.dbo.view_sp_xd6z_getFullCompanyOperationsDispatch as indupt						
-			group by
-					 indupt.company,indupt.id_area,indupt.area
---					,indupt.id_flota,indupt.flota
-					,indupt.id_tipo_operacion
-					,indupt.id_fraccion,indupt.fraccion				
-					,year(indupt.f_despachado)
-					,indupt.mes
-					,indupt.trip_count		
-		)
-select
-		row_number()
-	over 
-		(order by id_area) as 
-							id,
-							company,
-							id_area,
-							area,
---							id_flota,
---							flota,
---							id_tipo_operacion,
---							tipo_operacion,
-							id_fraccion,
-							fraccion,
-							cyear,
-							mes,
-							kms,
-							subtotal,
-							peso,
-							non_zero
+	with operations_ind
+						(  
+								 company,id_area,area
+	--							,id_flota,flota
+								,id_tipo_operacion
+								,id_fraccion
+								,fraccion
+								,cyear,mes
+								,kms_real
+								,kms_viaje
+								,subtotal
+								,peso
+								,non_zero
+						)
+		as (
+				select 
+						 indupt.company,indupt.id_area
+						 ,--indupt.area
+	--				case	
+	--				 	when indupt.id_tipo_operacion in 	(
+	--				 											select confi.module_data_definition from sistemas.dbo.projections_configs as confi
+	--				 											where confi.projections_type_configs_id = 5
+	--				 										)
+	--				 		then
+	--				 			(
+	--			 					select module_field_translation from sistemas.dbo.projections_configs as conf 
+	--			 					where conf.projections_type_configs_id = 5 and conf.module_data_definition = indupt.id_tipo_operacion
+	--				 			)
+	--				 	else
+	--				 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
+	--				  end as 'area'
+					  
+					case	
+					 	when indupt.id_tipo_operacion in 	(
+																12
+					 										)
+					 		then
+					 			(
+										'LA PAZ'
+					 			)
+					 	else
+					 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
+					  end as 'area'
+					  
+	--					,indupt.id_flota,indupt.flota
+						,indupt.id_tipo_operacion
+						,indupt.id_fraccion
+	--					,indupt.fraccion
+						,case
+							when indupt.id_fraccion is null
+								then 'VACIO'
+							else
+								indupt.fraccion
+						end as 'fraccion'
+						,year(indupt.f_despachado) as 'cyear'
+						,indupt.mes
+						--,tipo_de_operacion
+						,case
+							when indupt.trip_count = 1
+								then sum(indupt.kms_real)
+							when indupt.trip_count is null
+								then sum(isnull(indupt.kms_real,0))
+							else
+								cast ((select '0') as int)
+						end as 'kms_real'
+	--					,sum(kms_real) as 'kms_real'
+						,case
+							when indupt.trip_count = 1
+								then sum(indupt.kms_viaje)
+							when indupt.trip_count is null
+								then sum(isnull(indupt.kms_viaje,0))
+							else
+								cast ((select '0') as int)
+						end as 'kms_viaje'
+						--,sum(kms_viaje) as 'kms-viaje'
+						,sum(indupt.subtotal) as 'subtotal',sum(indupt.peso) as 'peso'
+						,case
+							when indupt.trip_count = 1
+								then count(indupt.trip_count)
+							when indupt.trip_count is null
+								then count(indupt.id_area)
+							else
+								cast ((select '0') as int)
+						end as 'non_zero'
+				from	
+						sistemas.dbo.projections_view_full_company_dispatched_indicators as indupt
+						--sistemas.dbo.view_sp_xd6z_getFullCompanyOperationsDispatch as indupt						
+				group by
+						 indupt.company,indupt.id_area,indupt.area
+	--					,indupt.id_flota,indupt.flota
+						,indupt.id_tipo_operacion
+						,indupt.id_fraccion,indupt.fraccion				
+						,year(indupt.f_despachado)
+						,indupt.mes
+						,indupt.trip_count		
+			)
+	select
+			row_number()
+		over 
+			(order by id_area) as 
+								id,
+								company,
+								id_area,
+								area,
+	--							id_flota,
+	--							flota,
+	--							id_tipo_operacion,
+	--							tipo_operacion,
+								id_fraccion,
+								fraccion,
+								cyear,
+								mes,
+								kms,
+								subtotal,
+								peso,
+								non_zero
 	from(
-		select 			
-				opsind.company
-				,cast(opsind.id_area as int)  as 'id_area'
-				,
---				case	
---				 	when opsind.id_tipo_operacion in 	(
---				 											select confi.module_data_definition from sistemas.dbo.projections_configs as confi
---				 											where confi.projections_type_configs_id = 5
---				 										)
---				 		then
---				 			(
---			 					select module_field_translation from sistemas.dbo.projections_configs as conf 
---			 					where conf.projections_type_configs_id = 5 and conf.module_data_definition = opsind.id_tipo_operacion
---				 			)
---				 	else
-				 		opsind.area collate SQL_Latin1_General_CP1_CI_AS as 'area'
-				  --end as 'area'
---				,opsind.id_flota,opsind.flota
---				,opsind.id_tipo_operacion
---				,isnull(tipoop.tipo_operacion,'Vacio') as 'tipo_operacion'
-				,opsind.id_fraccion
-				,opsind.fraccion
-				,opsind.cyear
-				,opsind.mes
-				,case -- which field we have to show
-					when opsind.id_fraccion in ( 
-											select prfrt.projections_id_fraccion
-											from sistemas.dbo.projections_view_company_fractions as prfrt
-											where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
-						then 
-							(sum(opsind.kms_viaje)*2)
-					when opsind.id_fraccion in (	
-											select prtrf.projections_id_fraccion
-											from sistemas.dbo.projections_view_company_fractions as prtrf
-											where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 2) -- means otros
-						then 
+			select 			
+					opsind.company
+					,cast(opsind.id_area as int)  as 'id_area'
+					,
+	--				case	
+	--				 	when opsind.id_tipo_operacion in 	(
+	--				 											select confi.module_data_definition from sistemas.dbo.projections_configs as confi
+	--				 											where confi.projections_type_configs_id = 5
+	--				 										)
+	--				 		then
+	--				 			(
+	--			 					select module_field_translation from sistemas.dbo.projections_configs as conf 
+	--			 					where conf.projections_type_configs_id = 5 and conf.module_data_definition = opsind.id_tipo_operacion
+	--				 			)
+	--				 	else
+					 		opsind.area collate SQL_Latin1_General_CP1_CI_AS as 'area'
+					  --end as 'area'
+	--				,opsind.id_flota,opsind.flota
+	--				,opsind.id_tipo_operacion
+	--				,isnull(tipoop.tipo_operacion,'Vacio') as 'tipo_operacion'
+					,opsind.id_fraccion
+					,opsind.fraccion
+					,opsind.cyear
+					,opsind.mes
+					,case -- which field we have to show
+						when opsind.id_fraccion in ( 
+												select prfrt.projections_id_fraccion
+												from sistemas.dbo.projections_view_company_fractions as prfrt
+												where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
+							then 
+								(sum(opsind.kms_viaje)*2)
+						when opsind.id_fraccion in (	
+												select prtrf.projections_id_fraccion
+												from sistemas.dbo.projections_view_company_fractions as prtrf
+												where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 2) -- means otros
+							then 
+								sum(opsind.kms_real)
+						else
 							sum(opsind.kms_real)
-					else
-						sum(opsind.kms_real)
-				end as 'kms'
-				,sum(opsind.subtotal) as 'subtotal'
-				,sum(opsind.peso) as 'peso'
-				,sum(opsind.non_zero) as 'non_zero'
-		from 
-				operations_ind opsind
---				left join 
---							sistemas.dbo.projections_view_operations_types as tipoop 
---							on opsind.company = tipoop.company_id and opsind.id_tipo_operacion = tipoop.id_tipo_operacion
-
-		group by 
-				 opsind.company
-				 ,opsind.id_area
-				 ,opsind.area
--- 				 ,opsind.id_flota
--- 				 ,opsind.flota
--- 				 ,opsind.id_tipo_operacion
--- 				 ,tipoop.tipo_operacion
-				 ,opsind.id_fraccion
-				 ,opsind.fraccion
-				 ,opsind.cyear
-				 ,opsind.mes
-		) as result
+					end as 'kms'
+					,sum(opsind.subtotal) as 'subtotal'
+					,sum(opsind.peso) as 'peso'
+					,sum(opsind.non_zero) as 'non_zero'
+			from 
+					operations_ind opsind
+	--				left join 
+	--							sistemas.dbo.projections_view_operations_types as tipoop 
+	--							on opsind.company = tipoop.company_id and opsind.id_tipo_operacion = tipoop.id_tipo_operacion
+	
+			group by 
+					 opsind.company
+					 ,opsind.id_area
+					 ,opsind.area
+	-- 				 ,opsind.id_flota
+	-- 				 ,opsind.flota
+	-- 				 ,opsind.id_tipo_operacion
+	-- 				 ,tipoop.tipo_operacion
+					 ,opsind.id_fraccion
+					 ,opsind.fraccion
+					 ,opsind.cyear
+					 ,opsind.mes
+	) as result
 		
 		
 		
@@ -2398,6 +2825,433 @@ as
 -- ==================================================================================================================================== --
 -- Core Canceled PortLetters
 -- ==================================================================================================================================== --
+
+-- ==================================================================================================================================== --
+-- 														View fixed Canceled tbk
+-- ==================================================================================================================================== --
+
+use sistemas
+
+IF OBJECT_ID ('projections_view_canceled_tbk_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_canceled_tbk_periods;
+
+--set language English
+create view projections_view_canceled_tbk_periods
+with encryption
+as	
+/*===============================================================================
+ Author         : Jesus Baizabal
+ email			: Baizabal.jesus@gmail.com
+ Create date    : June 2, 2017
+ Description    : 
+ @license       : MIT License (http://www.opensource.org/licenses/mit-license.php)
+ Database owner : bonampak s.a de c.v 
+ @status        : Stable
+ @version		: 1.0.2
+ ===============================================================================*/
+
+with "canceled" as (
+	select
+		'' as 'projections_period_id'
+		,(
+			select 
+					nombre
+			from 
+					bonampakdb.dbo.desp_flotas as flt
+			where
+					flt.id_flota = matto.id_flota
+		
+		) as 'flota'
+		,matto.id_flota as 'id_flota' 
+		,flete.id_fraccion
+	    ,flete.no_viaje,flete.id_area,'1' as 'company',flete.num_guia,flete.no_guia,flete.subtotal
+	    ,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
+	    ,cast(year(flete.fecha_cancelacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_cancelacion)), 2) as 'cancelacion'
+	    ,cast(year(flete.fecha_confirmacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_confirmacion)), 2) as 'confirmacion'
+	    ,cast(year(flete.fecha_guia) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_guia)), 2) as 'guia'
+		,case (select datename(mm,flete.fecha_cancelacion))
+			when 	'January' 	then 	'Enero'
+			when 	'February' 	then 	'Febrero'
+			when 	'March'		then	'Marzo'
+			when 	'April'		then	'Abril'
+			when	'May'		then	'Mayo'
+			when	'June'		then	'Junio'
+			when	'July'		then	'Julio'
+			when	'August'	then	'Agosto'
+			when	'September'	then	'Septiembre'
+			when	'October'	then	'Octubre'
+			when	'November'	then	'Noviembre'
+			when	'December'	then	'Diciembre'
+		 end as 'mes'
+		,(
+			select 
+					sum(rg.peso)
+			from 
+					bonampakdb.dbo.trafico_renglon_guia as rg
+			where 
+					rg.no_guia = flete.no_guia
+				and rg.id_area = flete.id_area
+		) as 'peso'
+		,case
+			when flete.id_tipo_operacion = '12'
+				then 'LA PAZ'
+			else
+					(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								bonampakdb.dbo.general_area as areas
+						where 
+								areas.id_area = flete.id_area
+					) 
+		end as 'Area'
+		,zpol.Tmov
+		,zpol.Cporte
+		,flete.id_tipo_operacion	
+	from 
+				bonampakdb.dbo.trafico_guia as flete
+		inner join 
+					(
+						select 
+							Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
+						CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
+						Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
+					from 
+						integraapp.dbo.zpoling 
+					where 
+						Cpny = 'bonampakdb'
+						and Estatus = 1
+						and Tmov = 'C'
+						group by Tmov,Tmov,CPorte,Area
+					) as zpol on zpol.Cporte = flete.num_guia
+		inner join 
+				bonampakdb.dbo.mtto_unidades as matto
+					on matto.id_unidad = flete.id_unidad
+	where 
+				flete.status_guia = 'B' 
+			and	flete.tipo_doc = 2				
+			and	flete.prestamo = 'N'
+		    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))
+)
+select
+			 "cc".projections_period_id,"cc".flota,"cc".id_flota,"cc".id_fraccion,"cc".no_viaje,"cc".id_area,"cc".company,"cc".num_guia,"cc".no_guia,"cc".subtotal
+	    	,"cc".fecha_cancelacion,"cc".fecha_confirmacion,"cc".fecha_guia
+	    	,"cc".mes,"cc".peso,"cc".Area,"cc".Tmov,"cc".Cporte,"cc".id_tipo_operacion
+from
+			"canceled" as "cc"
+where
+			(	-- if 
+				(
+						"cc".fecha_confirmacion is not null 
+					and -- if
+						(
+							"cc".cancelacion  >  "cc".confirmacion
+						)
+					or -- else
+						(
+							("cc".cancelacion = "cc".confirmacion) 
+						and
+							("cc".confirmacion <> "cc".guia)
+						)
+				)
+			or -- else
+				(
+						"cc".fecha_confirmacion is null
+					and 
+						(
+							("cc".cancelacion > "cc".guia)
+						)
+				)
+			)
+
+
+
+-- ==================================================================================================================================== --	
+
+-- ==================================================================================================================================== --
+-- 														View fixed Canceled atm
+-- ==================================================================================================================================== --
+
+use sistemas
+
+IF OBJECT_ID ('projections_view_canceled_atm_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_canceled_atm_periods;
+
+--set language English
+create view projections_view_canceled_atm_periods
+with encryption
+as	
+/*===============================================================================
+ Author         : Jesus Baizabal
+ email			: Baizabal.jesus@gmail.com
+ Create date    : June 2, 2017
+ Description    : 
+ @license       : MIT License (http://www.opensource.org/licenses/mit-license.php)
+ Database owner : bonampak s.a de c.v 
+ @status        : Stable
+ @version		: 1.0.2
+ ===============================================================================*/
+
+with "canceled" as (
+	select
+		'' as 'projections_period_id'
+		,(
+			select 
+					nombre
+			from 
+					macuspanadb.dbo.desp_flotas as flt
+			where
+					flt.id_flota = matto.id_flota
+		
+		) as 'flota'
+		,matto.id_flota as 'id_flota' 
+		,flete.id_fraccion
+	    ,flete.no_viaje,flete.id_area,'2' as 'company',flete.num_guia,flete.no_guia,flete.subtotal
+	    ,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
+	    ,cast(year(flete.fecha_cancelacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_cancelacion)), 2) as 'cancelacion'
+	    ,cast(year(flete.fecha_confirmacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_confirmacion)), 2) as 'confirmacion'
+	    ,cast(year(flete.fecha_guia) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_guia)), 2) as 'guia'
+		,case (select datename(mm,flete.fecha_cancelacion))
+			when 	'January' 	then 	'Enero'
+			when 	'February' 	then 	'Febrero'
+			when 	'March'		then	'Marzo'
+			when 	'April'		then	'Abril'
+			when	'May'		then	'Mayo'
+			when	'June'		then	'Junio'
+			when	'July'		then	'Julio'
+			when	'August'	then	'Agosto'
+			when	'September'	then	'Septiembre'
+			when	'October'	then	'Octubre'
+			when	'November'	then	'Noviembre'
+			when	'December'	then	'Diciembre'
+		 end as 'mes'
+		,(
+			select 
+					sum(rg.peso)
+			from 
+					macuspanadb.dbo.trafico_renglon_guia as rg
+			where 
+					rg.no_guia = flete.no_guia
+				and rg.id_area = flete.id_area
+		) as 'peso'
+		,case
+			when flete.id_tipo_operacion = '12'
+				then 'LA PAZ'
+			else
+					(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								macuspanadb.dbo.general_area as areas
+						where 
+								areas.id_area = flete.id_area
+					) 
+		end as 'Area'
+		,zpol.Tmov
+		,zpol.Cporte
+		,flete.id_tipo_operacion	
+	from 
+				macuspanadb.dbo.trafico_guia as flete
+		inner join 
+					(
+						select 
+							Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
+						CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
+						Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
+					from 
+						integraapp.dbo.zpoling 
+					where 
+						Cpny = 'macuspanadb'
+						and Estatus = 1
+						and Tmov = 'C'
+						group by Tmov,Tmov,CPorte,Area
+					) as zpol on zpol.Cporte = flete.num_guia
+		inner join 
+				macuspanadb.dbo.mtto_unidades as matto
+					on matto.id_unidad = flete.id_unidad
+	where 
+				flete.status_guia = 'B' 
+			and	flete.tipo_doc = 2				
+			and	flete.prestamo = 'N'
+		    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))
+)
+select
+			 "cc".projections_period_id,"cc".flota,"cc".id_flota,"cc".id_fraccion,"cc".no_viaje,"cc".id_area,"cc".company,"cc".num_guia,"cc".no_guia,"cc".subtotal
+	    	,"cc".fecha_cancelacion,"cc".fecha_confirmacion,"cc".fecha_guia
+	    	,"cc".mes,"cc".peso,"cc".Area,"cc".Tmov,"cc".Cporte,"cc".id_tipo_operacion
+from
+			"canceled" as "cc"
+where
+			(	-- if 
+				(
+						"cc".fecha_confirmacion is not null 
+					and -- if
+						(
+							"cc".cancelacion  >  "cc".confirmacion
+						)
+					or -- else
+						(
+							("cc".cancelacion = "cc".confirmacion) 
+						and
+							("cc".confirmacion <> "cc".guia)
+						)
+				)
+			or -- else
+				(
+						"cc".fecha_confirmacion is null
+					and 
+						(
+							("cc".cancelacion > "cc".guia)
+						)
+				)
+			)
+
+
+
+-- ==================================================================================================================================== --	
+
+-- ==================================================================================================================================== --
+-- 														View fixed Canceled tei
+-- ==================================================================================================================================== --
+
+use sistemas
+
+IF OBJECT_ID ('projections_view_canceled_tei_periods', 'V') IS NOT NULL		
+    DROP VIEW projections_view_canceled_tei_periods;
+
+--set language English
+create view projections_view_canceled_tei_periods
+with encryption
+as	
+/*===============================================================================
+ Author         : Jesus Baizabal
+ email			: Baizabal.jesus@gmail.com
+ Create date    : June 2, 2017
+ Description    : 
+ @license       : MIT License (http://www.opensource.org/licenses/mit-license.php)
+ Database owner : bonampak s.a de c.v 
+ @status        : Stable
+ @version		: 1.0.2
+ ===============================================================================*/
+
+with "canceled" as (
+	select
+		'' as 'projections_period_id'
+		,(
+			select 
+					nombre
+			from 
+					tespecializadadb.dbo.desp_flotas as flt
+			where
+					flt.id_flota = matto.id_flota
+		
+		) as 'flota'
+		,matto.id_flota as 'id_flota' 
+		,flete.id_fraccion
+	    ,flete.no_viaje,flete.id_area,'3' as 'company',flete.num_guia,flete.no_guia,flete.subtotal
+	    ,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
+	    ,cast(year(flete.fecha_cancelacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_cancelacion)), 2) as 'cancelacion'
+	    ,cast(year(flete.fecha_confirmacion) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_confirmacion)), 2) as 'confirmacion'
+	    ,cast(year(flete.fecha_guia) as varchar(4)) + right('00'+convert(varchar(2),MONTH(flete.fecha_guia)), 2) as 'guia'
+		,case (select datename(mm,flete.fecha_cancelacion))
+			when 	'January' 	then 	'Enero'
+			when 	'February' 	then 	'Febrero'
+			when 	'March'		then	'Marzo'
+			when 	'April'		then	'Abril'
+			when	'May'		then	'Mayo'
+			when	'June'		then	'Junio'
+			when	'July'		then	'Julio'
+			when	'August'	then	'Agosto'
+			when	'September'	then	'Septiembre'
+			when	'October'	then	'Octubre'
+			when	'November'	then	'Noviembre'
+			when	'December'	then	'Diciembre'
+		 end as 'mes'
+		,(
+			select 
+					sum(rg.peso)
+			from 
+					tespecializadadb.dbo.trafico_renglon_guia as rg
+			where 
+					rg.no_guia = flete.no_guia
+				and rg.id_area = flete.id_area
+		) as 'peso'
+		,case
+			when flete.id_tipo_operacion = '12'
+				then 'LA PAZ'
+			else
+					(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								tespecializadadb.dbo.general_area as areas
+						where 
+								areas.id_area = flete.id_area
+					) 
+		end as 'Area'
+		,zpol.Tmov
+		,zpol.Cporte
+		,flete.id_tipo_operacion	
+	from 
+				tespecializadadb.dbo.trafico_guia as flete
+		inner join 
+					(
+						select 
+							Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
+						CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
+						Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
+					from 
+						integraapp.dbo.zpoling 
+					where 
+						Cpny = 'tespecializadadb'
+						and Estatus = 1
+						and Tmov = 'C'
+						group by Tmov,Tmov,CPorte,Area
+					) as zpol on zpol.Cporte = flete.num_guia
+		inner join 
+				tespecializadadb.dbo.mtto_unidades as matto
+					on matto.id_unidad = flete.id_unidad
+	where 
+				flete.status_guia = 'B' 
+			and	flete.tipo_doc = 2				
+			and	flete.prestamo = 'N'
+		    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))
+)
+select
+			 "cc".projections_period_id,"cc".flota,"cc".id_flota,"cc".id_fraccion,"cc".no_viaje,"cc".id_area,"cc".company,"cc".num_guia,"cc".no_guia,"cc".subtotal
+	    	,"cc".fecha_cancelacion,"cc".fecha_confirmacion,"cc".fecha_guia
+	    	,"cc".mes,"cc".peso,"cc".Area,"cc".Tmov,"cc".Cporte,"cc".id_tipo_operacion
+from
+			"canceled" as "cc"
+where
+			(	-- if 
+				(
+						"cc".fecha_confirmacion is not null 
+					and -- if
+						(
+							"cc".cancelacion  >  "cc".confirmacion
+						)
+					or -- else
+						(
+							("cc".cancelacion = "cc".confirmacion) 
+						and
+							("cc".confirmacion <> "cc".guia)
+						)
+				)
+			or -- else
+				(
+						"cc".fecha_confirmacion is null
+					and 
+						(
+							("cc".cancelacion > "cc".guia)
+						)
+				)
+			)
+
+-- ==================================================================================================================================== --	
+		
+			
+			
 use sistemas
 
 IF OBJECT_ID ('projections_view_canceled_periods', 'V') IS NOT NULL		
@@ -2420,322 +3274,120 @@ as
  ===============================================================================*/
 
 -- ========================================= understanding Canceled ============================= --
-
-select
-	'' as 'projections_period_id'
-	,(
-		select 
-				nombre
-		from 
-				bonampakdb.dbo.desp_flotas as flt
-		where
-				flt.id_flota = matto.id_flota
-	
-	) as 'flota'
-	,matto.id_flota as 'id_flota' 
-	,flete.id_fraccion
-    ,flete.no_viaje,flete.id_area,'1' as 'company',flete.num_guia,flete.no_guia,flete.subtotal,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
-	,case (select datename(mm,flete.fecha_cancelacion))
-		when 	'January' 	then 	'Enero'
-		when 	'February' 	then 	'Febrero'
-		when 	'March'		then	'Marzo'
-		when 	'April'		then	'Abril'
-		when	'May'		then	'Mayo'
-		when	'June'		then	'Junio'
-		when	'July'		then	'Julio'
-		when	'August'	then	'Agosto'
-		when	'September'	then	'Septiembre'
-		when	'October'	then	'Octubre'
-		when	'November'	then	'Noviembre'
-		when	'December'	then	'Diciembre'
-	 end as 'mes'
-	,(
-		select 
-				sum(rg.peso)
-		from 
-				bonampakdb.dbo.trafico_renglon_guia as rg
-		where 
-				rg.no_guia = flete.no_guia
-			and rg.id_area = flete.id_area
-	) as 'peso'
-	,case
-		when flete.id_tipo_operacion = '12'
-			then 'LA PAZ'
-		else
-				(
-					select
-							ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
-					from 
-							bonampakdb.dbo.general_area as areas
-					where 
-							areas.id_area = flete.id_area
-				) 
-	end as 'Area'
-	,zpol.Tmov
-	,zpol.Cporte
-	,flete.id_tipo_operacion	
-from 
-			bonampakdb.dbo.trafico_guia as flete
-	inner join 
-				(
-					select 
-						Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
-					CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
-					Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
-				from 
-					integraapp.dbo.zpoling 
-				where 
-					Cpny = 'bonampakdb'
-					and Estatus = 1
-					and Tmov = 'C'
-					--and CPorte = 'OO-039659'
-					group by Tmov,Tmov,CPorte,Area
-				) as zpol on zpol.Cporte = flete.num_guia
-	inner join 
-			bonampakdb.dbo.mtto_unidades as matto
-				on matto.id_unidad = flete.id_unidad
-where 
-			flete.status_guia = 'B' 
-		and	flete.tipo_doc = 2				
-		and	flete.prestamo = 'N'
-	    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))									
-		and	
-			(	-- if 
-				(
-						flete.fecha_confirmacion is not null 
-					and -- if
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )
-						)
-					or -- else
-						(
-							((right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) = (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )) 
-						and
-							(right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) ) <> (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			or -- else
-				(
-						flete.fecha_confirmacion is null
-					and 
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) > (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			)
+select * from sistemas.dbo.projections_view_canceled_tbk_periods
+		union all -- ========================= Macuspana ======================== --
+select * from sistemas.dbo.projections_view_canceled_atm_periods
+		union all -- ========================= Cuautitlan ======================== --
+select * from sistemas.dbo.projections_view_canceled_tei_periods
+--select
+--	'' as 'projections_period_id'
+--	,(
+--		select 
+--				nombre
+--		from 
+--				bonampakdb.dbo.desp_flotas as flt
+--		where
+--				flt.id_flota = matto.id_flota
+--	
+--	) as 'flota'
+--	,matto.id_flota as 'id_flota' 
+--	,flete.id_fraccion
+--    ,flete.no_viaje,flete.id_area,'1' as 'company',flete.num_guia,flete.no_guia,flete.subtotal,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
+--	,case (select datename(mm,flete.fecha_cancelacion))
+--		when 	'January' 	then 	'Enero'
+--		when 	'February' 	then 	'Febrero'
+--		when 	'March'		then	'Marzo'
+--		when 	'April'		then	'Abril'
+--		when	'May'		then	'Mayo'
+--		when	'June'		then	'Junio'
+--		when	'July'		then	'Julio'
+--		when	'August'	then	'Agosto'
+--		when	'September'	then	'Septiembre'
+--		when	'October'	then	'Octubre'
+--		when	'November'	then	'Noviembre'
+--		when	'December'	then	'Diciembre'
+--	 end as 'mes'
+--	,(
+--		select 
+--				sum(rg.peso)
+--		from 
+--				bonampakdb.dbo.trafico_renglon_guia as rg
+--		where 
+--				rg.no_guia = flete.no_guia
+--			and rg.id_area = flete.id_area
+--	) as 'peso'
+--	,case
+--		when flete.id_tipo_operacion = '12'
+--			then 'LA PAZ'
+--		else
+--				(
+--					select
+--							ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+--					from 
+--							bonampakdb.dbo.general_area as areas
+--					where 
+--							areas.id_area = flete.id_area
+--				) 
+--	end as 'Area'
+--	,zpol.Tmov
+--	,zpol.Cporte
+--	,flete.id_tipo_operacion	
+--from 
+--			bonampakdb.dbo.trafico_guia as flete
+--	inner join 
+--				(
+--					select 
+--						Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
+--					CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
+--					Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
+--				from 
+--					integraapp.dbo.zpoling 
+--				where 
+--					Cpny = 'bonampakdb'
+--					and Estatus = 1
+--					and Tmov = 'C'
+--					--and CPorte = 'OO-039659'
+--					group by Tmov,Tmov,CPorte,Area
+--				) as zpol on zpol.Cporte = flete.num_guia
+--	inner join 
+--			bonampakdb.dbo.mtto_unidades as matto
+--				on matto.id_unidad = flete.id_unidad
+--where 
+--			flete.status_guia = 'B' 
+--		and	flete.tipo_doc = 2				
+--		and	flete.prestamo = 'N'
+--	    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))									
+--		and	
+--			(	-- if 
+--				(
+--						flete.fecha_confirmacion is not null 
+--					and -- if
+--						(
+--							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )
+--						)
+--					or -- else
+--						(
+--							((right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) = (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )) 
+--						and
+--							(right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) ) <> (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
+--						)
+--				)
+--			or -- else
+--				(
+--						flete.fecha_confirmacion is null
+--					and 
+--						(
+--							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) > (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
+--						)
+--				)
+--			)
 --		and 
 --			zpol.Cporte not in 
 --								(
 --									'OO-040486','OO-040487','OO-040495','OO-040496','OO-040501','OO-040503','OO-040508','OO-040509','OO-040513','OO-040514' --> Orizaba <--> 2017-05 as 2017-04
 --									,'OG-080192' --> La Paz <--> 2017-05 as 2017-04
 --								)
-		union all -- ========================= Macuspana ======================== --
 
-select
-	'' as 'projections_period_id'
-	,(
-		select 
-				nombre
-		from 
-				macuspanadb.dbo.desp_flotas as flt
-		where
-				flt.id_flota = matto.id_flota
-	
-	) as 'flota'
-	,matto.id_flota as 'id_flota' 
-	,flete.id_fraccion
-    ,flete.no_viaje,flete.id_area,'2' as 'company',flete.num_guia,flete.no_guia,flete.subtotal,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
-	,case (select datename(mm,flete.fecha_cancelacion))
-		when 	'January' 	then 	'Enero'
-		when 	'February' 	then 	'Febrero'
-		when 	'March'		then	'Marzo'
-		when 	'April'		then	'Abril'
-		when	'May'		then	'Mayo'
-		when	'June'		then	'Junio'
-		when	'July'		then	'Julio'
-		when	'August'	then	'Agosto'
-		when	'September'	then	'Septiembre'
-		when	'October'	then	'Octubre'
-		when	'November'	then	'Noviembre'
-		when	'December'	then	'Diciembre'
-	 end as 'mes'
-	,(
-		select 
-				sum(rg.peso)
-		from 
-				macuspanadb.dbo.trafico_renglon_guia as rg
-		where 
-				rg.no_guia = flete.no_guia
-			and rg.id_area = flete.id_area
-	) as 'peso'
-	,case
-		when flete.id_tipo_operacion = '12'
-			then 'LA PAZ'
-		else
-				(
-					select
-							ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
-					from 
-							macuspanadb.dbo.general_area as areas
-					where 
-							areas.id_area = flete.id_area
-				) 
-	end as 'Area'
-	,zpol.Tmov
-	,zpol.Cporte
-	,flete.id_tipo_operacion	
-from 
-			macuspanadb.dbo.trafico_guia as flete
-	inner join 
-				(
-					select 
-						Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
-					CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
-					Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
-				from 
-					integraapp.dbo.zpoling 
-				where 
-					Cpny = 'macuspanadb'
-					and Estatus = 1
-					and Tmov = 'C'
-					--and CPorte = 'OO-039659'
-					group by Tmov,Tmov,CPorte,Area
-				) as zpol on zpol.Cporte = flete.num_guia
-	inner join 
-			macuspanadb.dbo.mtto_unidades as matto
-				on matto.id_unidad = flete.id_unidad
-where 
-			flete.status_guia = 'B' 
-		and	flete.tipo_doc = 2				
-		and	flete.prestamo = 'N'
-	    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))									
-		and	
-			(	-- if 
-				(
-						flete.fecha_confirmacion is not null 
-					and -- if
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )
-						)
-					or -- else
-						(
-							((right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) = (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )) 
-						and
-							(right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) ) <> (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			or -- else
-				(
-						flete.fecha_confirmacion is null
-					and 
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			)
-		union all -- ========================= Cuautitlan ======================== --
-select
-	'' as 'projections_period_id'
-	,(
-		select 
-				nombre
-		from 
-				tespecializadadb.dbo.desp_flotas as flt
-		where
-				flt.id_flota = matto.id_flota
-	
-	) as 'flota'
-	,matto.id_flota as 'id_flota' 
-	,flete.id_fraccion
-    ,flete.no_viaje,flete.id_area,'3' as 'company',flete.num_guia,flete.no_guia,flete.subtotal,flete.fecha_cancelacion,flete.fecha_confirmacion,flete.fecha_guia
-	,case (select datename(mm,flete.fecha_cancelacion))
-		when 	'January' 	then 	'Enero'
-		when 	'February' 	then 	'Febrero'
-		when 	'March'		then	'Marzo'
-		when 	'April'		then	'Abril'
-		when	'May'		then	'Mayo'
-		when	'June'		then	'Junio'
-		when	'July'		then	'Julio'
-		when	'August'	then	'Agosto'
-		when	'September'	then	'Septiembre'
-		when	'October'	then	'Octubre'
-		when	'November'	then	'Noviembre'
-		when	'December'	then	'Diciembre'
-	 end as 'mes'
-	,(
-		select 
-				sum(rg.peso)
-		from 
-				tespecializadadb.dbo.trafico_renglon_guia as rg
-		where 
-				rg.no_guia = flete.no_guia
-			and rg.id_area = flete.id_area
-	) as 'peso'
-	,case
-		when flete.id_tipo_operacion = '12'
-			then 'LA PAZ'
-		else
-				(
-					select
-							ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
-					from 
-							tespecializadadb.dbo.general_area as areas
-					where 
-							areas.id_area = flete.id_area
-				) 
-	end as 'Area'
-	,zpol.Tmov
-	,zpol.Cporte
-	,flete.id_tipo_operacion	
-from 
-			tespecializadadb.dbo.trafico_guia as flete
-	inner join 
-				(
-					select 
-						Tmov COLLATE SQL_Latin1_General_CP1_CI_AS as 'Tmov',
-					CPorte COLLATE SQL_Latin1_General_CP1_CI_AS as 'Cporte',
-					Area COLLATE SQL_Latin1_General_CP1_CI_AS as 'Area'
-				from 
-					integraapp.dbo.zpoling 
-				where 
-					Cpny = 'tespecializadadb'
-					and Estatus = 1
-					and Tmov = 'C'
-					--and CPorte = 'OO-039659'
-					group by Tmov,Tmov,CPorte,Area
-				) as zpol on zpol.Cporte = flete.num_guia
-	inner join 
-			tespecializadadb.dbo.mtto_unidades as matto
-				on matto.id_unidad = flete.id_unidad
-where 
-			flete.status_guia = 'B' 
-		and	flete.tipo_doc = 2				
-		and	flete.prestamo = 'N'
-	    and	flete.fecha_cancelacion between dateadd(month,-2,cast((current_timestamp) as date)) and dateadd(day,2,cast((current_timestamp) as date))									
-		and	
-			(	-- if 
-				(
-						flete.fecha_confirmacion is not null 
-					and -- if
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )
-						)
-					or -- else
-						(
-							((right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) ) = (right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) )) 
-						and
-							(right( CONVERT(VARCHAR(10), flete.fecha_confirmacion, 105), 7) ) <> (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			or -- else
-				(
-						flete.fecha_confirmacion is null
-					and 
-						(
-							(right( CONVERT(VARCHAR(10), flete.fecha_cancelacion, 105), 7) )  >  (right( CONVERT(VARCHAR(10), flete.fecha_guia, 105), 7) )
-						)
-				)
-			)
 -- ========================================= Understanding Canceled ============================= --
 
 -- ==================================================================================================================================== --

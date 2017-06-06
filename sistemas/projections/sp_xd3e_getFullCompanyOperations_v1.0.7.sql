@@ -18,16 +18,12 @@
 -- ==================================================================================================================== --
 ALTER PROCEDURE sp_build_xd3e_getFullCompanyOperations
  (
---	@year varchar(4),		-- year or years ex:'2016|2017'
---	@month varchar(2),		-- month or months ex: '01|02|03|04|05|06|07|08|09|10'
-	@Company varchar(8000),				-- companies id's ex: 1(tbk) or 2(amt) or 3(tei) or 0 (zero means all companies)
+	@Company varchar(8000),		-- companies id's ex: 1(tbk) or 2(amt) or 3(tei) or 0 (zero means all companies)
 	@bunit varchar(8000),      -- bussiness unit
-	--@doctype tinyint,			-- document type (1 = Acepted) , (2 = Cancel) , ...
 	@mode tinyint,				-- mode 0 = queryAccepted 1 = insert Accepted in period  3 = queryCancelInsert  4 = queryCancelView  5 = insertAcceptedUpt
 	@user_id int,				-- user_id when mode is set to 0 this can be empty ''
 	@period_id int				-- projections_closed_period_controls_id when mode is set to 0 this can be empty ''
  )
-
 
 /** TODO review the field definitions */
 /**
@@ -418,7 +414,7 @@ print 'Testing the result'
 			group by
 					area,mes,fraccion
 	 
-	 		select * from projections_view_indicators_periods_fleets
+	 		select * from sistemas.dbo.projections_view_indicators_periods_fleets
 			where cyear = '2017' and mes = 'Abril'
 			and company in (select company from @comp)
 			and id_area in (select units from @bunits)
@@ -428,6 +424,7 @@ print 'Testing the result'
 		
 -- closed by company is tested , not tested by bsu		
 -- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '0','0',9,'0','0'
+-- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '3','0',1,'0','0'
 	
 		
 -- ========================  set the last insert id ================================== --		
@@ -436,7 +433,7 @@ print 'Testing the result'
  * 
  * 			CHECK The periods with periods to closed
 			select 
-					@user_id as 'user_id',"timeun".next_period as 'projections_closed_periods',
+					'0' as 'user_id',"timeun".next_period as 'projections_closed_periods',
 					"timeun".id as 'projections_view_bussiness_units_id'
 					,"timeun".projections_corporations_id ,"timeun".id_area 
 					,'1' as 'projections_status_period'

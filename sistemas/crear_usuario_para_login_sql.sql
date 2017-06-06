@@ -65,6 +65,7 @@ SELECT
 			when	'FN' 	then	'Scalar Functions'
 			when	'IF'	then 	'Inline Table-Value Functions'
 			when	'TF'	then	'Table-Value Functions'
+			when	'TR'	then 	'Trigger'
 			when	'U'		then	'Base Table'
 			when	'V'		then	'View'
 		end as 'Type'
@@ -76,7 +77,10 @@ WHERE
 		'P', -- stored procedures
 		'FN', -- scalar functions
 		'IF', -- inline table-valued functions
-		'TF' -- table-valued functions
+		'TF', -- table-valued functions
+		'TR',
+		'U',
+		'V'
 		)
 ORDER BY type, name
 
@@ -295,6 +299,7 @@ where
 		-- add user to a role
 		use integraapp
 		exec sp_addrolemember 'projections' , 'cyberio'
+--		exec sp_addrolemember 'projections' , 'integra'
 		
 		use bonampakdb
 		GRANT SELECT ON "bonampakdb"."dbo"."general_area" TO "projections"
@@ -451,7 +456,7 @@ CREATE USER miguelteisa FOR LOGIN miguelteisa;
                    is only populated if the object is a table, view or a table value function.
  */
 
-   --List all access provisioned to a sql user or windows user/group directly
+   --List all access provisioned to a sql user or windows user/group directly use sistemas
      SELECT
          [UserName] = CASE princ.[type]
                          WHEN 'S' THEN princ.[name]

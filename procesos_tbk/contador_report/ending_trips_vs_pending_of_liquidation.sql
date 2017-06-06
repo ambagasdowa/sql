@@ -1,6 +1,24 @@
+/*
 -- viajes finalizados vs viajes pendientes de liquidar 
+SELECT @@DATEFIRST AS 'First Day'  
+    ,DATEPART(dw, SYSDATETIME()) AS 'Today'; 
+    
+-- Equivalent to DATEPART(DW) with DATEFIRST 1
+SELECT DATEDIFF(DAY,'20000103',CURRENT_TIMESTAMP)%7+1
 
+-- Equivalent to DATEPART(DW) with DATEFIRST 7
+SELECT DATEDIFF(DAY,'20000102',CURRENT_TIMESTAMP)%7+1
+
+-- equivalen to datefirst 1 
+SELECT (DATEPART(weekday, GETDATE()) + @@DATEFIRST - 2) % 7 + 1    
+*/  
+
+use sistemas
+
+create view report_finalizados_vs_liquidados
+as
 with "antilope" as 
+set 
 	(
 		select
 				 trafico_viaje.no_viaje
@@ -89,7 +107,7 @@ with "antilope" as
 		 ,"anticipo"."year" as 'ant_year'
 		 ,"anticipo"."month" as 'ant_month'
 		 ,"liquidacion"."week" as 'liq_week'
-		 ,"liquidacion"."year" as 'ant_year'
+		 ,"liquidacion"."year" as 'liq_year'
 		 ,"liquidacion"."month" as 'liq_month'
 		 ,"liquidacion".fecha_liquidacion
 		,case 
@@ -150,6 +168,6 @@ with "antilope" as
 		as "liquidacion" on "liquidacion".id_area = "anticipo".id_area and "liquidacion".no_viaje = "anticipo".no_viaje 
 			and
 				"anticipo"."year" = "liquidacion"."year"
-	order by 
-				"anticipo"."week"
 		
+				
+select * from sistemas.dbo.report_finalizados_vs_liquidados

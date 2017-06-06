@@ -49,7 +49,7 @@ IF OBJECT_ID ('reporter_costos', 'V') IS NOT NULL
 				(
 					"_source_company" not in ('ATMMAC','TEICUA','TCGTUL')
 				and
-					UnidadNegocio not in ('00')
+					"acc".Compania not in ('ATMMAC','TEICUA','TCGTUL')
 				)
 			)
 		group by
@@ -60,7 +60,7 @@ IF OBJECT_ID ('reporter_costos', 'V') IS NOT NULL
 -- ==================================================================================================================== --	
 -- ====================================    Check the struct of a table   ============================================== --
 -- ==================================================================================================================== --
-use integraapp	
+use integraapp
 
 SELECT
 		name,type
@@ -77,25 +77,26 @@ FROM
 WHERE
 	type IN
 		(
---		'P', -- stored procedures
+		'P'--, -- stored procedures
 --		'FN', -- scalar functions
 --		'IF', -- inline table-valued functions
 --		'TF' -- table-valued functions
-		'V' 
+--		'U',
+--		'V' 
 		)
-	and name like '%Adm%'
+--	and name like 'casetas_%'
 ORDER BY type, name
 	
 
 -- ==================================================================================================================== --	
 -- =======================================    Costos Administracion Gst    ============================================ --
 -- ==================================================================================================================== --
-		
+-- fetchCostosAdministracionGst
 		
 use integraapp
-IF OBJECT_ID ('fetchCostosAdministracionGstDin', 'V') IS NOT NULL
-	drop view fetchCostosAdministracionGstDin;
-create view fetchCostosAdministracionGstDin
+IF OBJECT_ID ('fetchCostosAdministracionGst', 'V') IS NOT NULL
+	drop view fetchCostosAdministracionGst;
+create view fetchCostosAdministracionGst
 as                                                                             
 select 
 		 "acc".Mes
@@ -130,9 +131,52 @@ where
 				(
 					"_source_company" not in ('ATMMAC','TEICUA','TCGTUL')
 				and
-					UnidadNegocio not in ('00')
+					"acc".Compania not in ('ATMMAC','TEICUA','TCGTUL')
+--				and
+--					UnidadNegocio not in ('00')
 				)
 			)
+
+
+-- ==================================================================================================================== --	
+-- =====================================    Costos Administracion Bonampak  =========================================== --
+-- ==================================================================================================================== --
+		
+		
+use integraapp
+IF OBJECT_ID ('fetchCostosAdministracionBonampak', 'V') IS NOT NULL
+	drop view fetchCostosAdministracionBonampak;
+create view fetchCostosAdministracionBonampak
+as                                                                             
+select 
+		 "acc".Mes
+		,"acc".NoCta
+		,"acc".NombreCta
+		,"acc".PerEnt
+		,"acc".Compania as 'Compañía'
+		,"acc".Tipo
+		,"acc".Entidad
+		,'' as 'distinto'
+		,"acc".TipoTransaccion as 'tipoTransacción'
+		,"acc".Referencia
+		,"acc".ReferenciaExterna as 'FechaTransacción'
+		,"acc".Descripcion as 'Descripción'
+		,"acc".Abono
+		,"acc".Cargo
+		,"acc".UnidadNegocio
+		,"acc".CentroCosto
+		,"acc".NombreEntidad
+		,"acc".Presupuesto
+		,"acc".FiscYr as 'Año'
+		,"acc"."_source_company" as 'Company'
+from 
+		sistemas.dbo.reporter_view_report_accounts as "acc"
+where 
+		"acc"."_key" = 'AD' 
+	and 
+		"acc"."_source_company" not in ('ATMMAC','TEICUA','TCGTUL')
+	and
+		"acc".Compania not in ('ATMMAC','TEICUA','TCGTUL')
 
 
 -- ==================================================================================================================== --	
@@ -276,41 +320,6 @@ from
 where 
 		"acc"."_key" = 'MV' and "acc"."_source_company" = 'TBKORI' and "acc".UnidadNegocio not in ('00')
 		
--- ==================================================================================================================== --	
--- =====================================    Costos Administracion Orizaba  ============================================ --
--- ==================================================================================================================== --
-		
-		
-use integraapp
-IF OBJECT_ID ('fetchCostosAdministracionOrizaba', 'V') IS NOT NULL
-	drop view fetchCostosAdministracionOrizaba;
-create view fetchCostosAdministracionOrizaba
-as                                                                             
-select 
-		 "acc".Mes
-		,"acc".NoCta
-		,"acc".NombreCta
-		,"acc".PerEnt
-		,"acc".Compania as 'Compañía'
-		,"acc".Tipo
-		,"acc".Entidad
-		,'' as 'distinto'
-		,"acc".TipoTransaccion as 'tipoTransacción'
-		,"acc".Referencia
-		,"acc".ReferenciaExterna as 'FechaTransacción'
-		,"acc".Descripcion as 'Descripción'
-		,"acc".Abono
-		,"acc".Cargo
-		,"acc".UnidadNegocio
-		,"acc".CentroCosto
-		,"acc".NombreEntidad
-		,"acc".Presupuesto
-		,"acc".FiscYr as 'Año'
-from 
-		sistemas.dbo.reporter_view_report_accounts as "acc"
-where 
-		"acc"."_key" = 'AD' and "acc"."_source_company" = 'TBKORI' and "acc".UnidadNegocio not in ('00')
-
 		
 -- /** END Orizaba*/
 -- ==================================================================================================================== --	

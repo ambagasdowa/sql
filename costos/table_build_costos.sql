@@ -535,7 +535,9 @@ create view reporter_view_gltran_account_rows_tbks
 				gl.FiscYr in ( year(CURRENT_TIMESTAMP), year(dateadd(year,-1,CURRENT_TIMESTAMP)) )
 			
 
-
+				
+	
+				
 -- ==================================================================================================================== --	
 -- =================================    	fetch the rowdata of GLTran		     ====================================== --
 -- ==================================================================================================================== --
@@ -560,7 +562,7 @@ create view reporter_view_gltran_account_rows_not_tbks
 									sistemas.dbo.reporter_view_sp_xs4z_accounts as costs
 									on  1 = 1
 						where
-									bsu.idsl in ('TCGTUL','ATMMAC','TEICUA')
+									bsu.idsl in ('ATMMAC','TEICUA','TCGTUL')
 					)
 	select 
 				 cost.segmentx ,cost.bsu
@@ -608,6 +610,87 @@ create view reporter_view_gltran_account_rows_not_tbks
 	where
 				gl.FiscYr in ( year(CURRENT_TIMESTAMP), year(dateadd(year,-1,CURRENT_TIMESTAMP)) )
 			
+	
+				
+			
+-- ==================================================================================================================== --	
+-- ============================    	fetch the extradata for teisa of GLTran     ====================================== --
+-- ==================================================================================================================== --
+-- select * from reporter_view_gltran_account_rows
+
+use sistemas
+
+IF OBJECT_ID ('reporter_view_gltran_account_rows_teiexs', 'V') IS NOT NULL
+	DROP VIEW reporter_view_gltran_account_rows_teiexs;
+
+create view reporter_view_gltran_account_rows_teiexs
+	with encryption as
+	
+
+	with costos as (
+						select 
+									 bsu.idbase as 'segmentx' , bsu.idsl as 'bsu'
+									,costs.rangeaccounta,costs.segmenta,costs.segmentb,costs."_key"
+						from 
+									sistemas.dbo.reporter_views_bussiness_units as bsu
+						inner join 
+									sistemas.dbo.reporter_view_sp_xs4z_accounts as costs
+									on  1 = 1
+						where
+									bsu.idsl in ('TCGTUL')
+					)
+	select 
+				 cost.segmentx 
+				,case
+					when gl.CpnyID = 'TEICUA'
+						then 'TEICUA'
+					else cost.bsu
+				 end as 'bsu'
+				,cost.rangeaccounta,cost.segmenta,cost.segmentb,cost."_key"
+				,ISNULL(gl.CuryCrAmt * gl.CuryRate,0.0) as 'Abono'
+				,ISNULL(gl.CuryDrAmt * gl.CuryRate,0.0) as 'Cargo'
+				,gl.Acct, gl.Sub, gl.CpnyID ,gl.PerPost ,gl.FiscYr 
+				,gl.PerEnt , gl.JrnlType ,gl.TranType ,gl.RefNbr 
+				,gl.ExtRefNbr ,gl.TranDesc
+	from
+				costos as cost
+		inner join 
+				integraapp.dbo.GLTran as gl
+			on 
+				substring(gl.Sub,8,2) = cost.segmentx
+			and
+				gl.Posted = 'P' and gl.LedgerID = 'REAL'
+			and 
+				gl.Acct = cost.rangeaccounta
+--			and
+--				cost.bsu = gl.CpnyID
+			and	-- start the logic for all the segments
+				(
+				--condition 1
+					( 
+							cost.segmentb is not null and cost.segmenta is not null -- when mode is equal then omit this and use the next case else use the limit defined in the or clause
+				    	and 
+						   	substring(gl.Sub,10,6)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
+					)
+	--			--condition 2
+					or
+					(
+							(cost.segmentb is null or cost.segmentb = '' ) and cost.segmenta is not null
+						and
+							substring(gl.Sub,10,6)  = replace(cost.segmenta,'?',' ')
+					)
+				-- else
+					or
+					(
+							(cost.segmentb is null or cost.segmentb = '' ) and (cost.segmenta is null or cost.segmenta = '' )
+						and
+							substring(gl.Sub,10,6) like '%'
+					)
+				 )
+	where
+				gl.FiscYr in ( year(CURRENT_TIMESTAMP), year(dateadd(year,-1,CURRENT_TIMESTAMP)) )
+		and
+			    gl.CpnyID in ('TEICUA') and substring(Sub,8,2) = 'EA'
 				
 -- ==================================================================================================================== --	
 -- =================================    	fetch the rowdata of GLTran		     ====================================== --
@@ -626,13 +709,19 @@ create view reporter_view_gltran_account_rows
 				 segmentx,bsu,rangeaccounta,segmenta,segmentb,"_key",Abono,Cargo,Acct,Sub,CpnyID
 				,PerPost ,FiscYr ,PerEnt ,JrnlType ,TranType ,RefNbr ,ExtRefNbr ,TranDesc
 	from 
-				reporter_view_gltran_account_rows_not_tbks
+				sistemas.dbo.reporter_view_gltran_account_rows_not_tbks
 	union all
 	select
 				 segmentx,bsu,rangeaccounta,segmenta,segmentb,"_key",Abono,Cargo,Acct,Sub,CpnyID
 				,PerPost ,FiscYr ,PerEnt ,JrnlType ,TranType ,RefNbr ,ExtRefNbr ,TranDesc
 	from 
-				reporter_view_gltran_account_rows_tbks
+				sistemas.dbo.reporter_view_gltran_account_rows_tbks
+	union all
+	select
+				 segmentx,bsu,rangeaccounta,segmenta,segmentb,"_key",Abono,Cargo,Acct,Sub,CpnyID
+				,PerPost ,FiscYr ,PerEnt ,JrnlType ,TranType ,RefNbr ,ExtRefNbr ,TranDesc
+	from 
+				sistemas.dbo.reporter_view_gltran_account_rows_teiexs
 				
 -- ==================================================================================================================== --	
 -- =====================    building budget report compatible with as mr_* tables   =================================== --
