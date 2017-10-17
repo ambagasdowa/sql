@@ -204,7 +204,7 @@ insert into dbo.casetas_standings values	(1,'Conciliado',CURRENT_TIMESTAMP,null,
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Catalog IavePeriods -- NEW --
+-- Catalog IavePeriods -- NEW -- DEPRECATED !!!! use casetas_iave_periods_options VIEW instead -- stand for a while /** just in case */
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 use [sistemas]
 -- go
@@ -260,10 +260,10 @@ insert into sistemas.dbo.casetas_iave_periods values
 				('1','405','Marzo 21 al 31','2017-03-21 00:00:00.000','2017-03-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','406','Abril 01 al 10','2017-04-01 00:00:00.000','2017-04-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','407','Abril 11 al 20','2017-04-11 00:00:00.000','2017-04-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
-				('1','408','Abril 21 al 30','2017-04-21 00:00:00.000','2017-04-30 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1');
+				('1','408','Abril 21 al 30','2017-04-21 00:00:00.000','2017-04-30 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 --insert into sistemas.dbo.casetas_iave_periods values
 				('1','409','Mayo 1 al 10','2017-05-01 00:00:00.000','2017-05-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
-				('1','410','Mayo 11 al 10','2017-05-11 00:00:00.000','2017-05-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
+				('1','410','Mayo 11 al 10','2017-05-11 00:00:00.000','2017-05-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 --insert into sistemas.dbo.casetas_iave_periods values
 				('1','411','Mayo 21 al 31','2017-05-21 00:00:00.000','2017-05-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','412','Junio 01 al 10','2017-06-01 00:00:00.000','2017-06-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
@@ -271,8 +271,168 @@ insert into sistemas.dbo.casetas_iave_periods values
 				('1','414','Junio 21 al 30','2017-06-21 00:00:00.000','2017-06-30 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','415','Julio 01 al 10','2017-07-01 00:00:00.000','2017-07-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
 				('1','416','Julio 11 al 20','2017-07-11 00:00:00.000','2017-07-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
-				('1','417','Julio 21 al 31','2017-07-21 00:00:00.000','2017-07-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
+				('1','417','Julio 21 al 31','2017-07-21 00:00:00.000','2017-07-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','418','ago 01 al 10','2017-08-01 00:00:00.000','2017-08-10 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','419','ag 11 al 20','2017-08-11 00:00:00.000','2017-08-20 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1'),
+				('1','420','ago 21 al 31','2017-08-21 00:00:00.000','2017-08-31 23:59:00.000','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
 --select * from sistemas.dbo.casetas_iave_periods
+
+-- ============================================================================================================== --
+-- ====== 		Compability with the engines 	   ====== --
+-- ============================================================================================================== --
+							
+use sistemas;
+IF OBJECT_ID ('casetas_iave_periods', 'V') IS NOT NULL
+    DROP VIEW casetas_iave_periods;
+
+create view casetas_iave_periods
+--with encryption
+as
+-- full compability with old table casetas_iave_periods
+		select 
+				 cast(row_number() over(partition by "_control" order by "_control") as int) as 'id'
+				,1 as 'user_id'
+				,cast(period_iave_id as int) as 'period_iave_id'
+				,period_desc collate SQL_Latin1_General_CP1_CI_AS as 'period_desc'
+				,cast(fecha_ini as datetime) as 'fecha_ini'
+				,cast(fecha_fin as datetime) as 'fecha_fin'
+				,5 as 'offset_day_minus'
+				,1 as 'offset_day_plus'
+				,CURRENT_TIMESTAMP as 'created'
+				,CURRENT_TIMESTAMP as 'modified'
+				,cast("_control" as tinyint) as '_status'
+		from 
+				sistemas.dbo.casetas_iave_periods_sources 
+		where 
+				period 
+					between 
+							(left(CONVERT(VARCHAR(10), (dateadd(month,-13,CURRENT_TIMESTAMP)), 112), 6))
+					and 
+							(left(CONVERT(VARCHAR(10), (dateadd(month,3,CURRENT_TIMESTAMP)), 112), 6))				
+				
+
+-- ============================================================================================================== --
+-- =========================================== Build iave periods =============================================== --
+-- ============================================================================================================== --
+-- original table select * from sistemas.dbo.casetas_iave_periods
+-- id,user_id,period_iave_id,period_desc,fecha_ini,fecha_fin,offset_day_minus,offset_day_plus,created,modified,_status
+-- example 1  |1       |375|Mayo 21 al 31 2016-05-21 00:00:00|2016-05-31 23:59:00 |5 |1 |2017-03-16 11:01:44 |2017-03-16 11:01:44 
+-- higest compability
+
+use sistemas;
+IF OBJECT_ID ('casetas_iave_periods_sources', 'V') IS NOT NULL
+    DROP VIEW casetas_iave_periods_sources;
+
+create view casetas_iave_periods_sources
+with encryption
+as
+with "years" as	 (
+					select 
+							 1 as "num"
+						union all
+				    select 
+							 "num" + 1 as "num"
+					from 
+				    		"years"
+				    where
+							"num" <= (DATEDIFF ( year , '2005-01-01' , CURRENT_TIMESTAMP ))
+)
+select
+		row_number()
+		over
+			(order by cyear) as
+				 "period_iave_id"
+				,"cyear"
+				,"id_month"
+				,"month"
+				,"date"
+				,"period"
+				,"per_id"
+				,"init"
+				,"end"
+				,"period_desc"
+				,"fecha_ini"
+				,"fecha_fin"
+				,"_control"
+	from
+		(
+			select
+					 year(dateadd(year,"yr"."num",'2005-01-01')) as "cyear"
+					,"mts".id_month
+					,"mts"."month"
+					,cast(year(dateadd(year,"yr"."num",'2005-01-01')) as varchar(4)) + '-' + cast("mts".id_month as varchar(2)) + '-01' as "date"
+					,cast(year(dateadd(year,"yr"."num",'2005-01-01')) as varchar(4)) + "mts".id_month as "period"
+					,"per".per_id
+					,"per".init as "init"
+					,isnull("per"."end",day(( DATEADD(month, (((year(dateadd(year,"yr"."num",'2005-01-01'))) - 1900) * 12) + "mts".id_month, -1) ))) as "end"
+					,"mts"."month" + ' ' + "per".init + ' al ' + isnull("per"."end",day(( DATEADD(month, (((year(dateadd(year,"yr"."num",'2005-01-01'))) - 1900) * 12) + "mts".id_month, -1) ))) as "period_desc"
+					, cast(year(dateadd(year,"yr"."num",'2005-01-01')) as varchar(4)) + '-' + "mts".id_month + '-' + right('00'+convert(varchar(2),"per".init), 2) +' 00:00:00.000' as "fecha_ini"
+					, cast(year(dateadd(year,"yr"."num",'2005-01-01')) as varchar(4)) + '-' + "mts".id_month + '-' + isnull("per"."end",day(( DATEADD(month, (((year(dateadd(year,"yr"."num",'2005-01-01'))) - 1900) * 12) + "mts".id_month, -1) ))) +' 23:59:00.000' as "fecha_fin"
+					,'1' as '_control'
+			from
+					"years" as "yr"
+				left join (
+							select '01' as "id_month", 'Enero' as "month"
+							union select '02' as "id_month", 'Febrero' as "month"
+							union select '03' as "id_month", 'Marzo' as "month"
+							union select '04' as "id_month", 'Abril' as "month"
+							union select '05' as "id_month", 'Mayo' as "month"
+							union select '06' as "id_month", 'Junio' as "month"
+							union select '07' as "id_month", 'Julio' as "month"
+							union select '08' as "id_month", 'Agosto' as "month"
+							union select '09' as "id_month", 'Septiembre' as "month"
+							union select '10' as "id_month", 'Octubre' as "month"
+							union select '11' as "id_month", 'Noviembre' as "month"
+							union select '12' as "id_month", 'Diciembre' as "month"
+						   )
+				as "mts" on 1 = 1
+				left join (
+							select '1' as 'per_id', '1' as 'init', '10' as 'end'
+							union select '2' as 'per_id', '11' as 'init', '20' as 'end'
+							union select '3' as 'per_id', '21' as 'init', null as 'end'
+						   )
+				as "per" on 1 = 1				
+		)
+	as result
+
+	
+-- ============================================================================================================== --
+-- ====== 		Maybe need a scroll control to set the periods to minimal for save cpu in the server 	   ====== --
+-- ============================================================================================================== --
+/** NOTE ScrollerTime */
+--controlling the offset in between clause
+
+use sistemas;
+IF OBJECT_ID ('casetas_iave_periods_options', 'V') IS NOT NULL
+    DROP VIEW casetas_iave_periods_options;
+
+create view casetas_iave_periods_options
+--with encryption
+as
+-- full compability with old table casetas_iave_periods
+		select 
+				 cast(row_number() over(partition by "_control" order by "_control") as int) as 'id'
+				,1 as 'user_id'
+				,cast(period_iave_id as int) as 'period_iave_id'
+				,period_desc collate SQL_Latin1_General_CP1_CI_AS as 'period_desc'
+				,cast(fecha_ini as datetime) as 'fecha_ini'
+				,cast(fecha_fin as datetime) as 'fecha_fin'
+				,5 as 'offset_day_minus'
+				,1 as 'offset_day_plus'
+				,CURRENT_TIMESTAMP as 'created'
+				,CURRENT_TIMESTAMP as 'modified'
+				,cast("_control" as tinyint) as '_status'
+		from 
+				sistemas.dbo.casetas_iave_periods_sources 
+		where 
+				period 
+					between 
+							(left(CONVERT(VARCHAR(10), (dateadd(month,-13,CURRENT_TIMESTAMP)), 112), 6))
+					and 
+							(left(CONVERT(VARCHAR(10), (dateadd(month,3,CURRENT_TIMESTAMP)), 112), 6))
+							
+							
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Catalog IavePeriods -- NEW -- add the id in iave when change column caseta to carril
@@ -951,56 +1111,7 @@ IF OBJECT_ID ('casetas_view_resumes', 'V') IS NOT NULL
 
 create view casetas_view_resumes
 --with encryption
-as
-	
-	--select
-	--	ctrl.id, 
-	--	--sum(_view.Monto_archivo) as 'view_monto' ,
-	--	--count(_view.id) as 'view_cruces' ,
-	--	ctrl._montos ,
-	--	ctrl.cruces,
-	--	hist.monto_conciliado as 'monto_conciliado',
-	--	hist.cruces_conciliados as 'cruces_conciliados',
-	--	(select (hist.monto_conciliado/ctrl._montos) * 100) as 'percent_montos',
-	--	(select ( convert(float(2),hist.cruces_conciliados) / convert(float(2),ctrl.cruces) ) * 100) as 'percent_cruces',
-	--	conctrl.conciliations_count as 'counter',
-	--	ctrl._filename,
-	--	ctrl._area,
-	--	ctrl.casetas_units_id,
-	--	evnt.casetas_event_name,
-	--	parent.casetas_parents_name,
-	--	stand.casetas_standings_name,
-	--	hist.id as 'historical_id',
-	--	ctrl._ctime,
-	--	ctrl.casetas_standings_id as 'fileStatId',
-	--	ctrl.casetas_corporations_id as '_cia_id'
-	--from 
-	--		sistemas.dbo.casetas_controls_files as ctrl
-	--	inner join 
-	--		sistemas.dbo.casetas_events as evnt
-	--		on ctrl.casetas_events_id = evnt.id
-	--	inner join
-	--		sistemas.dbo.casetas_parents as parent
-	--		on	ctrl.casetas_parents_id = parent.id
-	--	inner join
-	--		sistemas.dbo.casetas_standings as stand
-	--		on ctrl.casetas_standings_id = stand.id
-	--	inner join
-	--		sistemas.dbo.casetas_controls_conciliations as conctrl
-	--		on ctrl.id = conctrl.casetas_controls_files_id
-	--	left join
-	--		casetas_historical_conciliations as hist
-	--		on conctrl.casetas_controls_files_id = hist.casetas_controls_files_id and hist.id = (select max(id) from sistemas.dbo.casetas_historical_conciliations as shist where shist.casetas_controls_files_id =  hist.casetas_controls_files_id)
-	--	left join
-	--		sistemas.dbo.casetas_views as _view
-	--		on _view.casetas_controls_files_id = ctrl.id
-	--group by 
-	--		ctrl._montos,ctrl.cruces,ctrl._filename,ctrl._area,ctrl.casetas_units_id,ctrl.id,
-	--		evnt.casetas_event_name,parent.casetas_parents_name,stand.casetas_standings_name,
-	--		conctrl.conciliations_count,hist.monto_conciliado,hist.cruces_conciliados,hist.id,
-	--		ctrl._ctime,ctrl.casetas_standings_id,ctrl.casetas_corporations_id
-
-	
+as	
 select
 		ctrl.id, 
 		--ctrl._montos ,
@@ -1014,9 +1125,9 @@ select
 		(select (hist.monto_conciliado/ctrl._montos) * 100) as 'percent_montos_old',
 		(select ( convert(float(2),hist.cruces_conciliados) / convert(float(2),ctrl.cruces) ) * 100) as 'percent_cruces_old',
 
-		(select (hist.monto_conciliado/ ( ctrl._montos - (	select rs.monto_total from sistemas.dbo.casetas_view_resume_stands as rs where rs.casetas_standings_id = '9' and rs.casetas_historical_conciliations_id = hist.id and rs.casetas_controls_files_id = ctrl.id and  rs._filename = ctrl._filename) )) * 100) as 'percent_montos',
+		(select (hist.monto_conciliado/ ( ctrl._montos - isnull((select rs.monto_total from sistemas.dbo.casetas_view_resume_stands as rs where rs.casetas_standings_id = '9' and rs.casetas_historical_conciliations_id = hist.id and rs.casetas_controls_files_id = ctrl.id and  rs._filename = ctrl._filename),0) )) * 100) as 'percent_montos',
 		
-		(select ( convert(float(2),hist.cruces_conciliados) / convert(float(2),(ctrl.cruces - ( select rs.cruces_totales from sistemas.dbo.casetas_view_resume_stands as rs where rs.casetas_standings_id = '9' and rs.casetas_historical_conciliations_id = hist.id and rs.casetas_controls_files_id = ctrl.id and rs._filename = ctrl._filename))) ) * 100) as 'percent_cruces',
+		(select ( convert(float(2),hist.cruces_conciliados) / convert(float(2),(ctrl.cruces - isnull((select rs.cruces_totales from sistemas.dbo.casetas_view_resume_stands as rs where rs.casetas_standings_id = '9' and rs.casetas_historical_conciliations_id = hist.id and rs.casetas_controls_files_id = ctrl.id and rs._filename = ctrl._filename),0) )) ) * 100) as 'percent_cruces',
 		
 		conctrl.conciliations_count as 'counter',
 		ctrl._filename,
@@ -1117,7 +1228,7 @@ select
 				when vcasetas.casetas_standings_id = 5
 					then null
 				else
-					(select ((sum(float_data))/ ( ctrlfile._montos - (select sum(rsv.Monto_archivo) from sistemas.dbo.casetas_views as rsv where rsv.casetas_standings_id = '9' and rsv.casetas_historical_conciliations_id = vcasetas.casetas_historical_conciliations_id and rsv.casetas_controls_files_id = vcasetas.casetas_controls_files_id and  rsv._filename = vcasetas._filename))) * 100)
+					(select ((sum(float_data))/ ( ctrlfile._montos - isnull((select sum(rsv.Monto_archivo) from sistemas.dbo.casetas_views as rsv where rsv.casetas_standings_id = '9' and rsv.casetas_historical_conciliations_id = vcasetas.casetas_historical_conciliations_id and rsv.casetas_controls_files_id = vcasetas.casetas_controls_files_id and  rsv._filename = vcasetas._filename),0))) * 100)
 			end as 'percent_montos',
 			count(vcasetas.id) as 'cruces_totales',
 			(select ( convert(float(2),count(vcasetas.id)) / convert(float(2),ctrlfile.cruces) ) * 100) as 'percent_cruces_old',
@@ -1133,7 +1244,7 @@ select
 				when vcasetas.casetas_standings_id = 5
 					then null
 				else
-					(select ( convert(float(2),count(vcasetas.id)) / convert(float(2),( ctrlfile.cruces - (select count(rsv.id) from sistemas.dbo.casetas_views as rsv where rsv.casetas_standings_id = '9' and rsv.casetas_historical_conciliations_id = vcasetas.casetas_historical_conciliations_id and rsv.casetas_controls_files_id = vcasetas.casetas_controls_files_id and  rsv._filename = vcasetas._filename))) ) * 100)
+					(select ( convert(float(2),count(vcasetas.id)) / convert(float(2),( ctrlfile.cruces - isnull((select count(rsv.id) from sistemas.dbo.casetas_views as rsv where rsv.casetas_standings_id = '9' and rsv.casetas_historical_conciliations_id = vcasetas.casetas_historical_conciliations_id and rsv.casetas_controls_files_id = vcasetas.casetas_controls_files_id and  rsv._filename = vcasetas._filename),0))) ) * 100)
 			end as 'percent_cruces',
 			vcasetas._filename,
 			vcasetas.cia,

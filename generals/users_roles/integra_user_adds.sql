@@ -72,4 +72,8 @@ GRANT SELECT ON "tespecializadadb"."dbo"."TEI_v_dieselContraloria" to "projectio
 GRANT SELECT ON "tespecializadadb"."dbo"."trafico_proveedor" to "projections"
 GRANT SELECT ON "tespecializadadb"."dbo"."trafico_comb_fact" to "projections"
 
+-- Adding this view
+use bonampakdb
+grant select on "bonampakdb"."dbo"."bonampak_consulta_vales_diesel_aceptados" to "projections"
+
 

@@ -1,15 +1,15 @@
 -- LIS to IAVE  This is the working one
 
-declare @ctrfile nvarchar(4000), @ctrhist int;
+declare @ctrfile nvarchar(4000), @ctrhist int
 
-declare @viaje as int ; set @viaje =  '112537'
-declare @iav as nvarchar(25) ; set @iav = 'IMDM21337804..';
-declare @casetas_controls_files_id as int;
+declare @viaje as int  set @viaje =  '112537'
+declare @iav as nvarchar(25)  set @iav = 'IMDM21337804..'
+declare @casetas_controls_files_id as int
 
-set @ctrfile = '161' ; ---set the file in dbo.casetas 134
-set @casetas_controls_files_id = @ctrfile;
+set @ctrfile = '397'  ---set the file in dbo.casetas 134
+set @casetas_controls_files_id = @ctrfile
 
-declare @casetas_historical_conciliations_id as int;
+declare @casetas_historical_conciliations_id as int
 
 set @casetas_historical_conciliations_id = (select max(id) from sistemas.dbo.casetas_historical_conciliations as hist where hist.casetas_controls_files_id = @casetas_controls_files_id)
 
@@ -189,7 +189,7 @@ declare @percents as table
 										,iave_caseta_id			int
 										,name					nvarchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS -- change for cia
 										,period_iave_id			int
-                                    );
+                                    )
 
 
 declare @casetas_conciliation as table
@@ -250,7 +250,7 @@ declare @casetas_conciliation as table
                                     );
         ------------------------- drop ---------------------------------------------
 
-;with casetas_pop_concilations as 
+with casetas_pop_concilations as 
 								(
 									select	
 											 --lis.company_id,lis.id_area,lis.no_viaje
@@ -479,7 +479,7 @@ insert into @percents
 												(year(track.fecha_cruce) = year(pop.fecha_ini)) 
 					order by 
 							pop.iave_catalogo,pop.desc_caseta
-					;
+					
 
 		--select cast(replace('LIB. OTE. S.L.P.','.','') as nvarchar(100))
 
@@ -491,7 +491,7 @@ insert into @percents
 --	and no_tarjeta_iave = 'IMDM21337804..'
 --	order by description_casetas
 --	--and description_casetas = 'SALAMANCA'
---;
+--
 
 --select key_num_5,alpha_location,* from sistemas.dbo.casetas where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'))
 --	and alpha_num_code = 'IMDM21337804..'
@@ -506,9 +506,9 @@ insert into @percents
 	if ((select options.switch from sistemas.dbo.casetas_options as options where options.option_name = 'next_period') = 1)
 	  begin
 	-- > find and delete old periods 
-	--	delete from sistemas.dbo.casetas_lis_next_conciliations where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'));
+	--	delete from sistemas.dbo.casetas_lis_next_conciliations where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'))
 
---	select * from sistemas.dbo.casetas_lis_next_conciliations where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'));
+--	select * from sistemas.dbo.casetas_lis_next_conciliations where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'))
 -- =========================== Trips in next Period ================================================ --
 			
 			--insert into sistemas.dbo.casetas_lis_next_conciliations
@@ -581,7 +581,7 @@ insert into @percents
 					conciliato.casetas_standings_id = 5 and conciliato.casetas_parents_id = 8
 				and 
 					conciliato.casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|'))
-			;
+			
 		end
 -- =========================== Trips in next Period ================================================ --
 		  
@@ -670,7 +670,7 @@ insert into @percents
 						--	casetas_standings_id = 1
 						--and
 						--	casetas_parents_id = 1
-							;
+							
 
 		--insert into @casetas_conciliation
 -- =========================== Drop if don't need THIS !!! ================================================ --
@@ -680,7 +680,7 @@ insert into @percents
 								--and 
 								--	no_viaje in (select item from sistemas.dbo.fnSplit(@viaje, '|'))  
 -- =========================== Drop if don't need ================================================ --
---		order by company_id,id_area,no_viaje,orden;
+--		order by company_id,id_area,no_viaje,orden
 insert into @casetas_conciliation
 	select 
 			    null as 'id_unidad', --			tci.id_unidad
@@ -745,14 +745,17 @@ insert into @casetas_conciliation
 								group by 
 										iave_cruce_id
 							)
-		;
+		
 -- ====== pop core ============ ---
 	
 	
-	
 	select * from @casetas_conciliation where casetas_controls_files_id in (select cast(item as int) as 'item' from sistemas.dbo.fnSplit(@ctrfile, '|')) 
-	and casetas_standings_id <> 5
-
+--	and casetas_standings_id = 6
+	and (
+			unit = 'TT1248'
+		or
+	 		id_unidad = 'TT1248'
+		)
 
 -- =========================== Drop if don't need THIS !!! ================================================ --
 									--and
@@ -763,7 +766,7 @@ insert into @casetas_conciliation
 -- =========================== Drop if don't need ================================================ -- 
 	
 -- =========================== Uncomment for Percents ================================================ --
---;with
+--with
 --		percents
 --				(
 	
@@ -883,9 +886,9 @@ insert into @casetas_conciliation
 ---- =========================== Drop if don't need ================================================ --
 --order by fecha_a , time_a
 
--- exec sp_upt_tollbooth_zam_trips_records_conciliation;
+-- exec sp_upt_tollbooth_zam_trips_records_conciliation
 
-go
+--go
 
 
 --select iave_catalogo,id_unidad from sistemas.dbo.casetas_lis_full_conciliations where casetas_controls_files_id = '135' group by iave_catalogo,id_unidad

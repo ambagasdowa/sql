@@ -74,13 +74,13 @@ FROM
 WHERE
 	type IN
 		(
-		'P', -- stored procedures
-		'FN', -- scalar functions
-		'IF', -- inline table-valued functions
-		'TF', -- table-valued functions
-		'TR',
-		'U',
-		'V'
+		'P', 	-- stored procedures
+		'FN', 	-- scalar functions
+		'IF', 	-- inline table-valued functions
+		'TF', 	-- table-valued functions
+		'TR',   -- trigger
+		'U',  	-- Base table
+		'V'		-- View
 		)
 ORDER BY type, name
 
@@ -384,6 +384,8 @@ where
 		-- set execution permissions on table function
 		GRANT SELECT ON "dbo"."fnSplit" TO "projections"
 		
+		
+
 		
 	-- list menbers of a role
 	exec sp_helprolemember 'projections'

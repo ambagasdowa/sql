@@ -48,148 +48,38 @@ DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
 --dbcc shrinkfile ('templog') -- shrink log file
 --ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
 --DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-
 ALTER DATABASE integraapp SET RECOVERY FULL
 
---use integraapp
+use integraapp
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 -- report the new file sizes
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'integraapp');
---GO
-
-
-
--- ===================================== Truncate log for bonampakdb ================================================ --
-
-
-SELECT name, size
-FROM sys.master_files
-WHERE database_id = DB_ID(N'bonampakdb');
--- GO
-
-use bonampakdb;
--- go
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
-ALTER DATABASE bonampakdb SET RECOVERY SIMPLE
-DBCC SHRINKFILE('lis530_log', 0, TRUNCATEONLY)
-DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
---dbcc shrinkfile ('templog') -- shrink log file
---ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
---DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-
-ALTER DATABASE bonampakdb SET RECOVERY FULL;
-
-use bonampakdb;
--- go
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
--- report the new file sizes
-SELECT name, size
-FROM sys.master_files
-WHERE database_id = DB_ID(N'bonampakdb');
+-- SELECT name, size
+-- FROM sys.master_files
+-- WHERE database_id = DB_ID(N'integraapp');
 -- GO
 
 
--- ===================================== Truncate log for NOM2001 ================================================ --
-
-SELECT name, size
-FROM sys.master_files
-WHERE database_id = DB_ID(N'NOM2001');
---GO
-
-use NOM2001;
---go
+use integrapruebas
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
-ALTER DATABASE NOM2001 SET RECOVERY SIMPLE
-DBCC SHRINKFILE('NOM2001_log', 0, TRUNCATEONLY)
---dbcc shrinkfile ('templog') -- shrink log file
---ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
---DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+ALTER DATABASE integrapruebas SET RECOVERY SIMPLE
+DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+ALTER DATABASE integrapruebas SET RECOVERY FULL
 
-ALTER DATABASE NOM2001 SET RECOVERY FULL;
-
-use NOM2001;
---go
+use integrapruebas
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
--- report the new file sizes
-SELECT name, size
-FROM sys.master_files
-WHERE database_id = DB_ID(N'NOM2001');
 
 
--- ===================================== Truncate log for sltestapp ================================================ --
-
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sltestapp');
--- GO
-
-use integrasys
+use teisasaldossys
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
-ALTER DATABASE integrasys SET RECOVERY SIMPLE
-DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
---dbcc shrinkfile ('templog') -- shrink log file
---ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
---DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-ALTER DATABASE integrasys SET RECOVERY FULL
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+ALTER DATABASE teisasaldossys SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
+ALTER DATABASE teisasaldossys SET RECOVERY FULL;
 
--- report the new file sizes
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sltestapp');
-
-
--- ===================================== Truncate log for sistemas ================================================ --
-
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sistemas');
---GO
-
-use sistemas
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
-ALTER DATABASE sistemas SET RECOVERY SIMPLE
-DBCC SHRINKFILE('sistemas_log', 0, TRUNCATEONLY)
---dbcc shrinkfile ('templog') -- shrink log file
---ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
---DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-
-ALTER DATABASE sistemas SET RECOVERY FULL
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
--- report the new file sizes
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sltestapp');
-
-
-
--- ===================================== Truncate log for integra_fiscal ================================================ --
-
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sistemas');
---GO
-
-use integra_fiscal;
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
-ALTER DATABASE integra_fiscal SET RECOVERY SIMPLE
-DBCC SHRINKFILE('integra_fiscal_log', 0, TRUNCATEONLY)
---dbcc shrinkfile ('templog') -- shrink log file
---ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
---DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
-
-ALTER DATABASE integra_fiscal SET RECOVERY FULL;
+use teisasaldossys
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 
@@ -231,6 +121,247 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 -- report the new file sizes
 
 
+
+
+-- ===================================== Truncate log for bonampakdb ================================================ --
+
+
+
+use bonampakdb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE bonampakdb SET RECOVERY SIMPLE
+DBCC SHRINKFILE('lis530_log', 0, TRUNCATEONLY)
+DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+ALTER DATABASE bonampakdb SET RECOVERY FULL;
+
+use bonampakdb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use macuspanadb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE macuspanadb SET RECOVERY SIMPLE
+DBCC SHRINKFILE('lis530_log', 0, TRUNCATEONLY)
+DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+ALTER DATABASE macuspanadb SET RECOVERY FULL;
+
+use macuspanadb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use tespecializadadb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE tespecializadadb SET RECOVERY SIMPLE
+DBCC SHRINKFILE('lis530_log', 0, TRUNCATEONLY)
+DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+ALTER DATABASE tespecializadadb SET RECOVERY FULL;
+
+use tespecializadadb
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+
+
+
+
+
+-- ===================================== Truncate log for NOM2001 ================================================ --
+
+SELECT name, size
+FROM sys.master_files
+WHERE database_id = DB_ID(N'NOM2001');
+--GO
+
+use NOM2001
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE NOM2001 SET RECOVERY SIMPLE
+DBCC SHRINKFILE('NOM2001_log', 0, TRUNCATEONLY)
+ALTER DATABASE NOM2001 SET RECOVERY FULL
+
+use NOM2001
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+-- report the new file sizes
+SELECT name, size
+FROM sys.master_files
+WHERE database_id = DB_ID(N'NOM2001');
+
+
+
+use NODI
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE NODI SET RECOVERY SIMPLE
+DBCC SHRINKFILE('NODI_log', 0, TRUNCATEONLY)
+ALTER DATABASE NODI SET RECOVERY FULL
+
+use NODI
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+-- ===================================== Truncate log for sltestapp ================================================ --
+
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'sltestapp');
+-- GO
+
+use integrasys
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE integrasys SET RECOVERY SIMPLE
+DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
+--dbcc shrinkfile ('templog') -- shrink log file
+--ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
+--DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+ALTER DATABASE integrasys SET RECOVERY FULL
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+-- report the new file sizes
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'sltestapp');
+
+
+-- ===================================== Truncate log for sistemas ================================================ --
+
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'sistemas');
+--GO
+
+-- Check if have a open transactions
+--
+--SELECT spid
+--,kpid
+--,login_time
+--,last_batch
+--,status
+--,hostname
+--,nt_username
+--,loginame
+--,hostprocess
+--,cpu
+--,memusage
+--,physical_io
+--FROM sys.sysprocesses
+--WHERE cmd = 'KILLED/ROLLBACK'
+--
+--DBCC CheckDB ('sistemas' , REPAIR_ALLOW_DATA_LOSS)
+--
+--DBCC INPUTBUFFER (460)
+--
+--use master
+--DBCC OPENTRAN ('sistemas')
+--
+--use sistemas
+--exec sp_who2 'active'
+--
+--kill 460 WITH STATUSONLY
+--
+--exec sp_lock 460
+
+
+use sistemas
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE sistemas SET RECOVERY SIMPLE
+DBCC SHRINKFILE('sistemas_log', 0, TRUNCATEONLY)
+
+ALTER DATABASE sistemas SET RECOVERY FULL
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+-- report the new file sizes
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'sltestapp');
+
+
+
+-- ===================================== Truncate log for integra_fiscal ================================================ --
+
+--SELECT name, size
+--FROM sys.master_files
+--WHERE database_id = DB_ID(N'sistemas');
+--GO
+
+use integra_fiscal;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+ALTER DATABASE integra_fiscal SET RECOVERY SIMPLE
+DBCC SHRINKFILE('integra_fiscal_log', 0, TRUNCATEONLY)
+--dbcc shrinkfile ('templog') -- shrink log file
+--ALTER DATABASE pruebasbonampak SET RECOVERY SIMPLE
+--DBCC SHRINKFILE('lis530_log1', 0, TRUNCATEONLY)
+
+ALTER DATABASE integra_fiscal SET RECOVERY FULL;
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use test_integra_fiscal
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+	ALTER DATABASE test_integra_fiscal SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('integra_fiscal_log', 0, TRUNCATEONLY)
+	
+	ALTER DATABASE test_integra_fiscal SET RECOVERY FULL;
+use test_integra_fiscal
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use integralogin
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+	ALTER DATABASE integralogin SET RECOVERY SIMPLE
+		DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)	
+	ALTER DATABASE integralogin SET RECOVERY FULL;
+use integralogin
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use SaldosInicialesSys
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+	ALTER DATABASE SaldosInicialesSys SET RECOVERY SIMPLE
+		DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)	
+	ALTER DATABASE SaldosInicialesSys SET RECOVERY FULL;
+use SaldosInicialesSys
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use MR
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+	ALTER DATABASE MR SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('MR_log', 0, TRUNCATEONLY)
+	ALTER DATABASE MR SET RECOVERY FULL;
+
+use MR
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use ManagementReporter
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+	ALTER DATABASE MR SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('ManagementReporter_log', 0, TRUNCATEONLY)
+	ALTER DATABASE MR SET RECOVERY FULL
+
+use ManagementReporter
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+
+use FiscalApp
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+	ALTER DATABASE MR SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+	ALTER DATABASE MR SET RECOVERY full
+	
+use FiscalApp
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
 
 

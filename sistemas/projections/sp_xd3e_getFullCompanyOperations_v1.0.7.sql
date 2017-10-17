@@ -423,10 +423,13 @@ print 'Testing the result'
 		
 		
 -- closed by company is tested , not tested by bsu		
+-- testing only with mode 9
 -- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '0','0',9,'0','0'
+
+-- close teisa in production example 
 -- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '3','0',1,'0','0'
 	
-		
+
 -- ========================  set the last insert id ================================== --		
 /*
  * 

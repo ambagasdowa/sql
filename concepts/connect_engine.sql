@@ -47,6 +47,10 @@ CREATE TABLE trafico_guia ENGINE=CONNECT CONNECTION='DSN=odbclarsa;UID=sa;PWD=ef
 
 CREATE TABLE trafico_renglon_guia ENGINE=CONNECT CONNECTION='DSN=odbclarsa;UID=sa;PWD=effeta;Database=macuspanadb;' table_type=odbc;
 
+CREATE TABLE generals_month_translations ENGINE=CONNECT CONNECTION='DSN=odbclarsa;UID=sa;PWD=effeta;Database=sistemas;' table_type=odbc;
+
+select * from mssql.generals_month_translations
+
 select * from mssql.general_area
 
 select * from mssql.trafico_guia as tg where tg.no_guia = '35708'

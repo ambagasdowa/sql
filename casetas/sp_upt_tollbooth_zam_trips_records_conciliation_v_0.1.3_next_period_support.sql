@@ -1,8 +1,8 @@
 Use sistemas
 SET ANSI_NULLS ON
-GO
+--GO
 SET QUOTED_IDENTIFIER ON
-GO
+--GO
 
 
 ALTER PROCEDURE sp_upt_tollbooth_zam_trips_records_conciliation
@@ -68,6 +68,25 @@ BEGIN
 --	insert into sistemas.dbo.casetas_iave_periods values (1,'393','Noviembre 21 al 30','2016-11-21','2016-11-30','5','1',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,'1')
 
 	--declare @_periods as int  set @_periods = '394'
+	-- Adding iave period autoscroll 
+	declare  @iave_periods table
+									(
+										id							int,
+										user_id						int,
+										period_iave_id				int,
+										period_desc					nvarchar(80)	collate	sql_latin1_general_cp1_ci_as,
+										fecha_ini					datetime,
+										fecha_fin					datetime,
+										offset_day_minus			int,
+										offset_day_plus				int,
+										created						datetime default current_timestamp,
+										modified					datetime default current_timestamp,
+										_status						tinyint default 1 null
+									)
+									
+	insert into  @iave_periods
+		select * from sistemas.dbo.casetas_iave_periods_options
+	
 	print 'updating ......'
 
 	declare @tollbooth_no_trips table
@@ -218,8 +237,8 @@ BEGIN
 						,travel.liq_tipo_pago,travel.liq_paso,travel.liq_id_caseta,travel.liq_monto_caseta , travel.liq_monto_iave,travel.liq_no_liquidacion
 						,travel.trliq_fecha_ingreso
 				from 
-					--@iave_periods as iave 
-					sistemas.dbo.casetas_iave_periods as iave
+					@iave_periods as iave 
+--					sistemas.dbo.casetas_iave_periods as iave
 					inner join
 								(
 									select 
@@ -545,7 +564,7 @@ BEGIN
 		
 		print 'updating are successfull'
  end
-go
+--go
 	-- select * from sistemas.dbo.casetas_iave_periods
 	-- select * from sistemas.dbo.casetas_lis_full_conciliations where period_iave_id = '394' and company_id = '2'
 	--where casetas_controls_files_id = 106

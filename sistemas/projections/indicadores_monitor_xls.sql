@@ -47,7 +47,7 @@ select
 from 
 			"bonampakdb"."dbo"."Bon_v_IndOperativosRA"
 where 
-		 Año = '2017' and Mes = 'MAYO'
+		 Año = '2017' and Mes = 'JUNIO'
 group by
 		fraccion
 
@@ -58,6 +58,18 @@ select
 		,sum(peso) as 'peso'
 		,fraccion
 from sistemas.dbo.projections_view_full_company_dispatched_indicators
-where year(f_despachado) = '2017' and mes = 'Mayo' and company = '1' and id_area = '3' group by fraccion
+where year(f_despachado) = '2017' and mes = 'Junio' and company = '1' and id_area = '3' group by fraccion
 	
+
+
+select * from sistemas.dbo.projections_view_full_company_dispatched_indicators 
+	where id_area = '3' and company = '1' and no_viaje = '59682'
+
+select * from bonampakdb.dbo.trafico_guia where 
+
+
+
+
+
+
 

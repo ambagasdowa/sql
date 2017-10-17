@@ -1,6 +1,10 @@
+-- AR emitidas
+-- Ap recividas  done
+
 use integraapp;
 
 --/**19470*/
+
 select
 	a.perpost,
 	a.BatNbr as Lote,
@@ -35,6 +39,7 @@ order by
 
 -- ====================== AR =========================== --
 --in query 21521
+-- WTF supose to do  hahahaha !!!!!!!!!!!!!!!??????????????????????????????
 select
 	bat.perpost,
 	bat.batnbr as 'bat_lote',
@@ -254,13 +259,19 @@ and "import".Folio like '%1392193572814%'
 
 
 
+
+
+-- ORIGINAL ----------------------------------------------------------
+
 select 
 		 "import".Archivoimp
-		,"import".UUID
+		,"import".UUID as 'UUID'
+--		,"tb2".ZUUID as 'ZUUID'
 		,"import"."RFC Emisor"
 		,"import".Folio
 		,"ap".User1 as 'AP_RFC_Emisor'
 		,"ap".ExtRefNbr as 'AP_Folio'
+		,"tb2".ZInvcNbr as 'ZInvcNbr'
 		,case
 			when substring("ap".ExtRefNbr,1,2) = 'F-'
 				then replace("ap".ExtRefNbr,'F-','0')
@@ -268,8 +279,11 @@ select
 				then replace("ap".ExtRefNbr,'AP','')
 		 	else "ap".ExtRefNbr
 		 end as 'AP_NewFolio'
-		,"ap".BatNbr
+		,"ap".BatNbr as 'AP_BatNbr'
+		,"tb2".ZAPBatNbr as 'ZAPBatNbr'
+		,"tb2".ZCuryRcptCtrlAmt as 'ZCuryRcptCtrlAmt'
 		,"ap".CpnyID
+		,"ap".TranDesc
 		,"ap".CuryTxblAmt00
 		,"ap".CuryTaxAmt00
 		,"import".SubTotal
@@ -294,6 +308,7 @@ left join
 						,"tran".CpnyID
 						,"tran".CuryTxblAmt00
 						,"tran".CuryTaxAmt00
+						,"tran".TranDesc
 				from 
 						integraapp.dbo.APTran as "tran"
 				where 
@@ -305,28 +320,113 @@ left join
 					and
 						"tran".PerPost > '201600'
 --					and 
---						"tran".BatNbr = '206422'
+--						"tran".BatNbr in ('284549','284821')
 			)
 		as "ap"
 			on
 				"import"."RFC Emisor" collate SQL_Latin1_General_CP1_CI_AS = "ap".User1
 			and
 				"import".Folio collate SQL_Latin1_General_CP1_CI_AS = "ap".NewFolio 
+left join 
+			sistemas.dbo.validaciones2 as "tb2" 
+	on
+			"ap".BatNbr = "tb2".ZAPBatNbr and "ap".CpnyID = "tb2".ZCpnyId collate SQL_Latin1_General_CP1_CI_AS
+		and
+			"ap".User1 = "tb2".ZVendId collate SQL_Latin1_General_CP1_CI_AS
+		and
+			"ap".CuryTxblAmt00 = "tb2".ZCuryRcptCtrlAmt
+		and
+			"import"."RFC Emisor" = "tb2".ZVendId collate SQL_Latin1_General_CP1_CI_AS
+		and	
+			"import".UUID = "tb2".ZUUID 
+--where 
+--		"ap".BatNbr = '200742'
 where
 		"import"."RFC Emisor" = 'APU640930KV9' 
-	and 
-		"import".Folio like '%10072460742%' 		
+--	and 
+--		"import".Folio like '%10072460742%' 		
 
+
+		--	-- ================================ try2 gtran with excel db ============================================ --
+
+
+													
+													
+													
 		
+	-- TRYING ----------------------------------------------------------
+-->> maybe
+1
+--			and
+--				"aps".PerPost = '201603'
+--			and
+--				"aps".CpnyId = 'TEICUA'
+				
+				
+select * from sistemas.dbo.validaciones2 where ZCpnyId = 'TEICUA' and ZPerPost = '201603' and ZAPBatNbr = '211314'
 
-	
-				
-				
-				
-				
-	
+select User1,VendId,JrnlType,TaxId00,ExtRefNbr,* from integraapp.dbo.APTran where CpnYId = 'TEICUA' and FiscYr = '2016' and BatNbr = '211314'
 
+
+								
+	-- APTRAN ----------------------------------------------------------			
+				
+				
+		select 
+				 "tran".ExtRefNbr
+				,case
+					when substring("tran".ExtRefNbr,1,2) = 'F-' -- case 'APU640930KV9' = ADO
+						then replace("tran".ExtRefNbr,'F-','0')
+					when substring("tran".ExtRefNbr,1,2) = 'AP' -- case 'APU640930KV9' = ADO
+						then replace("tran".ExtRefNbr,'AP','')
+				 	else "tran".ExtRefNbr
+				 end as 'NewFolio'
+				,"tran".User1
+				,"tran".BatNbr
+				,"tran".CpnyID
+				,"tran".CuryTxblAmt00
+				,"tran".CuryTaxAmt00
+				,"tran".TranDesc
+				,*
+		from 
+				integraapp.dbo.APTran as "tran"
+		where 
+				"tran".JrnlType = 'AP' and "tran".TaxId00 = 'IVA 16'
+			and
+				isnumeric(SUBSTRING("tran".User1,1,3)) = 0 and "tran".User1 is not null and "tran".User1 <> '' and "tran".User1 <> 'GLOBAL'
+			and
+				"tran".ExtRefNbr <> '' and "tran".ExtRefNbr is not null
+			and
+				"tran".PerPost > '201600'
+			and 
+				"tran".BatNbr in ('200742','205003')
 		
+			
+	-- ================================ try3  ============================================ --
+select 
+		 "import".Archivoimp
+		,"import".UUID as 'UUID'
+		,"import"."RFC Emisor"
+		,"import".Folio
+		,"import".SubTotal
+from 
+		sistemas.dbo.importtbk as "import"
+where
+		"import"."RFC Emisor" = 'CNM980114PI2'
+	and
+		"import".Folio in ('120728625','495888')
+		
+		
+select * from sistemas.dbo.validaciones2 where ZInvcNbr in ('495888')
+and ZUUID in ('968C14B9-88DD-0742-B15E-8A6282B3AF1C')
+		
+		
+	-- ================================ try2 gtran with excel db ============================================ --
+	
+
+
+
+
 select 
 	        bat.perpost,bat.batnbr as 'bat_lote',bat.CpnyID as 'bat_Company', case bat.CuryId when 'MN' then 'MXN' end as 'bat_Moneda'
 			----,ap.CuryDocBal as 'ar_rfc'
@@ -367,7 +467,7 @@ select
 			ap.DocType = 'VO'
 		and 
 			tra.TaxId00 = 'IVA 16'
-		-- ================================ maybe don not use this ================================================= --
+		-- ================================ maybe don't use this ================================================= --
 		and
 			isnumeric(SUBSTRING("tra".User1,1,3)) = 0 and "tra".User1 is not null and "tra".User1 <> '' and "tra".User1 <> 'GLOBAL'
 		and
@@ -376,7 +476,7 @@ select
 			"tra".PerPost > '201600'
 		and
 			"tra".BatNbr = '201449'
-		-- ================================ maybe don not use this ================================================= --
+		-- ================================ maybe do not use this ================================================= --
 --		and 
 --			tra.User1 = 'APU640930KV9' 
 --		and 
@@ -406,17 +506,96 @@ select
 
 
 			
-zapbatnbr
+--zapbatnbr
+
+-- =============================================================================================================================== -- 
+-- ===============================================    Working From hir   ========================================================= --
+-- =============================================== from hir do -- Latest -- ====================================================== --
+-- =============================================================================================================================== --
+-- /**This is the ultimate and working  Wed Jul 12 18:28:06 CDT 2017 */
+
+
+with "aps" as (
+    select
+                row_number() over(partition by "ap".CpnyId,"ap".BatNbr,"ap".User1,"ap".VendId,"ap".tstamp order by "ap".tstamp) as "index"
+                ,"tb2".ZUUID
+                ,"ap".ExtRefNbr
+                ,"tb2".ZInvcNbr as 'ZZInvcNbr'
+                ,"tb2".ZAPRefno as 'ZZAPRefno'
+                ,"ap".CuryTranAmt
+--                ,"ap".CuryTxblAmt00
+                ,"ap".CuryTaxAmt00
+                ,"tb2".ZCuryRcptCtrlAmt as 'zcrcpAmmt'
+                ,"ap".TranDesc
+                ,"ap".CpnyId,"ap".BatNbr,"ap".User1,"ap".VendId,"ap".tstamp as 'ap.tstamp'
+                ,"ap".FiscYr,"ap".PerPost
+                ,"tb2".ZAPBatNbr
+    from
+                sistemas.dbo.validaciones2 as "tb2" --> xls file -> validaciones 2016
+        left join
+                integraapp.dbo.APTran as "ap" on "ap".JrnlType = 'AP' -- and "ap".TaxId00 = 'IVA 16'
+            and
+                isnumeric(SUBSTRING("ap".VendId,1,3)) = 0 --> jajajaja ... and this why ??
+            and
+                "ap".User1 <> 'GLOBAL'
+            and
+                "ap".BatNbr = "tb2".ZAPBatNbr and "ap".CpnyID = "tb2".ZCpnyId collate SQL_Latin1_General_CP1_CI_AS
+            and
+                "ap".VendId = "tb2".ZVendId collate SQL_Latin1_General_CP1_CI_AS --> Redeem! collate for solomon
+            and
+            	"ap".LineType = 'R'
+--	where 
+--            	"ap".BatNbr in ( '237950' )
+--	and
+--            round("ap".CuryTxblAmt00,0,1) = round("tb2".ZCuryRcptCtrlAmt,0,1) --> without decimals and not rounding
+)
+select 	
+		"aps"."index","aps".ZUUID,"aps".ExtRefNbr,"aps".ZZInvcNbr,"aps".ZZAPRefno
+		,sum("aps".CuryTranAmt) as 'CuryTranAmt'
+		--,sum("aps".CuryTxblAmt00) as 'CuryTxblAmt00'
+		,sum("aps".CuryTaxAmt00) as 'CuryTaxAmt00'
+		,"aps".zcrcpAmmt 
+		,"aps".CpnyId,"aps".BatNbr
+		--,"aps".User1
+		,"aps".VendId
+		,"aps".FiscYr,"aps".PerPost,"aps".ZAPBatNbr
+from 
+		"aps"
+where
+        "aps"."index" = 1
+--    and
+--    	"aps".ZUUID in ('32714189-B164-48BF-B815-F79C5C5158B5','D69BFC03-0814-4385-4E84-EA91FED2E588')
+--	and 
+--		"aps".ZAPBatNbr in (
+--							'200169',
+--							'246811',
+--							'237950'
+--							)
+group by 
+		"aps"."index","aps".ZUUID,"aps".ExtRefNbr,"aps".ZZInvcNbr,"aps".ZZAPRefno
+		,"aps".zcrcpAmmt 
+		,"aps".CpnyId,"aps".BatNbr
+		--,"aps".User1
+		,"aps".VendId
+		,"aps".FiscYr,"aps".PerPost,"aps".ZAPBatNbr
+
+-- =============================================================================================================================== --
+-- ===============================================     Working Done   =  ========================================================= --
+-- =============================================================================================================================== --
+
+select count(*) from sistemas.dbo.validaciones2
+		
+		
+		
+
+select LineRef,TranAmt,CuryTranAmt,CuryTaxAmt00,BatNbr,CpnyID,tstamp,* from integraapp.dbo.APTran as "ap" where  "ap".BatNbr in ( '247823' , '247808' )
+
+select * from sistemas.dbo.validaciones2 as "tb2" where ZAPBatNbr in ( '247823' , '247808' )
 
 
 
+select LineRef,TranAmt,CuryTranAmt,CuryTaxAmt00,BatNbr,CpnyID,tstamp,* from integraapp.dbo.APTran as "ap" where  "ap".BatNbr in ( '175281', '181090', '190092', '193515', '247808', '247823' )
 
-
-
-
-
-
-
-
+select * from sistemas.dbo.validaciones2 as "tb2" where ZAPBatNbr in ( '175281', '181090', '190092', '193515', '247808', '247823' )
 
 

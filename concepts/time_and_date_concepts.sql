@@ -280,9 +280,47 @@ select * from NOM2001.dbo.getPayroll where nombre like 'carlos%'
 ---------------------------------------------------------------------------------------------------------------------------------
 
 
+-- ============================ firts and last day in a month and year =============================================== --
+
+
+declare @mes as int
+declare @nyear as int
+ set @nyear = 2017
+ set @mes = 8
+ 
+    select DATEADD(month,@mes-1,DATEADD(year,@nyear-1900,0)) as 'First' /*First*/
+
+    select DATEADD(day,-1,DATEADD(month,@mes,DATEADD(year,@nyear-1900,0))) as 'Last' /*Last*/
+    
+
+
+-- how many sundays has
+
+declare @fini as date
+declare @fend as date
+
+set @fini = '2017-08-01'
+set @fend = '2017-08-18'
+
+select (datediff(day,@fini,@fend)-DATEPART(dw,@fend)+8)/7 as 'Sundays'
 
 
 
+-- day of month 
 
-
+DECLARE @mydate DATETIME
+SELECT @mydate = GETDATE()
+SELECT CONVERT(VARCHAR(25),DATEADD(dd,-(DAY(@mydate)),@mydate),23) ,
+'Último día del mes anterior'
+UNION
+SELECT CONVERT(VARCHAR(25),DATEADD(dd,-(DAY(@mydate)-1),@mydate),23) AS Date_Value,
+'Primer día del mes corriente' AS Date_Type
+UNION
+SELECT CONVERT(VARCHAR(25),@mydate,23) AS Date_Value, 'Hoy' AS Date_Type
+UNION
+SELECT CONVERT(VARCHAR(25),DATEADD(dd,-(DAY(DATEADD(mm,1,@mydate))),DATEADD(mm,1,@mydate)),23) ,
+'Último día del mes corriente'
+UNION
+SELECT CONVERT(VARCHAR(25),DATEADD(dd,-(DAY(DATEADD(mm,1,@mydate))-1),DATEADD(mm,1,@mydate)),23) ,
+'Primer día del mes siguiente'
 

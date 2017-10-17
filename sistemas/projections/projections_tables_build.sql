@@ -73,16 +73,18 @@ insert into dbo.projections_corporations values	(1,'TBK','Bonampak',CURRENT_TIME
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Catalog ProjectionsUnits
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+--select * from sistemas.dbo.projections_view_bussiness_units
+													
 use sistemas;
--- go
+
 IF OBJECT_ID ('projections_view_bussiness_units', 'V') IS NOT NULL
     DROP VIEW projections_view_bussiness_units;
--- go
-
+-- now build the view
 create view projections_view_bussiness_units
 with encryption
 as
+with "bunits" as
+(
     select
 		row_number()
 	over 
@@ -93,7 +95,6 @@ as
 							,name
 							,isnull(label,name) as 'label'
 	from(
-
 			--select (select 0) as 'projections_corporations_id',(select 0) as 'id_area', (select 'SIN ASIGNAR') as 'name'
 			--union all
 			select
@@ -150,6 +151,21 @@ as
 			where
 					tei.id_area <> 0
 		) as result
+)
+	select 
+			 "units".id
+			,"units".projections_corporations_id
+			,"units".id_area 
+			,"units".name
+			,"units".label
+			,"cia".IDSL as 'tname'
+	from 
+			"bunits" as "units"
+	inner join 
+			(
+				select IDSL,AreaLIS from integraapp.dbo.xrefcia
+			)
+		as "cia" on substring("units".label,1,7) = substring("cia".AreaLis,1,7)
 -- go
 
 
@@ -633,6 +649,11 @@ create table dbo.projections_fraccion_groups(
 -- go
 
 set ansi_padding off
+
+
+
+
+
 -- go
 --truncate table sistemas.dbo.projections_fraccion_groups
 --insert into sistemas.dbo.projections_fraccion_groups values	
@@ -1304,10 +1325,10 @@ select
 											where projections_corporations_id = opsind.company and projections_rp_fraction_id = 1) -- means granel
 						then 
 							(sum(opsind.kms_viaje)*2)
-					when opsind.id_fraccion in (	
+					when opsind.id_fraccion not in (	
 											select projections_id_fraccion 
 											from sistemas.dbo.projections_view_company_fractions 
-											where projections_corporations_id = opsind.company and projections_rp_fraction_id = 2) -- means otros
+											where projections_corporations_id = opsind.company and projections_rp_fraction_id = 1) -- means otros
 						then 
 							sum(opsind.kms_real)
 					else
@@ -2276,10 +2297,10 @@ select
 											where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
 						then 
 							(sum(opsind.kms_viaje)*2)
-					when opsind.id_fraccion in (	
+					when opsind.id_fraccion not in (	
 											select prtrf.projections_id_fraccion
 											from sistemas.dbo.projections_view_company_fractions as prtrf
-											where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 2) -- means otros
+											where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 1) -- means otros
 						then 
 							sum(opsind.kms_real)
 					else
@@ -2504,10 +2525,10 @@ select
 											where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
 						then 
 							(sum(opsind.kms_viaje)*2)
-					when opsind.id_fraccion in (	
+					when opsind.id_fraccion not in (	
 											select prtrf.projections_id_fraccion
 											from sistemas.dbo.projections_view_company_fractions as prtrf
-											where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 2) -- means otros
+											where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 1) -- means otros
 						then 
 							sum(opsind.kms_real)
 					else
@@ -2699,10 +2720,10 @@ use sistemas
 												where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
 							then 
 								(sum(opsind.kms_viaje)*2)
-						when opsind.id_fraccion in (	
+						when opsind.id_fraccion not in (	
 												select prtrf.projections_id_fraccion
 												from sistemas.dbo.projections_view_company_fractions as prtrf
-												where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 2) -- means otros
+												where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 1) -- means otros
 							then 
 								sum(opsind.kms_real)
 						else

@@ -32,14 +32,21 @@ IF OBJECT_ID ('reporter_costos', 'V') IS NOT NULL
 	
 	create view reporter_costos
 	as
-		select 
+		select
 			 "acc"."_source_company"
+			,"units".label as 'area'
+			,"acc".Mes as 'mes'
+			,"acc".UnidadNegocio
 			,round(sum("acc".Cargo - "acc".Abono),3) as 'Real'
 			,round(sum("acc".Presupuesto),3) as 'Presupuesto'
 			,"acc"."_period"
-			,"acc"."_key"
+			,"acc"."_key" as 'type'
+			,"acc".FiscYr as 'cyear'
 		from 
 			sistemas.dbo.reporter_view_report_accounts as "acc"
+		inner join 
+			sistemas.dbo.projections_view_bussiness_units as "units"
+			on "acc"."_source_company" = "units".tname
 		where
 			(
 				(
@@ -53,10 +60,142 @@ IF OBJECT_ID ('reporter_costos', 'V') IS NOT NULL
 				)
 			)
 		group by
-			  "acc"."_period"
+			  "acc".UnidadNegocio
+			 ,"acc"."_period"
+			 ,"acc".Mes
 			 ,"acc"."_source_company"
+			 ,"units".label
 			 ,"acc"."_key"
+ 			 ,"acc".FiscYr
 			
+ 			 
+
+-- ==================================================================================================================== --	
+-- =======================================    Check the Costos data    ================================================ --
+-- ==================================================================================================================== --
+
+			 
+use sistemas
+IF OBJECT_ID ('reporter_costos_accounts', 'V') IS NOT NULL
+	drop view reporter_costos_accounts;
+	
+	create view reporter_costos_accounts
+	as
+		select
+			 "acc"."_source_company"
+			,"units".label as 'area'
+			,"acc".UnidadNegocio
+			,"acc".Mes as 'mes'
+			,"acc".NoCta as 'account'
+			,"acc".NombreCta as 'name'
+			,round(sum("acc".Cargo - "acc".Abono),3) as 'Real'
+			,round(sum("acc".Presupuesto),3) as 'Presupuesto'
+			,"acc"."_period"
+			,"acc"."_key" as 'type'
+			,"acc".FiscYr as 'cyear'
+		from 
+			sistemas.dbo.reporter_view_report_accounts as "acc"
+		inner join 
+			sistemas.dbo.projections_view_bussiness_units as "units"
+			on "acc"."_source_company" = "units".tname
+		where
+			(
+				(
+					"_source_company" in ('ATMMAC','TEICUA','TCGTUL')
+				)
+			or
+				(
+					"_source_company" not in ('ATMMAC','TEICUA','TCGTUL')
+				and
+					"acc".Compania not in ('ATMMAC','TEICUA','TCGTUL')
+				)
+			)
+		group by
+			  "acc".UnidadNegocio
+			 ,"acc"."_period"
+			 ,"acc"."_source_company"
+			 ,"units".label
+	  		 ,"acc".NoCta
+			 ,"acc".NombreCta
+			 ,"acc".Mes
+			 ,"acc"."_key"
+ 			 ,"acc".FiscYr
+ 			 
+ 			 
+-- ==================================================================================================================== --	
+-- ====================================    Get the Costos data by account  ============================================ --
+-- ==================================================================================================================== --
+--select * from sistemas.dbo.reporter_costos_details_accounts as "kct"
+--where 		"kct".cyear = '2017'
+--		and "kct".account = '0501010100'
+--		and "kct".area = 'ORIZABA'
+--		and "kct".Mes = 'ENERO'
+--		and "kct"."type" = 'OF'
+
+-- select top(100) * from sistemas.dbo.reporter_costos_accounts
+ 			 
+use sistemas
+IF OBJECT_ID ('reporter_portal_costos_details_accounts', 'V') IS NOT NULL
+	drop view reporter_portal_costos_details_accounts;
+	
+	create view reporter_portal_costos_details_accounts
+	as
+	select
+			 row_number() over( order by "units".label asc) as 'id'
+			,"acc"."_source_company"
+			,"units".label as 'area'
+			,"acc".UnidadNegocio
+			,"acc".Mes as 'mes'
+			,"acc".NoCta as 'account'
+			,"acc".NombreCta as 'name'
+			,round(sum("acc".Cargo - "acc".Abono),3) as 'Real'
+			,round(sum("acc".Presupuesto),3) as 'Presupuesto'
+--			,round("acc".Cargo - "acc".Abono,3) as 'Real'
+--			,round("acc".Presupuesto,3) as 'Presupuesto'
+			,"acc"."_period"
+			,"acc".Descripcion
+			,"acc".NombreEntidad
+			,"acc".TipoTransaccion
+			,"acc".Referencia
+			,"acc".ReferenciaExterna 
+			,"acc"."_key" as 'type'
+			,"acc".FiscYr as 'cyear'
+		from 
+			sistemas.dbo.reporter_view_report_accounts as "acc"
+		inner join 
+			sistemas.dbo.projections_view_bussiness_units as "units"
+			on "acc"."_source_company" = "units".tname
+		where
+			(
+				(
+					"_source_company" in ('ATMMAC','TEICUA','TCGTUL')
+				)
+			or
+				(
+					"_source_company" not in ('ATMMAC','TEICUA','TCGTUL')
+				and
+					"acc".Compania not in ('ATMMAC','TEICUA','TCGTUL')
+				and
+					UnidadNegocio not in ('00')
+				)
+			)
+ 		group by
+			  "acc".UnidadNegocio
+			 ,"acc"."_period"
+			 ,"acc"."_source_company"
+			 ,"units".label
+	  		 ,"acc".NoCta
+			 ,"acc".NombreCta
+			 ,"acc".Mes
+			 ,"acc".Descripcion
+			 ,"acc".NombreEntidad
+			 ,"acc".TipoTransaccion
+			 ,"acc".Referencia
+			 ,"acc".ReferenciaExterna 
+			 ,"acc"."_key"
+ 			 ,"acc".FiscYr
+ 			 
+ 			 
 -- ==================================================================================================================== --	
 -- ====================================    Check the struct of a table   ============================================== --
 -- ==================================================================================================================== --
@@ -69,23 +208,25 @@ SELECT
 			when	'FN' 	then	'Scalar Functions'
 			when	'IF'	then 	'Inline Table-Value Functions'
 			when	'TF'	then	'Table-Value Functions'
+			when	'TR'	then 	'Trigger'
 			when	'U'		then	'Base Table'
 			when	'V'		then	'View'
-		end as 'Types'
+		end as 'Type'
 FROM
 	dbo.sysobjects
 WHERE
 	type IN
 		(
-		'P'--, -- stored procedures
---		'FN', -- scalar functions
---		'IF', -- inline table-valued functions
---		'TF' -- table-valued functions
---		'U',
---		'V' 
+		'P', 	-- stored procedures
+		'FN', 	-- scalar functions
+		'IF', 	-- inline table-valued functions
+		'TF', 	-- table-valued functions
+		'TR',   -- trigger
+		'U',  	-- Base table
+		'V'		-- View
 		)
---	and name like 'casetas_%'
 ORDER BY type, name
+
 	
 
 -- ==================================================================================================================== --	
