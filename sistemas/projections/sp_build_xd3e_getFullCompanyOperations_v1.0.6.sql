@@ -378,7 +378,7 @@ if @mode <> 9
 -- ====================================      CERRAR PËRIODOS          =========================================== --
 -- ============================================================================================================== --
 			
--- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '3','0','1','0','0';
+-- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '1','0','1','0','0';
 -- select * from sistemas.dbo.projections_view_closed_period_units
 
 			

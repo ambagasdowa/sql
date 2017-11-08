@@ -196,7 +196,7 @@ insert into dbo.casetas_standings values	(1,'Conciliado',CURRENT_TIMESTAMP,null,
 											(1,'Cruces no correspondidos de I+D en lIS',CURRENT_TIMESTAMP,null,1,1),				-- 6 -- ok
 											(1,'Tarjeta IAVE en I+D no Registrada en LIS',CURRENT_TIMESTAMP,null,1,1),				-- 7 -- ok
 											(1,'Inconsistencia en las Fechas del Viaje',CURRENT_TIMESTAMP,null,1,1),				-- 8
-											(1,'Cruce de veh�culos Utilitarios',CURRENT_TIMESTAMP,null,1,1),						-- 9 -- ok
+											(1,'Cruce de vehículos Utilitarios',CURRENT_TIMESTAMP,null,1,1),						-- 9 -- ok
 											(2,'Archivo por Conciliar',CURRENT_TIMESTAMP,null,1,1),									-- 10
 											(2,'Archivo Conciliado',CURRENT_TIMESTAMP,null,1,1),									-- 11
 											(1,'Viaje sin finalizar y sin caseta en LIS',CURRENT_TIMESTAMP,null,1,1)                -- 12

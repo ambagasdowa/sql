@@ -17,6 +17,8 @@ create database portal_nextcloud
 
 -- select * from portal_users.groups
 
+SHOW GRANTS FOR 'ambagasdowa'@'localhost';
+
 
 -- =========================================================================== --
 -- ======================== create a user ==================================== --

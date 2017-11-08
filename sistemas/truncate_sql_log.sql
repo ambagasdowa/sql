@@ -345,9 +345,9 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 use ManagementReporter
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
-	ALTER DATABASE MR SET RECOVERY SIMPLE
+	ALTER DATABASE ManagementReporter SET RECOVERY SIMPLE
 	DBCC SHRINKFILE('ManagementReporter_log', 0, TRUNCATEONLY)
-	ALTER DATABASE MR SET RECOVERY FULL
+	ALTER DATABASE ManagementReporter SET RECOVERY FULL
 
 use ManagementReporter
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
@@ -356,13 +356,26 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 use FiscalApp
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
-	ALTER DATABASE MR SET RECOVERY SIMPLE
+	ALTER DATABASE FiscalApp SET RECOVERY SIMPLE
 	DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
-	ALTER DATABASE MR SET RECOVERY full
+	ALTER DATABASE FiscalApp SET RECOVERY full
 	
 use FiscalApp
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
+
+
+use intermedia
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+
+	ALTER DATABASE intermedia SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('intermedia_log', 0, TRUNCATEONLY)
+	ALTER DATABASE intermedia SET RECOVERY full
+	
+use intermedia
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
+
+	
 
 
 -- =========================================== Check database storage ======================================================= --
