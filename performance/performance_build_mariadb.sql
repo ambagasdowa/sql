@@ -54,6 +54,7 @@ CREATE TABLE performance_references DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNEC
 -- OR utf8_unicode_ci
 -- DEFAULT CHARSET=latin1
 -- the issue for a charset conversion is in the latin1
+
 -- ==================================================================================================================== --	
 -- ===================================     Performance Control(Facturas) View    ====================================== --
 -- ==================================================================================================================== --
@@ -76,9 +77,9 @@ CREATE TABLE IF NOT EXISTS `performance_facturas` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB  CHARACTER SET utf8 COLLATE utf8_general_ci ;
 
-select * from `portal_apps`.`performance_references`
+select * from `portal_apps`.`performance_facturas`
 
-truncate table `portal_apps`.`performance_facturas`
+-- truncate table `portal_apps`.`performance_facturas`
 
 -- ==================================================================================================================== --	
 -- =================================     Performance Dashboard(Facturas) View    ====================================== --
@@ -91,6 +92,7 @@ select
 		 `reference`.id
 		,`reference`.performance_customers_id
 		,`reference`.Empresa
+		,`reference`.Nombre
 		,`reference`.Folio
 		,`reference`.Flete
 		,`reference`.Referencia

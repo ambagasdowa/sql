@@ -117,9 +117,3 @@ where
 		"document".CpnyID = 'TEICUA' and year("document".Crtd_DateTime) = '2017' and month("document".Crtd_DateTime) = '10' and day("document".Crtd_DateTime) = '25'
 		
 		
---	and(
---		year("document".DiscDate)= 2017
---	)
---order by
---	Folio
-	

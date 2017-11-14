@@ -782,7 +782,7 @@ IF OBJECT_ID ('ingresos_costos_ppto_toneladas', 'V') IS NOT NULL
 create view ingresos_costos_ppto_toneladas
 
 as
-select  * from sistemas.dbo.ingresos_costos_granel_toneladas
+select  cyear,CpnyID,PtdBal10 from sistemas.dbo.ingresos_costos_granel_toneladas
 union all
 select  * from sistemas.dbo.ingresos_costos_otros_toneladas
 
@@ -1300,7 +1300,6 @@ where period
 		substring( convert(nvarchar(MAX), dateadd(month,-1,current_timestamp), 112) , 1, 6 )
 	and
 		substring( convert(nvarchar(MAX), current_timestamp, 112) , 1, 6 )
-
 
 
 

@@ -2772,11 +2772,37 @@ as
 with operativos 
 	as (	
 		select 
-				area ,fraccion ,cyear ,mes ,sum(kms) as 'kms' ,sum(subsubtotal) as 'subsubtotal' ,sum(subpeso) as 'subpeso' ,sum(non_zero) as 'non_zero'
+				 "flr".area ,"flr".fraccion ,"flr".cyear ,"flr".mes ,sum("flr".kms) as 'kms' 
+				,sum("flr".subsubtotal) as 'subsubtotal' ,sum("flr".subpeso) as 'subpeso' 
+				,sum("flr".non_zero) as 'non_zero'
+				,case 
+					when ("flr".mes = 'Enero') then sum("prep".PtdBal00)
+					when ("flr".mes = 'Febrero') then sum("prep".PtdBal01)
+					when ("flr".mes = 'Marzo') then sum("prep".PtdBal02)
+					when ("flr".mes = 'Abril') then sum("prep".PtdBal03)
+					when ("flr".mes = 'Mayo') then sum("prep".PtdBal04)
+					when ("flr".mes = 'Junio') then sum("prep".PtdBal05)
+					when ("flr".mes = 'Julio') then sum("prep".PtdBal06)
+					when ("flr".mes = 'Agosto') then sum("prep".PtdBal07)
+					when ("flr".mes = 'Septiembre') then sum("prep".PtdBal08)
+					when ("flr".mes = 'Octubre') then sum("prep".PtdBal09)
+					when ("flr".mes = 'Noviembre') then sum("prep".PtdBal10)
+					when ("flr".mes = 'Diciembre') then sum("prep".PtdBal11)
+				end as 'presupuesto'
 		from 
-				sistemas.dbo.projections_view_indicators_periods_fleets
+				sistemas.dbo.projections_view_indicators_periods_fleets as "flr"
+			inner join 
+				sistemas.dbo.projections_view_bussiness_units as "unit"
+			on 
+				"flr".area = "unit".name
+			left join 
+				sistemas.dbo.ingresos_costos_granel_toneladas as "prep"
+			on 
+				"flr".cyear = "prep".cyear and "flr".fraccion = "prep".fraction
+			and 
+				"unit".tname = "prep".CpnyID
 		group by 
-				area ,fraccion ,cyear ,mes
+				"flr".area ,"flr".fraccion ,"flr".cyear ,"flr".mes
 	)
 	select
 			row_number()
@@ -2790,15 +2816,49 @@ with operativos
 								,kms
 								,subsubtotal
 								,subpeso 
-								,non_zero 
+								,non_zero
+								,presupuesto
 		from(
 				select
-						area ,fraccion ,cyear ,mes ,kms,subsubtotal,subpeso,non_zero
+						area ,fraccion ,cyear ,mes ,kms,subsubtotal,subpeso,non_zero,presupuesto
 				from 
 						operativos
 			) 
 	as result			
+--with operativos 
+--	as (	
+--		select 
+--				area ,fraccion ,cyear ,mes ,sum(kms) as 'kms' ,sum(subsubtotal) as 'subsubtotal' ,sum(subpeso) as 'subpeso' ,sum(non_zero) as 'non_zero'
+--		from 
+--				sistemas.dbo.projections_view_indicators_periods_fleets
+--		group by 
+--				area ,fraccion ,cyear ,mes
+--	)
+--	select
+--			row_number()
+--		over 
+--			(order by area) as 
+--								 id
+--								,area
+--								,fraccion
+--								,cyear
+--								,mes
+--								,kms
+--								,subsubtotal
+--								,subpeso 
+--								,non_zero 
+--		from(
+--				select
+--						area ,fraccion ,cyear ,mes ,kms,subsubtotal,subpeso,non_zero
+--				from 
+--						operativos
+--			) 
+--	as result			
 
+	
+	
+
+	
 --	select * from sistemas.dbo.projections_view_indicators_periods_fleets where area = 'ORIZABA' --cyear = '2017' and mes = 'Marzo'
 --		select * from projections_view_indicators_periods where cyear = '2017'
 --		select * from projections_view_indicators_periods_full_fleets where cyear = '2017' order by mes

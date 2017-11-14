@@ -40,7 +40,6 @@ WHERE database_id = DB_ID(N'integraapp');
 --GO
 
 use integraapp
---go
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 ALTER DATABASE integraapp SET RECOVERY SIMPLE
@@ -96,9 +95,7 @@ use sltestapp;
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 ALTER DATABASE sltestapp SET RECOVERY SIMPLE
-
 DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
-
 ALTER DATABASE sltestapp SET RECOVERY FULL;
 
 use sltestapp;
@@ -375,7 +372,24 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 use intermedia
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
-	
+
+
+use pruebassys
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+	ALTER DATABASE pruebassys SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
+	ALTER DATABASE pruebassys SET RECOVERY full
+use pruebassys
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
+
+
+use SaldosInicialesApp
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+	ALTER DATABASE SaldosInicialesApp SET RECOVERY SIMPLE
+	DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+	ALTER DATABASE SaldosInicialesApp SET RECOVERY full
+use SaldosInicialesApp
+select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
 
 -- =========================================== Check database storage ======================================================= --
