@@ -1238,12 +1238,12 @@ insert into sistemas.dbo.casetas_views
 					casetas_controls_files_id = @casetas_controls_files_id and id = @casetas_historical_conciliations_id;
 
 END
-GO
 
 
+--  select * from sistemas.dbo.casetas_units
 --3:15
--- exec sistemas.dbo.sp_tollbooth_net 4,134,1
-
+-- exec sistemas.dbo.sp_tollbooth_net 1,456,1
+-- options bsu , file_id ,user_id
 
  --truncate table sistemas.dbo.casetas_tiger_runs
  --truncate table sistemas.dbo.casetas_logs
@@ -1252,6 +1252,7 @@ GO
  --truncate table sistemas.dbo.casetas_controls_conciliations
  --truncate table sistemas.dbo.casetas_historical_conciliations
  --truncate table sistemas.dbo.casetas
+
 
 
 

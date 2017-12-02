@@ -555,7 +555,6 @@ BEGIN
 		   begin
 				insert into @tollbooth_next_full
 					select * from @tollbooth_no_trips where liq_paso = 'S' and liq_tipo_pago = '1' 
-				
 		   end
 
 		truncate table sistemas.dbo.casetas_lis_full_conciliations

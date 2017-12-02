@@ -29,8 +29,8 @@ create table `own_finances`(
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
--- insert into `own_finances` values (null,357.60,0,'savings',now(),now()); -- income
--- insert into `own_finances`.`own_finances` values (null,0,1012.00,'costs_weekend 16-ago-17',now(),now()); -- expenses
+-- insert into `own_finances` values (null,400,0,'savings',now(),now()); -- income
+-- insert into `own_finances`.`own_finances` values (null,0,52.00,'snacks',now(),now()); -- expenses
 
 select * from `own_finances`.`own_finances`
 

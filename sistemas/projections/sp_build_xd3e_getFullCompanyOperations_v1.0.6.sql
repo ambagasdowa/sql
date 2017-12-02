@@ -378,7 +378,7 @@ if @mode <> 9
 -- ====================================      CERRAR PËRIODOS          =========================================== --
 -- ============================================================================================================== --
 			
--- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '1','0','1','0','0';
+-- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '2','0','1','0','0';
 -- select * from sistemas.dbo.projections_view_closed_period_units
 
 			
@@ -388,8 +388,8 @@ if @mode <> 9
 --exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations		
 --															@company   1:tbk 2:atm 3 teisa
 --															@unit	   0:all , or id_area
---															@mode      1 : close , 9 : test 
+--															@mode      1 : Production , 9 : test 
 --															@user_id   can be 0
---															@period	   can be 0
+--															@period	   can be 0 
 -- ============================================================================================================== --
 

@@ -1089,6 +1089,10 @@ group by
 --	view for totals in ingresos same as after but without the period filter
 -- =================================================================== --
 
+-- testing 
+--select * from sistemas.dbo.projections_view_indicators_dispatch_periods_full_ops as "fleets"			
+			
+			
 use sistemas
 -- go
 IF OBJECT_ID ('ingresos_costos_view_ind_ppto_ingresos', 'V') IS NOT NULL
@@ -1114,8 +1118,7 @@ with "op" as (
 			 end as 'frt'
 			,"units".tname
 	from
---			sistemas.dbo.projections_view_indicators_periods_fleets as "fleets"
-			sistemas.dbo.projections_view_indicators_dispatch_periods_full_ops as "fleets"
+			sistemas.dbo.ingresos_view_indicators_dispatch_periods_full_ops as "fleets"
 	inner join
 			sistemas.dbo.reporter_views_years as "pe"
 		on
@@ -1256,7 +1259,7 @@ group by
 			,"operation".tname
 			
 			
--- select * from sistemas.dbo.ingresos_costos_view_ind_ppto_ingresos
+-- select * from sistemas.dbo.ingresos_costos_view_ind_ppto_ingresos where periodo = '201711'
 
 
 -- define fractions
@@ -1303,7 +1306,152 @@ where period
 
 
 
+		
+--================================================================================================================================================================================
+-- FULL view againts a store by month
+--================================================================================================================================================================================
 
+use sistemas
+	if OBJECT_ID('ingresos_view_indicators_dispatch_periods_full_ops', 'V') is not null
+		drop view ingresos_view_indicators_dispatch_periods_full_ops
+	create view ingresos_view_indicators_dispatch_periods_full_ops
+	with encryption
+	as
+	with operations_ind
+						(  
+								 company,id_area,area
+								,id_tipo_operacion
+								,id_fraccion
+								,fraccion
+								,cyear,mes
+								,kms_real
+								,kms_viaje
+								,subtotal
+								,peso
+								,non_zero
+						)
+		as (
+				select 
+						 indupt.company,indupt.id_area				  
+						,case	
+						 	when indupt.id_tipo_operacion in 	(
+																	12
+						 										)
+						 		then
+						 			(
+											'LA PAZ'
+						 			)
+						 	else
+						 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
+						  end as 'area'
+						,indupt.id_tipo_operacion
+						,indupt.id_fraccion
+						,case
+							when indupt.id_fraccion is null
+								then 'VACIO'
+							else
+								indupt.fraccion
+						end as 'fraccion'
+						,year(indupt.f_despachado) as 'cyear'
+						,indupt.mes
+						,case
+							when indupt.trip_count = 1
+								then sum(indupt.kms_real)
+							when indupt.trip_count is null
+								then sum(isnull(indupt.kms_real,0))
+							else
+								cast ((select '0') as int)
+						end as 'kms_real'
+						,case
+							when indupt.trip_count = 1
+								then sum(indupt.kms_viaje)
+							when indupt.trip_count is null
+								then sum(isnull(indupt.kms_viaje,0))
+							else
+								cast ((select '0') as int)
+						end as 'kms_viaje'
+						,sum(indupt.subtotal) as 'subtotal',sum(indupt.peso) as 'peso'
+						,case
+							when indupt.trip_count = 1
+								then count(indupt.trip_count)
+							when indupt.trip_count is null
+								then count(indupt.id_area)
+							else
+								cast ((select '0') as int)
+						end as 'non_zero'
+				from	
+						sistemas.dbo.projections_view_full_company_dispatched_indicators as indupt
+				where 
+					indupt.f_despachado <= dateadd(day,-1,current_timestamp)
+				group by
+						 indupt.company,indupt.id_area,indupt.area
+						,indupt.id_tipo_operacion
+						,indupt.id_fraccion,indupt.fraccion				
+						,year(indupt.f_despachado)
+						,indupt.mes
+						,indupt.trip_count		
+			)
+	select
+			row_number()
+		over 
+			(order by id_area) as 
+								id,
+								company,
+								id_area,
+								area,
+								id_fraccion,
+								fraccion,
+								cyear,
+								mes,
+								kms,
+								subtotal,
+								peso,
+								non_zero
+	from(
+			select 			
+					opsind.company
+					,cast(opsind.id_area as int)  as 'id_area'
+					,opsind.area collate SQL_Latin1_General_CP1_CI_AS as 'area'
+					,opsind.id_fraccion
+					,opsind.fraccion
+					,opsind.cyear
+					,opsind.mes
+					,case -- which field we have to show
+						when opsind.id_fraccion in ( 
+												select prfrt.projections_id_fraccion
+												from sistemas.dbo.projections_view_company_fractions as prfrt
+												where prfrt.projections_corporations_id = opsind.company and prfrt.projections_rp_fraction_id = 1) -- means granel
+							then 
+								(sum(opsind.kms_viaje)*2)
+						when opsind.id_fraccion not in (	
+												select prtrf.projections_id_fraccion
+												from sistemas.dbo.projections_view_company_fractions as prtrf
+												where prtrf.projections_corporations_id = opsind.company and prtrf.projections_rp_fraction_id = 1) -- means otros
+							then 
+								sum(opsind.kms_real)
+						else
+							sum(opsind.kms_real)
+					end as 'kms'
+					,sum(opsind.subtotal) as 'subtotal'
+					,sum(opsind.peso) as 'peso'
+					,sum(opsind.non_zero) as 'non_zero'
+			from 
+					operations_ind opsind
+			group by 
+					 opsind.company
+					 ,opsind.id_area
+					 ,opsind.area
+					 ,opsind.id_fraccion
+					 ,opsind.fraccion
+					 ,opsind.cyear
+					 ,opsind.mes
+	) as result
+		
+		
+	
+-- ========================================================================================================================================= --
+-- 																																			 --
+-- ========================================================================================================================================= --
 
 
 

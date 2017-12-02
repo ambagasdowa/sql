@@ -798,7 +798,7 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
 		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
@@ -814,7 +814,7 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,no_de_ejes								int
 		,monto_iave								decimal(18,6)
 		,tarifas								decimal(18,6)
-		,liq_tipo_pa-- go							int
+		,liq_tipo_pago							int
 		,liq_paso								nvarchar(1)
 		,liq_id_caseta							int
 		,liq_monto_caseta						decimal(18,6)
@@ -829,10 +829,10 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,_modified								datetime default current_timestamp
 		,_status								tinyint default 1 null
 ) on [primary]
--- go
+
 
 set ansi_padding off
--- go
+
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

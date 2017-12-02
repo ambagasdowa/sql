@@ -2753,7 +2753,7 @@ use sistemas
 	) as result
 		
 		
-		
+--		select * from sistemas.dbo.projections_view_full_company_dispatched_indicators
 		
 --================================================================================================================================================================================
 -- Full Query Operaciones

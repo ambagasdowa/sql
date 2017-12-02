@@ -58,6 +58,9 @@ select
 from 
 		integraapp.dbo.Customer as "customer"
 		
+		
+		
+		
 -- ==================================================================================================================== --	
 -- =================================     	  Factura Data View		     ====================================== --
 -- ==================================================================================================================== --
@@ -83,6 +86,7 @@ select
 	end as TipoDocumento
 	,"document".User6 as Folio
 	,"customer".Name as Nombre
+	,"customer".terms as 'diasCredito'
 	,"document".CuryTxblTot00 as Flete
 	,"document".CuryTaxTot00 as Iva
 	,"document".CuryTaxTot01 as Retencion
@@ -117,3 +121,498 @@ where
 		"document".CpnyID = 'TEICUA' and year("document".Crtd_DateTime) = '2017' and month("document".Crtd_DateTime) = '10' and day("document".Crtd_DateTime) = '25'
 		
 		
+
+		
+-- ==================================================================================================================== --	
+-- =================================     	  Viajes Indicadores Data View		  ===================================== --
+-- ==================================================================================================================== --		
+		
+-- TBK
+		
+use sistemas;
+
+IF OBJECT_ID ('performance_view_full_indicators_tbk_periods', 'V') IS NOT NULL
+    DROP VIEW performance_view_full_indicators_tbk_periods;
+-- now build the view
+create view performance_view_full_indicators_tbk_periods
+with encryption
+as
+	with guia_tbk as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,guia.num_guia
+					,guia.no_guia
+					,viaje.f_despachado
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+					,cast(guia.fecha_ingreso as date) as 'fecha_ingreso'
+					,cast(guia.fecha_modifico as date) as 'fecha_modifico'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cliente.id_cliente
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,"trg".peso
+					,(
+						select 
+								descripcion
+						from
+								bonampakdb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								bonampakdb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								bonampakdb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								bonampakdb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							bonampakdb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'1' as 'company'
+			from 
+						bonampakdb.dbo.trafico_viaje as "viaje"
+				inner join 
+						bonampakdb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+					and 
+						guia.prestamo <> 'P'
+					and 
+						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				inner join
+						bonampakdb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				inner join
+						bonampakdb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				inner join 
+						bonampakdb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(guia.fecha_guia) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+ 				,"guia".num_guia,"guia".no_guia
+				,"guia".f_despachado ,"guia".fecha_guia ,"guia".fecha_ingreso ,"guia".fecha_modifico
+				,"guia".mes ,"guia".id_cliente ,"guia".cliente 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+	from 
+				guia_tbk as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".num_guia , "guia".no_guia
+				,"guia".fecha_guia ,"guia".f_despachado ,"guia".fecha_ingreso , "guia".fecha_modifico
+				,"guia".mes 
+				,"guia".id_cliente
+				,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+
+--select * from sistemas.dbo.performance_view_full_indicators_tbk_periods
+				
+				
+--	ATM
+
+use sistemas
+IF OBJECT_ID ('performance_view_full_indicators_atm_periods', 'V') IS NOT NULL		
+    DROP VIEW performance_view_full_indicators_atm_periods;
+create view performance_view_full_indicators_atm_periods
+
+with encryption
+as			
+	with guia_atm as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,guia.num_guia
+					,guia.no_guia
+					,viaje.f_despachado
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+					,cast(guia.fecha_ingreso as date) as 'fecha_ingreso'
+					,cast(guia.fecha_modifico as date) as 'fecha_modifico'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cliente.id_cliente
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,"trg".peso
+					,(
+						select 
+								descripcion
+						from
+								macuspanadb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								macuspanadb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								macuspanadb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								macuspanadb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							macuspanadb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'2' as 'company'
+			from 
+						macuspanadb.dbo.trafico_viaje as "viaje"
+				inner join 
+						macuspanadb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+					and 
+						guia.prestamo <> 'P'
+					and 
+						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				inner join
+						macuspanadb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				inner join
+						macuspanadb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				inner join 
+						macuspanadb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(guia.fecha_guia) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".num_guia , "guia".no_guia
+				,"guia".f_despachado ,"guia".fecha_guia ,"guia".fecha_ingreso , "guia".fecha_modifico
+				,"guia".mes ,"guia".id_cliente ,"guia".cliente
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+	from 
+				guia_atm as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".num_guia , "guia".no_guia
+				,"guia".f_despachado,"guia".fecha_guia ,"guia".fecha_ingreso ,"guia".fecha_modifico
+				,"guia".mes ,"guia".id_cliente ,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+
+				
+-- Teisa
+
+			
+-- ==================================================================================================================== --	
+-- ===============================      full indicators for tespecializadadb	  ===================================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('performance_view_full_indicators_tei_periods', 'V') IS NOT NULL		
+    DROP VIEW performance_view_full_indicators_tei_periods;
+    
+create view performance_view_full_indicators_tei_periods
+with encryption
+as
+	with guia_tei as 
+		(
+			select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+					,guia.num_guia
+					,guia.no_guia
+					,viaje.f_despachado
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+					,cast(guia.fecha_ingreso as date) as 'fecha_ingreso'
+					,cast(guia.fecha_modifico as date) as 'fecha_modifico'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cliente.id_cliente
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+					,"trg".peso
+					,(
+						select 
+								descripcion
+						from
+								tespecializadadb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								tespecializadadb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								tespecializadadb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								tespecializadadb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							tespecializadadb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'3' as 'company'
+			from 
+						tespecializadadb.dbo.trafico_viaje as "viaje"
+				inner join 
+						tespecializadadb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+					and 
+						guia.prestamo <> 'P'
+					and 
+						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+				inner join
+						tespecializadadb.dbo.trafico_renglon_guia as "trg"
+					on
+						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				inner join
+						tespecializadadb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				inner join 
+						tespecializadadb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(guia.fecha_guia) = "translation".month_num
+		)
+	select 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				,"guia".num_guia , "guia".no_guia
+				,"guia".f_despachado ,"guia".fecha_guia , "guia".fecha_ingreso , "guia".fecha_modifico
+				,"guia".mes  ,"guia".id_cliente ,"guia".cliente 
+--				,avg("guia".kms_viaje) as 'kms_viaje' 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_viaje
+				end as 'kms_viaje'
+--				,avg("guia".kms_real) as 'kms_real'
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else "guia".kms_real
+				end as 'kms_real'
+				,sum("guia".subtotal) as 'subtotal' 
+				,sum("guia".peso) as 'peso'
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company 
+				,case 
+					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
+						then '0' else '1'
+				end as 'trip_count'
+	from 
+				guia_tei as "guia"
+	group by 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+ 				,"guia".num_guia , "guia".no_guia
+				,"guia".f_despachado , "guia".fecha_guia , "guia".fecha_ingreso , "guia".fecha_modifico
+				,"guia".mes ,"guia".id_cliente ,"guia".cliente
+				,"guia".kms_viaje,"guia".kms_real
+				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
+		
+
+
+-- ==================================================================================================================== --	
+-- =============================      full query indicators for all company    ======================================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('performance_trips', 'V') IS NOT NULL		
+    DROP VIEW performance_trips;
+    
+create view performance_trips
+as 
+(
+	select
+		row_number()
+	over 
+		(order by num_guia) as 
+				     id
+					,id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
+					,num_guia, no_guia
+					,f_despachado,fecha_guia,fecha_ingreso,fecha_modifico,mes,id_cliente,cliente,kms_viaje,kms_real,subtotal
+					,peso,configuracion_viaje,tipo_de_operacion,flota,area,fraccion,company,trip_count	
+	from (
+			select 
+					 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
+					,num_guia , no_guia
+					,f_despachado,fecha_guia,fecha_ingreso,fecha_modifico,mes,id_cliente,cliente,kms_viaje,kms_real,subtotal
+					,peso,configuracion_viaje,tipo_de_operacion,flota
+					, -- area
+					case 
+						when id_tipo_operacion = '12'
+							then 'LA PAZ'
+						else	
+							area
+					end as 'area'
+					,fraccion,company,trip_count	
+			from 
+					sistemas.dbo.performance_view_full_indicators_tbk_periods
+			union all
+			select 
+					 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
+					,num_guia,no_guia
+					,f_despachado,fecha_guia,fecha_ingreso,fecha_modifico,mes,id_cliente,cliente,kms_viaje,kms_real,subtotal
+					,peso,configuracion_viaje,tipo_de_operacion,flota,area,fraccion,company,trip_count	
+			from 
+					sistemas.dbo.performance_view_full_indicators_atm_periods
+			union all
+			select 
+					 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
+					,num_guia , no_guia
+					,f_despachado,fecha_guia,fecha_ingreso,fecha_modifico,mes,id_cliente,cliente,kms_viaje,kms_real,subtotal
+					,peso,configuracion_viaje,tipo_de_operacion,flota,area,fraccion,company,trip_count	
+			from 
+					sistemas.dbo.performance_view_full_indicators_tei_periods
+	) as result
+) 
+
+
+-- select * from sistemas.dbo.performance_trips_indicators
+
+select * from sistemas.dbo.casetas_lis_full_conciliations
+
+
+
+select * from sistemas.dbo.casetas_controls_files where [_filename] like '%425%' and [_area] = 'teicua'
+
+select * from sistemas.dbo.casetas_view_resume_stands where  casetas_controls_files_id = '426'
+
+
+
+select is_current from sistemas.dbo.ingresos_costos_gst_holidays where year(is_current) = year(current_timestamp) and month(is_current) = month(current_timestamp)
+
+select current_timestamp , cast(dateadd(day,-1,current_timestamp) as date) as 'new_date'
+

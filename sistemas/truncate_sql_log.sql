@@ -264,22 +264,21 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 
 
 use sistemas
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
-ALTER DATABASE sistemas SET RECOVERY SIMPLE
-DBCC SHRINKFILE('sistemas_log', 0, TRUNCATEONLY)
-
-ALTER DATABASE sistemas SET RECOVERY FULL
-select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
-
+	select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+		ALTER DATABASE sistemas SET RECOVERY SIMPLE
+		DBCC SHRINKFILE('sistemas_log', 0, TRUNCATEONLY)
+--		ALTER DATABASE sistemas SET RECOVERY full
+	select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
 -- report the new file sizes
---SELECT name, size
---FROM sys.master_files
---WHERE database_id = DB_ID(N'sltestapp');
+-- SELECT name, size
+-- FROM sys.master_files
+-- WHERE database_id = DB_ID(N'sltestapp');
+	
+exec sp_who2 'Active'
 
 
-
+DBCC CheckDB ('sistemas')
 -- ===================================== Truncate log for integra_fiscal ================================================ --
 
 --SELECT name, size
@@ -391,6 +390,15 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 use SaldosInicialesApp
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
+
+--use
+--select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
+--
+--	ALTER DATABASE SaldosInicialesApp SET RECOVERY SIMPLE
+--	DBCC SHRINKFILE('integraapp_Log', 0, TRUNCATEONLY)
+--	ALTER DATABASE SaldosInicialesApp SET RECOVERY full
+--use SaldosInicialesApp
+--select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
 -- =========================================== Check database storage ======================================================= --
 
