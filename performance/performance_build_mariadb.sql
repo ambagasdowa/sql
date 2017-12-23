@@ -116,13 +116,13 @@ select
 		,`facturas`.performance_references_id
 		,`facturas`.performance_bsus_id
 		,`facturas`.entregaFacturaCliente
-		,ifnull(timestampdiff(day,`reference`.ElaboracionFactura,`facturas`.entregaFacturaCliente), 0) as 'deliver'
+		,ifnull(abs(datediff(`reference`.ElaboracionFactura,`facturas`.entregaFacturaCliente)), 0) as 'deliver'
 		,`facturas`.aprobacionFactura
-		,ifnull(timestampdiff(day,`facturas`.entregaFacturaCliente,`facturas`.aprobacionFactura),0) as 'proved'
+		,ifnull(abs(datediff(`facturas`.entregaFacturaCliente,`facturas`.aprobacionFactura)),0) as 'proved'
 		,ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) as 'fechaPromesaPago'
-		,ifnull(timestampdiff(day,`facturas`.aprobacionFactura, ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) ),0) as 'promise'
+		,ifnull(abs(datediff(`facturas`.aprobacionFactura, ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) )),0) as 'promise'
 		,`facturas`.fechaPago
-		,ifnull(timestampdiff(day,ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0),`facturas`.fechaPago),0) as 'payment'
+		,ifnull(abs(datediff(ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0),`facturas`.fechaPago)),0) as 'payment'
 from
 		`portal_apps`.performance_references as `reference`
 	left join 
@@ -134,6 +134,8 @@ from
 	and 
 		`reference`.Empresa = `facturas`.performance_bsus_id
 		
+
+
 -- ==================================================================================================================== --	
 -- ===================================     Performance Control(Viajes) table    ====================================== --
 -- ==================================================================================================================== --
@@ -198,7 +200,7 @@ as
 			,`viaje`.entregaEvidenciasCliente		-- deliver
 			,ifnull(timestampdiff(day,`trips`.fecha_modifico,`viaje`.entregaEvidenciasCliente), 0) as 'deliver'			
 			,`viaje`.validacionEvidenciasCliente	-- validation
-			,ifnull(timestampdiff(day,`trips`.fecha_modifico,`viaje`.validacionEvidenciasCliente), 0) as 'validation'
+			,ifnull(timestampdiff(day,`viaje`.entregaEvidenciasCliente,`viaje`.validacionEvidenciasCliente), 0) as 'validation'
 -- 
 			,`trips`.mes
 			,`trips`.id_cliente
@@ -341,9 +343,19 @@ where
 -- 	select ifnull(null,0);
 
 		
-		select * from portal_users.users where username like '%mendieta%'
+		select * from portal_users.users where username like '%mun%'
+		
+		select * from portal_users.groups 
 		
 		
+use portal_apps
+
+	select 
+			usr.name,usr.last_name,
+			usr.username,ctr.clear_key
+	from portal_apps.control_desk_user_controls ctr
+	left join 
+		portal_users.users as usr on ctr.user_id = usr.id
 		
 
 -- 	

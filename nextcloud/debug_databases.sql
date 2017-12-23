@@ -8,7 +8,7 @@ show tables
 select * from mssql_integradb.general_view_bussiness_units
 -- show engines;
 -- SELECT * FROM `information_schema`.`plugins`;
--- SELECT * FROM mysql.plugin;
+-- SELECT * FROM mysql.plugin; 
 -- create database mssql_integradb
 -- use mssql_integradb
 -- show tables;
@@ -43,22 +43,31 @@ use portal_nextcloud
 show tables;
 
 
-select * from portal_nextcloud.oc_users
+-- set a view for shared documents
+
+select uid,displayname,password from portal_nextcloud.oc_users
 
 select * from portal_nextcloud.oc_share
+-- 
 
-select * from portal_nextcloud.oc_filecache
-
-select * from portal_nextcloud.oc_dav_shares
+-- set a view for storage
+select * from portal_nextcloud.oc_filecache where storage = '6'
 
 select * from portal_nextcloud.oc_mounts
 
 select * from portal_nextcloud.oc_storages
+-- 
 
+-- contacts 
 select * from portal_nextcloud.oc_accounts
 
+select * from portal_nextcloud.oc_dav_shares
 select * from portal_nextcloud.oc_mimetypes
 
+
+select * from portal_nextcloud.oc_files_trash
+
+select * from portal_nextcloud.oc_personal_settings
 
 
 

@@ -401,7 +401,7 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 --select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files	
 
 -- =========================================== Check database storage ======================================================= --
-
+use sistemas
 SELECT RTRIM(name) AS [Segment Name], groupid AS [Group Id], filename AS [File Name],
             CAST(size/128.0 AS DECIMAL(10,2)) AS [Allocated Size in MB],
             CAST(FILEPROPERTY(name, 'SpaceUsed')/128.0 AS DECIMAL(10,2)) AS [Space Used in MB],

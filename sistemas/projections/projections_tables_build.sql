@@ -790,21 +790,21 @@ as
 (
 	select 
 			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
-			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,no_viaje ,num_guia ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
 			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count 	
 	from 
 			sistemas.dbo.projections_view_full_indicators_tbk_periods
 	union all
 	select 
 			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
-			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,no_viaje ,num_guia ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
 			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count 			
 	from 
 			sistemas.dbo.projections_view_full_indicators_atm_periods
 	union all
 	select 
 			 id_area ,id_unidad ,id_configuracionviaje ,id_tipo_operacion ,id_fraccion ,id_flota 
-			,no_viaje ,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
+			,no_viaje ,num_guia,fecha_guia ,mes ,f_despachado ,cliente ,kms_viaje ,kms_real ,subtotal ,peso 
 			,configuracion_viaje ,tipo_de_operacion ,flota ,area ,fraccion ,company ,trip_count
 	from 
 			sistemas.dbo.projections_view_full_indicators_tei_periods
@@ -832,6 +832,7 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+					,guia.num_guia
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -913,7 +914,8 @@ as
 						month(guia.fecha_guia) = "translation".month_num
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia 
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -934,7 +936,8 @@ as
 	from 
 				guia_tbk as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -965,6 +968,7 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+					,guia.num_guia
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -1046,7 +1050,8 @@ as
 						month(guia.fecha_guia) = "translation".month_num
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -1067,7 +1072,8 @@ as
 	from 
 				guia_atm as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -1095,6 +1101,7 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+					,guia.num_guia
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -1176,7 +1183,8 @@ as
 						month(guia.fecha_guia) = "translation".month_num
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 --				,avg("guia".kms_viaje) as 'kms_viaje' 
@@ -1199,7 +1207,8 @@ as
 	from 
 				guia_tei as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
+				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -1696,9 +1705,14 @@ with operations_ind
 			select 
 					 indupt.company,indupt.id_area
 					 ,case
-					 		when indupt.id_tipo_operacion  = 12
-					 			then 'LA PAZ'
-					 			else indupt.area
+					 		when indupt.id_tipo_operacion = 12
+					 			then 
+					 				case
+					 					when indupt.area = 'GUADALAJARA'
+						 					then 'LA PAZ'
+						 				else indupt.area	
+						 			end
+					 		else indupt.area
 					 end as 'area'
 					,indupt.id_flota,indupt.flota
 					,indupt.id_tipo_operacion
@@ -1748,7 +1762,12 @@ with operations_ind
 					 perdat.company,perdat.id_area
 					,case 
 						when perdat.id_tipo_operacion = 12
-							then 'LA PAZ'
+							then 
+								case 
+									when perdat.area = 'GUADALAJARA'
+										then 'LA PAZ'
+									else perdat.area
+								end
 						else perdat.area
 					 end as 'area'
 					,perdat.id_flota,perdat.flota
@@ -1788,8 +1807,6 @@ select
 	,peso
 	,non_zero
 from operations_ind
-
-						
 
 
 -- ==================================================================================================================== --	
@@ -1845,6 +1862,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--
+					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -1853,7 +1877,16 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+--					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								sum(isnull("tren".peso,0) + isnull("tren".peso_estimado,0)) 
+						from 
+								bonampakdb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+								
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -1909,10 +1942,10 @@ as
 --						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				left join
-						bonampakdb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				left join
+--						bonampakdb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				left join
 						bonampakdb.dbo.trafico_cliente as "cliente"
 					on 
@@ -1925,9 +1958,14 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(viaje.f_despachado) = "translation".month_num
+				inner join 
+						bonampakdb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje , "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -1949,12 +1987,14 @@ as
 	from 
 				guia_tbk as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje, "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
 				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
 				,"guia".cyear
+				
 
 -- ==================================================================================================================== --	
 -- ===============================      full indicators DISPACHT?? for macuspanadb	     ============================== --
@@ -2605,13 +2645,14 @@ use sistemas
 	--				  end as 'area'
 					  
 					case	
-					 	when indupt.id_tipo_operacion in 	(
-																12
-					 										)
+					 	when indupt.id_tipo_operacion = 12
 					 		then
-					 			(
-										'LA PAZ'
-					 			)
+					 			case 
+					 				when indupt.area = 'GUADALAJARA'
+					 					then 'LA PAZ'
+					 				else
+					 					indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
+					 			end
 					 	else
 					 		indupt.area collate SQL_Latin1_General_CP1_CI_AS -- as 'area'
 					  end as 'area'
@@ -2861,7 +2902,7 @@ with operativos
 	
 --	select * from sistemas.dbo.projections_view_indicators_periods_fleets where area = 'ORIZABA' --cyear = '2017' and mes = 'Marzo'
 --		select * from projections_view_indicators_periods where cyear = '2017'
---		select * from projections_view_indicators_periods_full_fleets where cyear = '2017' order by mes
+--		select * from projections_view_indicators_periods_full_fleets where cyear = '2017' and mes = 'Noviembre' and fraccion = 'GRANEL' order by mes
 -- ================================================================================================================================================================================
 --  Tipos de Operacion por Compania
 -- ================================================================================================================================================================================

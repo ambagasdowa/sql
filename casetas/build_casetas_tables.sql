@@ -286,7 +286,7 @@ IF OBJECT_ID ('casetas_iave_periods', 'V') IS NOT NULL
     DROP VIEW casetas_iave_periods;
 
 create view casetas_iave_periods
---with encryption
+with encryption
 as
 -- full compability with old table casetas_iave_periods
 		select 
@@ -306,7 +306,7 @@ as
 		where 
 				period 
 					between 
-							(left(CONVERT(VARCHAR(10), (dateadd(month,-13,CURRENT_TIMESTAMP)), 112), 6))
+							(left(CONVERT(VARCHAR(10), (dateadd(month,-5,CURRENT_TIMESTAMP)), 112), 6))
 					and 
 							(left(CONVERT(VARCHAR(10), (dateadd(month,3,CURRENT_TIMESTAMP)), 112), 6))				
 				
@@ -407,7 +407,7 @@ IF OBJECT_ID ('casetas_iave_periods_options', 'V') IS NOT NULL
     DROP VIEW casetas_iave_periods_options;
 
 create view casetas_iave_periods_options
---with encryption
+with encryption
 as
 -- full compability with old table casetas_iave_periods
 		select 
@@ -427,12 +427,12 @@ as
 		where 
 				period 
 					between 
-							(left(CONVERT(VARCHAR(10), (dateadd(month,-13,CURRENT_TIMESTAMP)), 112), 6))
+							(left(CONVERT(VARCHAR(10), (dateadd(month,-5,CURRENT_TIMESTAMP)), 112), 6))
 					and 
 							(left(CONVERT(VARCHAR(10), (dateadd(month,3,CURRENT_TIMESTAMP)), 112), 6))
 							
 							
-
+select * from sistemas.dbo.casetas_iave_periods_options
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- Catalog IavePeriods -- NEW -- add the id in iave when change column caseta to carril
@@ -733,7 +733,7 @@ create table [dbo].[casetas_lis_not_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
 		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
@@ -749,7 +749,7 @@ create table [dbo].[casetas_lis_not_conciliations](
 		,no_de_ejes								int
 		,monto_iave								decimal(18,6)
 		,tarifas								decimal(18,6)
-		,liq_tipo_pa-- go							int
+		,liq_tipo_pago							int
 		,liq_paso								nvarchar(1)
 		,liq_id_caseta							int
 		,liq_monto_caseta						decimal(18,6)
@@ -798,6 +798,71 @@ create table [dbo].[casetas_lis_full_conciliations](
 		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
 		,company_id								int
 		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
+		,iave_catalogo 							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,id_ruta								int
+		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
+		,id_caseta								int
+		,fecha_real_viaje						datetime
+		,fecha_real_fin_viaje					datetime
+		,diff_length_hours						int
+		,no_ejes_viaje							int
+		,no_tarjeta_llave						nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,orden									int
+		,consecutivo							int
+		,desc_caseta							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,no_de_ejes								int
+		,monto_iave								decimal(18,6)
+		,tarifas								decimal(18,6)
+		,liq_tipo_pago							int
+		,liq_paso								nvarchar(1)
+		,liq_id_caseta							int
+		,liq_monto_caseta						decimal(18,6)
+		,liq_monto_iave							decimal(18,6)
+		,liq_no_liquidacion						int
+		,trliq_fecha_ingreso					datetime
+		,_filename								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
+		,iave_period							int
+		,casetas_controls_files_id				int
+		,casetas_historical_conciliations_id	int
+		,fecha_conciliacion						datetime
+		,_modified								datetime default current_timestamp
+		,_status								tinyint default 1 null
+) on [primary]
+
+
+set ansi_padding off
+
+select * from sistemas.dbo.casetas_lis_full_conciliations
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- Core CasetasViajesLisNextConciliations
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+use [sistemas]
+
+IF OBJECT_ID('dbo.casetas_lis_next_conciliations', 'U') IS NOT NULL 
+  DROP TABLE dbo.casetas_lis_next_conciliations; 
+
+set ansi_nulls on
+
+set quoted_identifier on
+
+set ansi_padding on
+
+ 
+create table [dbo].[casetas_lis_next_conciliations](
+		 id										bigint identity(1,1) primary key
+		,lis_full_id							int
+		,period_iave_id							int
+		,fecha_ini								date
+		,fecha_fin								date
+		,no_viaje								int
+		,f_despachado							date
+		,id_area								int
+		,name									nvarchar(25) collate	sql_latin1_general_cp1_ci_as
+		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
+		,company_id								int
+		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
 		,iave_catalogo							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
 		,id_ruta								int
@@ -833,71 +898,6 @@ create table [dbo].[casetas_lis_full_conciliations](
 
 set ansi_padding off
 
-
-
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
--- Core CasetasViajesLisNextConciliations
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-use [sistemas]
--- go
-IF OBJECT_ID('dbo.casetas_lis_next_conciliations', 'U') IS NOT NULL 
-  DROP TABLE dbo.casetas_lis_next_conciliations; 
--- go
-set ansi_nulls on
--- go
-set quoted_identifier on
--- go
-set ansi_padding on
--- go
- 
-create table [dbo].[casetas_lis_next_conciliations](
-		 id										int identity(1,1)
-		,lis_full_id							int
-		,period_iave_id							int
-		,fecha_ini								date
-		,fecha_fin								date
-		,no_viaje								int
-		,f_despachado							date
-		,id_area								int
-		,name									nvarchar(25) collate	sql_latin1_general_cp1_ci_as
-		,cia									nvarchar(15) collate	sql_latin1_general_cp1_ci_as
-		,company_id								int
-		,id_unidad								nvarchar(10) collate	sql_latin1_general_cp1_ci_as
-		,iave_catalo-- go							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
-		,iave_viaje								nvarchar(25) collate	sql_latin1_general_cp1_ci_as
-		,id_ruta								int
-		,desc_ruta								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
-		,id_caseta								int
-		,fecha_real_viaje						datetime
-		,fecha_real_fin_viaje					datetime
-		,diff_length_hours						int
-		,no_ejes_viaje							int
-		,no_tarjeta_llave						nvarchar(25) collate	sql_latin1_general_cp1_ci_as
-		,orden									int
-		,consecutivo							int
-		,desc_caseta							nvarchar(25) collate	sql_latin1_general_cp1_ci_as
-		,no_de_ejes								int
-		,monto_iave								decimal(18,6)
-		,tarifas								decimal(18,6)
-		,liq_tipo_pa-- go							int
-		,liq_paso								nvarchar(1)
-		,liq_id_caseta							int
-		,liq_monto_caseta						decimal(18,6)
-		,liq_monto_iave							decimal(18,6)
-		,liq_no_liquidacion						int
-		,trliq_fecha_ingreso					datetime
-		,_filename								nvarchar(50) collate	sql_latin1_general_cp1_ci_as
-		,iave_period							int
-		,casetas_controls_files_id				int
-		,casetas_historical_conciliations_id	int
-		,fecha_conciliacion						datetime
-		,_modified								datetime default current_timestamp
-		,_status								tinyint default 1 null
-) on [primary]
--- go
-
-set ansi_padding off
--- go
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

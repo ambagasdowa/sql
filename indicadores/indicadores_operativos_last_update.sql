@@ -620,6 +620,239 @@ create
 	order by
 		c.nombre
 		
+		
+select 
+	sum(Tonelaje) as 'peso',sum(subtotal) as 'subtotal', count(Area) as 'records','legacy' as 'query' 
+from 
+	bonampakdb.dbo.Bon_v_IndOperativosOZ 
+where 
+	year(f_despachado) = '2017' and month(f_despachado)= '12' and fraccion = 'GRANEL'
+--
+union all
+select 
+	sum(peso) as 'peso',sum(subtotal) as 'subtotal', count(id_area) as 'records' ,'yesterday' as 'query' 
+from 
+	sistemas.dbo.projections_view_full_company_dispatched_indicators 
+where 
+	year(f_despachado) = '2017' and month(f_despachado) = '12' 
+	and f_despachado <= dateadd(day,-1,current_timestamp) and fraccion = 'GRANEL' and area = 'ORIZABA'
+--
+union all
+select 
+	sum(peso) as 'peso', sum(subtotal) as 'subtotal', count(id_area) as 'records' , 'Acepted' as 'query' 
+from
+	sistemas.dbo.projections_view_full_company_indicators
+where 
+	year(fecha_guia) = '2017' and month(fecha_guia) = '12' 
+	and fraccion = 'GRANEL' and area = 'ORIZABA'	
+	and day(fecha_guia) = '12'
+--
+union all
+select 
+	sum(peso) as 'peso',sum(subtotal) as 'subtotal', count(id_area) as 'records' ,'current' as 'query' 
+from 
+	sistemas.dbo.projections_view_full_company_dispatched_indicators 
+where 
+	year(f_despachado) = '2017' and month(f_despachado) = '12' 
+	and fraccion = 'GRANEL' and area = 'ORIZABA'	
+
+
+select dateadd(day,-1,current_timestamp)
+
+
+	
+select 
+	*
+from 
+	bonampakdb.dbo.Bon_v_IndOperativosOZ 
+where 
+	year(f_despachado) = '2017' and month(f_despachado)= '12' and fraccion = 'GRANEL'	
+	and day(f_despachado) = '12'
+	order by Viaje
+	
+select 
+	*
+from 
+--	sistemas.dbo.projections_view_full_company_dispatched_indicators 
+	sistemas.dbo.projections_view_full_dispatched_tbk_periods
+where 
+	year(f_despachado) = '2017' and month(f_despachado) = '12' 
+	and f_despachado <= dateadd(day,-1,current_timestamp) and fraccion = 'GRANEL' and area = 'ORIZABA'	
+	and day(f_despachado) = '12'
+	order by no_viaje
+	
+
+--	and no_viaje = '33131'
+	
+	
+select "g".id_unidad,"v".no_viaje,"g".subtotal
+	,"g".num_guia
+	,(
+		select 
+				sum(isnull("tren".peso,0) + isnull("tren".peso_estimado,0)) 
+		from 
+				bonampakdb.dbo.trafico_renglon_guia as "tren"
+		where	
+				"tren".no_guia = "g".no_guia and "tren".id_area = "v".id_area
+				
+	 ) as 'peso'
+	,* 
+from 
+	bonampakdb.dbo.trafico_viaje as "v" 
+	inner join bonampakdb.dbo.trafico_guia as "g" 
+	on "v".id_area = "g".id_area and "v".no_viaje = "g".no_viaje
+where 
+	year("v".f_despachado) = '2017' and month("v".f_despachado)= '12' and day("v".f_despachado) = '12'
+	and "g".status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+	and "g".id_area = '1' and "g".id_fraccion = '1' order by "v".no_viaje
+	
+--num_guia = 'OO-046118'	
+
+select no_guia,id_cliente,id_remolque1,id_remolque2,* from bonampakdb.dbo.trafico_guia where no_viaje = '33131' and id_area = '1'
+
+select * from bonampakdb.dbo.trafico_viaje where no_viaje = '33131' and id_area = '1'
+
+select * from bonampakdb.dbo.trafico_ruta where id_ruta = '17'
+
+select * from bonampakdb.dbo.trafico_cliente where id_cliente = 1
+	
+
+select * from bonampakdb.dbo.mtto_unidades where id_unidad = 'TT1306'
+
+select * from bonampakdb.dbo.trafico_renglon_guia where no_guia = '52288' and id_area = '1'
+
+select 
+	*
+from 
+	sistemas.dbo.projections_view_full_dispatched_tbk_periods
+where 
+	year(f_despachado) = '2017' and month(f_despachado) = '12' 
+	and f_despachado <= dateadd(day,-1,current_timestamp) and fraccion = 'GRANEL' and area = 'ORIZABA'	
+	and no_viaje = '33131'
+	
+	
+	
+select 
+					 viaje.id_area
+					,viaje.id_unidad
+					,viaje.id_configuracionviaje
+					,guia.id_tipo_operacion
+					,guia.id_fraccion
+					,manto.id_flota
+					,viaje.no_viaje
+--
+					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--
+					,cast(guia.fecha_guia as date) as 'fecha_guia'
+--					,(select datename(mm,guia.fecha_guia)) as 'mes'
+					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
+					,cast(viaje.f_despachado as date) as 'f_despachado'
+					,cliente.nombre as 'cliente'
+					,viaje.kms_viaje
+					,viaje.kms_real
+					,guia.subtotal
+--					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso_old'
+					,(
+						select 
+								sum(isnull("tren".peso,0) + isnull("tren".peso_estimado,0)) 
+						from 
+								bonampakdb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+								
+					 ) as 'peso'
+					,(
+						select 
+								descripcion
+						from
+								bonampakdb.dbo.trafico_configuracionviaje as "trviaje"
+						where
+								trviaje.id_configuracionviaje = viaje.id_configuracionviaje
+					) as 'configuracion_viaje'
+					,(
+						select 
+								tipo_operacion
+						from
+								bonampakdb.dbo.desp_tipooperacion as "tpop"
+						where 
+								tpop.id_tipo_operacion = guia.id_tipo_operacion
+					 ) as 'tipo_de_operacion'
+					,(
+						select 
+								nombre
+						from 
+								bonampakdb.dbo.desp_flotas as "fleet"
+						where
+								fleet.id_flota = manto.id_flota
+							
+					) as 'flota'
+					,(
+						select
+								ltrim(rtrim(replace(replace(replace(replace(replace(areas.nombre ,'AUTOTRANSPORTE' , ''),' S.A. DE C.V.',''),'BONAMPAK',''),'TRANSPORTADORA ESPECIALIZADA INDUSTRIAL','CUAUTITLAN'),'TRANSPORTE DE CARGA GEMINIS','TULTITLAN')))
+						from 
+								bonampakdb.dbo.general_area as "areas"
+						where 
+								areas.id_area = viaje.id_area
+					) as 'area'
+					,(
+						select
+								desc_producto
+						from
+							bonampakdb.dbo.trafico_producto as "producto"
+						where      
+							producto.id_producto = 0 and producto.id_fraccion = guia.id_fraccion
+					) as 'fraccion'
+					,'1' as 'company'
+					,year("viaje".f_despachado) as 'cyear'
+			from 
+						bonampakdb.dbo.trafico_viaje as "viaje"
+				left join 
+						bonampakdb.dbo.trafico_guia as "guia"
+					on	
+						guia.status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
+--					and 
+--						guia.prestamo <> 'P'
+--					and 
+--						guia.tipo_doc = 2 
+					and
+						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
+--				left join
+--						bonampakdb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+				left join
+						bonampakdb.dbo.trafico_cliente as "cliente"
+					on 
+						cliente.id_cliente = guia.id_cliente
+				left join 
+						bonampakdb.dbo.mtto_unidades as "manto"
+					on 
+						manto.id_unidad = viaje.id_unidad
+				inner join
+						sistemas.dbo.generals_month_translations as "translation"
+					on
+						month(viaje.f_despachado) = "translation".month_num
+				inner join 
+						bonampakdb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
+--			where viaje.no_viaje = '33131'
+--					and viaje.id_area = '1'
+---------------------------------------------------------------------------------------------- compabilitie issues
+
+						
+select 
+	*
+from 
+	sistemas.dbo.projections_view_full_company_dispatched_indicators 
+where 
+	year(f_despachado) = '2017' and month(f_despachado) = '12' and day(f_despachado)= '11' and fraccion = 'GRANEL' and area = 'ORIZABA'
+
+
 -- =================================================================================================== --				
 -- VIAJES DESPACHADOS ORIZABA
 -- =================================================================================================== --
