@@ -109,8 +109,10 @@ begin
 	-- select 
 		update
 			sltestapp.dbo.ARTran
-			set CuryUnitPrice = cast("tran".CuryTranAmt / (case when "tran".Qty = 0 then 1 else "tran".Qty end ) as decimal(12,1)) -- aprobed
+--			set CuryUnitPrice = ("tran".CuryTranAmt / (case when "tran".Qty = 0 then 1 else "tran".Qty end )) -- aprobed changes made on jan 2018
+			set CuryUnitPrice = ("tran".CuryTranAmt) -- changes request by SistemasGerencia on jan 2018
 			,UnitPrice = cast("tran".CuryTranAmt / (case when "tran".Qty = 0 then 1 else "tran".Qty end ) as decimal(12,2))
+			,Qty = '1' -- changes request by SistemasGerencia on jan 2018
 		from 
 			inserted as "in"
 		inner join 

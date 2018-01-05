@@ -660,6 +660,35 @@ where
 select dateadd(day,-1,current_timestamp)
 
 
+
+select 
+	sum(peso) as 'peso', sum(subtotal) as 'subtotal', count(id_area) as 'records' , 'Acepted' as 'query' 
+from
+	sistemas.dbo.projections_view_full_company_indicators
+where 
+	year(fecha_guia) = '2018' --and month(fecha_guia) = '12' 
+	and 
+		fraccion = 'GRANEL' and area = 'ORIZABA'	
+--	and day(fecha_guia) = '12'
+
+select 
+--	sum(peso) as 'peso', sum(subtotal) as 'subtotal', count(id_area) as 'records' , 'Acepted' as 'query' 
+*
+from
+	sistemas.dbo.projections_view_full_company_indicators
+where 
+	year(fecha_guia) = '2018' --and month(fecha_guia) = '12' 
+--	and 
+--		fraccion = 'GRANEL' and area = 'ORIZABA'	
+		
+
+select * from sistemas.dbo.projections_view_indicators_periods where cyear = '2018'
+
+select * from sistemas.dbo.projections_closed_period_datas where year(fecha_guia) = '2018'
+
+select * from sistemas.dbo.projections_view_closed_period_units
+
+
 	
 select 
 	*
@@ -705,6 +734,9 @@ where
 	year("v".f_despachado) = '2017' and month("v".f_despachado)= '12' and day("v".f_despachado) = '12'
 	and "g".status_guia in (select item from sistemas.dbo.fnSplit('R|T|C|A', '|'))
 	and "g".id_area = '1' and "g".id_fraccion = '1' order by "v".no_viaje
+	
+	
+
 	
 --num_guia = 'OO-046118'	
 

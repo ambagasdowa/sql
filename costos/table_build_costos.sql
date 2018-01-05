@@ -556,6 +556,8 @@ SET FMTONLY OFF
 -- ==================================================================================================================== --
 -- Add a third segment definitions
 
+--select * from sistemas.dbo.reporter_view_sp_xs4z_accounts
+			
 use sistemas
 
 IF OBJECT_ID ('reporter_view_sp_xs4z_accounts', 'V') IS NOT NULL

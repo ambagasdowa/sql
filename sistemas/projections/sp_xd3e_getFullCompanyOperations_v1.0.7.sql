@@ -16,6 +16,7 @@
 	 @version		: 1.0.0
  */
 -- ==================================================================================================================== --
+
 ALTER PROCEDURE sp_build_xd3e_getFullCompanyOperations
  (
 	@Company varchar(8000),		-- companies id's ex: 1(tbk) or 2(amt) or 3(tei) or 0 (zero means all companies)
@@ -194,7 +195,7 @@ ALTER PROCEDURE sp_build_xd3e_getFullCompanyOperations
 		from 
 				sistemas.dbo.projections_view_closed_period_units as "un"
 		where 
-				(right( CONVERT(VARCHAR(10),"un".next_period, 105), 7) ) < (right( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 105), 7) )
+				(left( CONVERT(VARCHAR(10),"un".next_period, 112), 6) ) < (left( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 112), 6) )
 			and 
 				"un".projections_corporations_id in (select company from @comp)
 		
@@ -218,7 +219,7 @@ ALTER PROCEDURE sp_build_xd3e_getFullCompanyOperations
 			and 
 					"com".id_area in (select units from @bunits)
 			and
-					(right( CONVERT(VARCHAR(10),"com".fecha_guia, 105), 7) ) = (right( CONVERT(VARCHAR(10),"table_time".next_period, 105), 7) )
+					(left( CONVERT(VARCHAR(10),"com".fecha_guia, 112), 6) ) = (left( CONVERT(VARCHAR(10),"table_time".next_period, 112), 6) )
 
 -- ==================================================================================================================== --	
 -- ====================================    fetching the rows of canceled       ======================================= --
@@ -238,7 +239,7 @@ ALTER PROCEDURE sp_build_xd3e_getFullCompanyOperations
 			and
 				"cnc".id_area in (select units from @bunits)
 			and
-					(right( CONVERT(VARCHAR(10),"cnc".fecha_cancelacion, 105), 7) ) = (right( CONVERT(VARCHAR(10),"tbl_time".next_period, 105), 7) )
+				(left( CONVERT(VARCHAR(10),"cnc".fecha_cancelacion, 112), 6) ) = (left( CONVERT(VARCHAR(10),"tbl_time".next_period, 112), 6) )
 	
 -- ==================================================================================================================== --	
 -- ================================        where to go ??? Quering Accepted	   ===================================== --
@@ -335,7 +336,7 @@ if @mode <> 9
 			from 
 					sistemas.dbo.projections_view_closed_period_units as "timeun"
 			where 
-					(right( CONVERT(VARCHAR(10),"timeun".next_period, 105), 7) ) < (right( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 105), 7) )
+					(left( CONVERT(VARCHAR(10),"timeun".next_period, 112), 6) ) < (left( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 112), 6) )
 				and 
 					"timeun".projections_corporations_id in (select company from @comp)
 				and	
@@ -391,7 +392,7 @@ print 'Next Period'
 			from 
 					sistemas.dbo.projections_view_closed_period_units as "timeun"
 			where 
-					(right( CONVERT(VARCHAR(10),"timeun".next_period, 105), 7) ) < (right( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 105), 7) )
+					(left( CONVERT(VARCHAR(10),"timeun".next_period, 112), 6) ) < (left( CONVERT(VARCHAR(10), CURRENT_TIMESTAMP, 112), 6) )
 				and 
 					"timeun".projections_corporations_id in (select company from @comp)
 				and	
