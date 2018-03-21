@@ -14,7 +14,56 @@
  @status        : Stable
  @version		: 1.0.0
  ================================================================================ */
-		
+
+
+
+-- ==================================================================================================================== --	
+-- =================================     	  Table Account Descriptions         ====================================== --
+-- ==================================================================================================================== --
+-- table of account descriptions
+-- select * from sistemas.dbo.performance_catalogs
+use sistemas;
+IF OBJECT_ID('performance_catalogs', 'U') IS NOT NULL 
+  DROP TABLE performance_catalogs; 
+-- go
+set ansi_nulls on
+-- go
+set quoted_identifier on
+-- go
+set ansi_padding on
+-- go
+create table [performance_catalogs](
+		id							int identity(1,1),
+        account						nvarchar(35) 		collate		sql_latin1_general_cp1_ci_as,
+		account_desc				nvarchar(2000)		collate		sql_latin1_general_cp1_ci_as,
+		clasification				nvarchar(35) 		collate		sql_latin1_general_cp1_ci_as,
+		created						datetime,
+		modified					datetime,
+		_status						tinyint default 1 null
+) on [primary]
+-- go
+set ansi_padding off
+-- go
+insert into performance_catalogs values	
+				('0401010000','FLETES GRANEL FACTURADOS','Granel',CURRENT_TIMESTAMP,null,'1'),
+				('0401070000','FLETES CAJA SECA FACTURADOS','Terceros',CURRENT_TIMESTAMP,null,'1'),
+				('0401090000','FLETES PLANAS FACTURADOS','Terceros',CURRENT_TIMESTAMP,null,'1'),
+				('0401130000','FLETES TOLVAS ALUM FACTURADOS','Terceros',CURRENT_TIMESTAMP,null,'1'),
+				('0401150000','FLETES ENCORTINADOS FACTURADOS','Terceros',CURRENT_TIMESTAMP,null,'1'),
+				('0401980000','FLETES OTROS FACTURADOS','Terceros',CURRENT_TIMESTAMP,null,'1'),
+				('0402010000','INGRESOS VARIOS','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402011000','INGRESOS POR CASETAS','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402012000','INGRESOS POR ESTADIAS','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402014000','INGRESOS POR REPARTO','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402090000','INGRESOS POR MANIOBRAS','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402040000','INGRESOS X VTA DE ACTIVO FIJO','Otros',CURRENT_TIMESTAMP,null,'1'),
+				('0402050000','SERV. DE COLABORACIÓN TEISA','Colaboración',CURRENT_TIMESTAMP,null,'1'),
+				('0402060000','SERV. DE COLABORACIÓN ATM','Colaboración',CURRENT_TIMESTAMP,null,'1'),
+				('0402060001','MANTENIMIENTO COLABORACION ATM','Colaboración',CURRENT_TIMESTAMP,null,'1'),
+				('0402120001','MANTTO. COLABORACON GEMINIS','Colaboración',CURRENT_TIMESTAMP,null,'1'),
+				('0402110000','INGRESOS INTERCOMPAÑIAS','Colaboración',CURRENT_TIMESTAMP,null,'1'),
+				('0403010000','INTERESES GANADOS','Colaboración',CURRENT_TIMESTAMP,null,'1');
+
 -- ==================================================================================================================== --	
 -- =================================     	  Client Catalog View		     ====================================== --
 -- ==================================================================================================================== --
@@ -58,8 +107,37 @@ select
 from 
 		integraapp.dbo.Customer as "customer"
 		
-		
-		
+-- ==================================================================================================================== --	
+-- =================================     	  Factura Data View		     ====================================== --
+-- ==================================================================================================================== --
+use sistemas;
+
+IF OBJECT_ID ('performance_accounts', 'V') IS NOT NULL
+    DROP VIEW performance_accounts;
+-- now build the view
+create view performance_accounts
+as
+with "performance" as (
+	select 
+		"artran".Acct,"artran".BatNbr,"artran".RefNbr,"artran".CpnyID 
+	from 
+			integraapp.dbo.ARTran as "artran" 
+	where 
+		Crtd_Prog = 'AR010' and LineRef = '1'
+	group by 
+		Acct,BatNbr,RefNbr,CpnyID
+)
+select 
+		 "per".Acct,"per".BatNbr,"per".RefNbr,"per".CpnyID
+		,"cat".id,"cat".account,"cat".account_desc,"cat".clasification
+from 
+		"performance" as "per"
+left join 
+		sistemas.dbo.performance_catalogs as "cat"
+	on 
+		"cat".account = "per".Acct
+
+select * from sistemas.dbo.performance_accounts
 		
 -- ==================================================================================================================== --	
 -- =================================     	  Factura Data View		     ====================================== --
@@ -94,8 +172,7 @@ select
 	,"document".RefNbr as Referencia
 	,"document".BatNbr as Lote
 	,"document".DocDesc as Descripcion
-	,"document".Crtd_DateTime as ElaboracionFactura
-	
+	,cast("document".Crtd_DateTime as date) as ElaboracionFactura
 	,case
 		month("document".Crtd_DateTime)
 		when 1 then 'ENERO'
@@ -112,17 +189,27 @@ select
 		when 12 then 'DICIEMBRE'
 	end as MES  
 	,day("document".Crtd_DateTime) as DIA
+	,"transac".Acct as 'Cuenta'
+	,"transac".account_desc as 'CuentaDesc'
+	,"transac".clasification as 'Clasificacion'
+	,cast("bat".DateEnt as date) as 'paymentDate'
 from
-	integraapp.dbo.ARDoc as "document" inner join integraapp.dbo.Customer as "customer" on
-	"document".CustId = "customer".CustId
+		integraapp.dbo.ARDoc as "document" 
+	inner join integraapp.dbo.Customer as "customer" 
+		on "document".CustId = "customer".CustId
+	left join sistemas.dbo.performance_accounts as "transac" 
+		on "transac".BatNbr = "document".BatNbr 
+	and	
+		"transac".RefNbr = "document".RefNbr and "transac".CpnyID = "document".CpnyID
+	left join integraapp.dbo.batch as "bat"
+		on	"bat".BatNbr = "document".BatNbr and "bat".CpnyID = "document".CpnyID and "bat".JrnlType = 'AR'
 where
 		"document".DocType = 'IN'
-	and
-		"document".CpnyID = 'TEICUA' and year("document".Crtd_DateTime) = '2017' and month("document".Crtd_DateTime) = '10' and day("document".Crtd_DateTime) = '25'
-		
-		
+	and 
+		year(cast("document".Crtd_DateTime as date)) in (year(dateadd(year,-1,cast(CURRENT_TIMESTAMP as date))),year(current_timestamp))
 
-		
+--select * from sistemas.dbo.performance_references
+	
 -- ==================================================================================================================== --	
 -- =================================     	  Viajes Indicadores Data View		  ===================================== --
 -- ==================================================================================================================== --		
@@ -263,7 +350,7 @@ as
 				,"guia".kms_viaje,"guia".kms_real
 				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
 
---select * from sistemas.dbo.performance_view_full_indicators_tbk_periods
+-- select * from sistemas.dbo.performance_view_full_indicators_tbk_periods
 				
 				
 --	ATM
@@ -580,6 +667,8 @@ as
 					,fraccion,company,trip_count	
 			from 
 					sistemas.dbo.performance_view_full_indicators_tbk_periods
+--			where 
+--					year(fecha_guia) in (year(dateadd(year,-1,cast(current_timestamp as date))),year(CURRENT_TIMESTAMP))
 			union all
 			select 
 					 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
@@ -588,6 +677,8 @@ as
 					,peso,configuracion_viaje,tipo_de_operacion,flota,area,fraccion,company,trip_count	
 			from 
 					sistemas.dbo.performance_view_full_indicators_atm_periods
+--			where 
+--					year(fecha_guia) in (year(dateadd(year,-1,cast(current_timestamp as date))),year(CURRENT_TIMESTAMP))
 			union all
 			select 
 					 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion,id_fraccion,id_flota,no_viaje
@@ -596,11 +687,42 @@ as
 					,peso,configuracion_viaje,tipo_de_operacion,flota,area,fraccion,company,trip_count	
 			from 
 					sistemas.dbo.performance_view_full_indicators_tei_periods
+--			where 
+--					year(fecha_guia) in (year(dateadd(year,-1,cast(current_timestamp as date))),year(CURRENT_TIMESTAMP))
 	) as result
 ) 
 
 
--- select * from sistemas.dbo.performance_trips_indicators
+-- select * from sistemas.dbo.performance_trips
+
+select year(fecha_guia) as 'guia',year(fecha_ingreso) as 'ingreso',year(fecha_modifico) as 'modifico', count(id_area) as 'count' from performance_view_full_indicators_tbk_periods
+where 
+			year(fecha_guia) = '2017'
+		or
+			year(fecha_ingreso) = '2017'
+		or 
+			year(fecha_modifico) = '2017'
+group by
+year(fecha_guia),year(fecha_ingreso),year(fecha_modifico)
+order by 
+year(fecha_guia)
+-- ==================================================================================================================== --	
+-- =============================      full query indicators for all company    ======================================== --
+-- ==================================================================================================================== --
+
+use sistemas
+IF OBJECT_ID ('performance_fractions', 'V') IS NOT NULL		
+    DROP VIEW performance_fractions;
+    
+create view performance_fractions
+as
+select 
+		id,projections_corporations_id,projections_rp_definition,projections_rp_fraction_id,projections_id_fraccion
+from 
+		sistemas.dbo.projections_view_company_fractions 
+		
+-- ==================================================================================================================== --		
+		
 
 select * from sistemas.dbo.casetas_lis_full_conciliations
 

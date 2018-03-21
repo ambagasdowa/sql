@@ -1367,9 +1367,44 @@ where
 --/** End of Cuatitlan */				
  
 -- ==================================================================================================================== --	
--- ========================    Costos (Transportacion) Operativos Fijos Tultitlan  ====================================== --
+-- ========================    Costos (Administracion) Operativos Fijos Tultitlan  ====================================== --
 -- ==================================================================================================================== --
 	
+use integraapp
+IF OBJECT_ID ('fetchCostosAdministracionTultitlan', 'V') IS NOT NULL
+	drop view fetchCostosAdministracionTultitlan;
+create view fetchCostosAdministracionTultitlan
+as                                                                             
+select 
+		 "acc".Mes
+		,"acc".NoCta
+		,"acc".NombreCta
+		,"acc".PerEnt
+		,"acc".Compania as 'Compañía'
+		,"acc".Tipo
+		,"acc".Entidad
+		,'' as 'distinto'
+		,"acc".TipoTransaccion as 'tipoTransacción'
+		,"acc".Referencia
+		,"acc".ReferenciaExterna as 'FechaTransacción'
+		,"acc".Descripcion as 'Descripción'
+		,"acc".Abono
+		,"acc".Cargo
+		,"acc".UnidadNegocio
+		,"acc".CentroCosto
+		,"acc".NombreEntidad
+		,"acc".Presupuesto
+		,"acc".FiscYr as 'Año'
+from 
+		sistemas.dbo.reporter_view_report_accounts as "acc"
+where 
+		"acc"."_key" = 'AD' and "acc"."_source_company" = 'TCGTUL' --and "acc".UnidadNegocio not in ('00')
+
+		
+-- ==================================================================================================================== --	
+-- ========================    Costos (Transportacion) Operativos Fijos Tultitlan  ====================================== --
+-- ==================================================================================================================== --
+		
 use integraapp
 IF OBJECT_ID ('fetchCostosFijosOpTultitlan', 'V') IS NOT NULL
 	drop view fetchCostosFijosOpTultitlan;

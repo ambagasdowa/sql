@@ -22,7 +22,7 @@
 
 -- Maintenance issues : just truncate the table 
 
-use sltestapp
+use integraapp
 
 IF OBJECT_ID('xwar_auxiliar_tables', 'U') IS NOT NULL 
   DROP TABLE xwar_auxiliar_tables; 
@@ -50,22 +50,22 @@ set ansi_padding off
 -- select * from sltestapp.dbo.xwar_auxiliar_tables
 -- truncate table sltestapp.dbo.xwar_auxiliar_tables
 --	select * from sltestapp.dbo.XGRWARTrans
-	use sltestapp
-	exec sp_desc ARTran
+--	use sltestapp
+--	exec sp_desc ARTran
 -- >>>>
 -- ==================================================================================================================== --	
 -- ====================================== 	  catch to aux  		 ========================================== --
 -- ==================================================================================================================== --
-use sltestapp
+use integraapp
 
-alter trigger towar_insert
-ON sltestapp.dbo.XGRWARTrans
+create trigger towar_insert
+ON integraapp.dbo.XGRWARTrans
 after insert
 as 
 begin
 		-- Catch the rows for examination
 	set nocount on
-	insert into sltestapp.dbo.xwar_auxiliar_tables
+	insert into integraapp.dbo.xwar_auxiliar_tables
 		select "i".BatNbr,"i".RefNbr ,"i".CpnyId,"i".LineNbr,current_timestamp,current_timestamp,'' from inserted as "i"
 end
 
@@ -127,53 +127,53 @@ begin
 			"tran".LineNbr = "xwar".LineNbr
 -- Update ardoc	
 -- ======================= SET montos ======================= --
-	select
-	@retencion = CAST((sum("tran".CuryTxblAmt00) * -0.04) AS DECIMAL(12,2))
-	   ,@iva = CAST((sum("tran".CuryTxblAmt00) * 0.16) AS DECIMAL(12,2))
-	   ,@monto = sum("tran".CuryTxblAmt00) + CAST((sum("tran".CuryTxblAmt00) * -0.04) AS DECIMAL(12,2)) + CAST((sum("tran".CuryTxblAmt00) * 0.16) AS DECIMAL(12,2))
-	from
-	sltestapp.dbo.ARdoc as "doc"
-	inner join
-	sltestapp.dbo.ARTran as "tran"
-	on  
-	"doc".BatNbr = "tran".BatNbr and "doc".RefNbr = "tran".RefNbr and "doc".CpnyID = "tran".CpnyID --and "xwar".LineNbr = "tran".LineNbr
-	where
-	"doc".User2 = 'LIS'
---		and
---		"doc".PerPost > '201700'
-	and
-		"doc".BatNbr = @bat and "doc".RefNbr = @rfr and "doc".CpnyID = @cpnid
-	group by
-	"doc".BatNbr,"doc".RefNbr,"doc".CpnyID
+--	select
+--	@retencion = CAST((sum("tran".CuryTxblAmt00) * -0.04) AS DECIMAL(12,2))
+--	,@iva = CAST((sum("tran".CuryTxblAmt00) * 0.16) AS DECIMAL(12,2))
+--	,@monto = sum("tran".CuryTxblAmt00) + CAST((sum("tran".CuryTxblAmt00) * -0.04) AS DECIMAL(12,2)) + CAST((sum("tran".CuryTxblAmt00) * 0.16) AS DECIMAL(12,2))
+--	from
+--	sltestapp.dbo.ARdoc as "doc"
+--	inner join
+--	sltestapp.dbo.ARTran as "tran"
+--	on  
+--	"doc".BatNbr = "tran".BatNbr and "doc".RefNbr = "tran".RefNbr and "doc".CpnyID = "tran".CpnyID --and "xwar".LineNbr = "tran".LineNbr
+--	where
+--	"doc".User2 = 'LIS'
+----		and
+----		"doc".PerPost > '201700'
+--	and
+--		"doc".BatNbr = @bat and "doc".RefNbr = @rfr and "doc".CpnyID = @cpnid
+--	group by
+--	"doc".BatNbr,"doc".RefNbr,"doc".CpnyID
 -- ================ update tables =========================== --
-		update
-		  sltestapp.dbo.ARDoc
-		set
-		 CuryTaxTot01 = @retencion
-		,TaxTot01 = @retencion
-		,CuryTaxTot00 = @iva
-		,TaxTot00 = @iva
-		,CuryOrigDocAmt = @monto
-		,CuryDocBal = @monto
-		,DocBal = @monto
-		,OrigDocAmt = @monto
-		where 
-				sltestapp.dbo.ARDoc.BatNbr = @bat
-			and 
-				sltestapp.dbo.ARDoc.RefNbr = @rfr
-			and 
-				sltestapp.dbo.ARDoc.CpnyID = @cpnid
+--		update
+--		  sltestapp.dbo.ARDoc
+--		set
+--		 CuryTaxTot01 = @retencion
+--		,TaxTot01 = @retencion
+--		,CuryTaxTot00 = @iva
+--		,TaxTot00 = @iva
+--		,CuryOrigDocAmt = @monto
+--		,CuryDocBal = @monto
+--		,DocBal = @monto
+--		,OrigDocAmt = @monto
+--		where 
+--				sltestapp.dbo.ARDoc.BatNbr = @bat
+--			and 
+--				sltestapp.dbo.ARDoc.RefNbr = @rfr
+--			and 
+--				sltestapp.dbo.ARDoc.CpnyID = @cpnid
 		-- ====================================================================== --
 -- update batch	
-		update
-			sltestapp.dbo.Batch
-			set 
-				 sltestapp.dbo.Batch.crtot = @monto
-				,sltestapp.dbo.Batch.curycrtot = @monto
-		where
-		   sltestapp.dbo.Batch.BatNbr = @bat and sltestapp.dbo.Batch.CpnyID = @cpnid
-		and
-		   sltestapp.dbo.Batch.Crtd_Prog = 'AR010'
+--		update
+--			sltestapp.dbo.Batch
+--			set 
+--				 sltestapp.dbo.Batch.crtot = @monto
+--				,sltestapp.dbo.Batch.curycrtot = @monto
+--		where
+--		   sltestapp.dbo.Batch.BatNbr = @bat and sltestapp.dbo.Batch.CpnyID = @cpnid
+--		and
+--		   sltestapp.dbo.Batch.Crtd_Prog = 'AR010'
 		-- ====================================================================== --		
 	end 
 end 

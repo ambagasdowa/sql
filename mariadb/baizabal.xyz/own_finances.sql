@@ -1,4 +1,14 @@
 show databases
+create database `portal_cloud`
+
+use portal_cloud
+
+show tables;
+
+
+
+
+
 use `own_finances`
 
 

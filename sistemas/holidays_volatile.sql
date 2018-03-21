@@ -349,6 +349,12 @@ with "l" as (
 
 
 --Presupuesto Ingresos Granel
+select * from sistemas.dbo.ingresos_costos_granel_ingresos
+
+select * from integraapp.dbo.AcctHist where FiscYr = '2018' and LedgerID = 'PRESUP2018'
+
+select * from integraapp.dbo.AcctHist where FiscYr = '2018' and LedgerID <> 'REAL'
+
 
 use sistemas
 -- go
@@ -1139,7 +1145,12 @@ with "op" as (
 select
 			 "operation".company
 			,"operation".id_area
-			,"operation".area
+			,case 
+				when "operation".area = 'TIJUANA'
+					then 'MEXICALI'
+				else
+					"operation".area
+			 end as 'area'
 			,"operation".frt
 			,"operation".cyear
 			,"operation".mes

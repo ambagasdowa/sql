@@ -391,7 +391,7 @@ set ansi_padding off
 
 
 --================================================================================================================================================================================
--- Config set the add-core definitions -- Define the prepsupuesto
+-- Config set the add-core definitions -- Define the presupuesto
 --================================================================================================================================================================================
 
 use [sistemas]
@@ -675,7 +675,7 @@ set ansi_padding off
 --================================================================================================================================================================================
 -- Catalog of the fracction definitions
 --================================================================================================================================================================================
-
+-- select * from sistemas.dbo.projections_view_fractions 		
 use sistemas;
 -- go
 IF OBJECT_ID ('projections_view_fractions', 'V') IS NOT NULL
@@ -833,7 +833,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--					
 					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--					
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -842,7 +848,15 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,"trg".peso
+--					,"trg".peso
+					,(
+						select 
+								sum(isnull("tren".peso,0)) 
+						from 
+								bonampakdb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -897,10 +911,10 @@ as
 						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				inner join
-						bonampakdb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				inner join
+--						bonampakdb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				inner join
 						bonampakdb.dbo.trafico_cliente as "cliente"
 					on 
@@ -913,10 +927,14 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(guia.fecha_guia) = "translation".month_num
+				inner join 
+						bonampakdb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -937,8 +955,8 @@ as
 	from 
 				guia_tbk as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota
+				,"guia".no_viaje,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -969,7 +987,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--					
 					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--					
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -978,7 +1002,15 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,"trg".peso
+--					,"trg".peso
+					,(
+						select 
+								sum(isnull("tren".peso,0)) 
+						from 
+								macuspanadb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -1033,10 +1065,10 @@ as
 						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				inner join
-						macuspanadb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				inner join
+--						macuspanadb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				inner join
 						macuspanadb.dbo.trafico_cliente as "cliente"
 					on 
@@ -1049,10 +1081,14 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(guia.fecha_guia) = "translation".month_num
+				inner join 
+						macuspanadb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje,"guia".num_guia
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -1073,13 +1109,14 @@ as
 	from 
 				guia_atm as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje ,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
 				,"guia".configuracion_viaje ,"guia".tipo_de_operacion ,"guia".flota ,"guia".area ,"guia".fraccion ,"guia".company
 
+				
 				
 -- ==================================================================================================================== --	
 -- ===============================      full indicators for tespecializadadb	  ===================================== --
@@ -1102,7 +1139,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--					
 					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--					
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -1111,7 +1154,15 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,"trg".peso
+--					,"trg".peso
+					,(
+						select 
+								sum(isnull("tren".peso,0)) 
+						from 
+								tespecializadadb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -1166,10 +1217,10 @@ as
 						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				inner join
-						tespecializadadb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				inner join
+--						tespecializadadb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				inner join
 						tespecializadadb.dbo.trafico_cliente as "cliente"
 					on 
@@ -1182,18 +1233,20 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(guia.fecha_guia) = "translation".month_num
+				inner join 
+						tespecializadadb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota
+				,"guia".no_viaje ,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
---				,avg("guia".kms_viaje) as 'kms_viaje' 
 				,case 
 					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
 						then '0' else "guia".kms_viaje
 				end as 'kms_viaje'
---				,avg("guia".kms_real) as 'kms_real'
 				,case 
 					when ( row_number() over(partition by "guia".no_viaje,"guia".id_area,"guia".company order by "guia".fecha_guia) ) > 1 
 						then '0' else "guia".kms_real
@@ -1208,8 +1261,8 @@ as
 	from 
 				guia_tei as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion 
-				,"guia".id_flota ,"guia".no_viaje ,"guia".num_guia
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje ,"guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -1886,7 +1939,6 @@ as
 								bonampakdb.dbo.trafico_renglon_guia as "tren"
 						where	
 								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
-								
 					 ) as 'peso'
 					,(
 						select 
@@ -2017,6 +2069,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--
+					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -2025,7 +2084,16 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+--					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								sum(isnull("tren".peso,0) + isnull("tren".peso_estimado,0)) 
+						from 
+								macuspanadb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+								
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -2081,10 +2149,10 @@ as
 --						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				left join
-						macuspanadb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				left join
+--						macuspanadb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				left join
 						macuspanadb.dbo.trafico_cliente as "cliente"
 					on 
@@ -2097,9 +2165,14 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(viaje.f_despachado) = "translation".month_num
+				inner join 
+						macuspanadb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje , "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -2121,7 +2194,8 @@ as
 	from 
 				guia_atm as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota
+				,"guia".no_viaje, "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion 
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real
@@ -2148,6 +2222,13 @@ as
 					,guia.id_fraccion
 					,manto.id_flota
 					,viaje.no_viaje
+--
+					,guia.num_guia
+					,viaje.id_ruta
+					,viaje.id_origen
+					,ruta.desc_ruta
+					,guia.monto_retencion
+--
 					,cast(guia.fecha_guia as date) as 'fecha_guia'
 --					,(select datename(mm,guia.fecha_guia)) as 'mes'
 					,upper(left("translation".month_name,1)) + right("translation".month_name,len("translation".month_name) - 1) as 'mes'
@@ -2156,7 +2237,16 @@ as
 					,viaje.kms_viaje
 					,viaje.kms_real
 					,guia.subtotal
-					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+--					,(isnull("trg".peso,0) + isnull("trg".peso_estimado,0)) as 'peso'
+					,(
+						select 
+								sum(isnull("tren".peso,0) + isnull("tren".peso_estimado,0)) 
+						from 
+								tespecializadadb.dbo.trafico_renglon_guia as "tren"
+						where	
+								"tren".no_guia = guia.no_guia and "tren".id_area = viaje.id_area
+								
+					 ) as 'peso'
 					,(
 						select 
 								descripcion
@@ -2212,10 +2302,10 @@ as
 --						guia.tipo_doc = 2 
 					and
 						guia.id_area = viaje.id_area and guia.no_viaje = viaje.no_viaje
-				left join
-						tespecializadadb.dbo.trafico_renglon_guia as "trg"
-					on
-						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
+--				left join
+--						tespecializadadb.dbo.trafico_renglon_guia as "trg"
+--					on
+--						"trg".no_guia = "guia".no_guia and "trg".id_area = "viaje".id_area 
 				left join
 						tespecializadadb.dbo.trafico_cliente as "cliente"
 					on 
@@ -2228,9 +2318,14 @@ as
 						sistemas.dbo.generals_month_translations as "translation"
 					on
 						month(viaje.f_despachado) = "translation".month_num
+				inner join 
+						tespecializadadb.dbo.trafico_ruta as "ruta"
+					on
+						viaje.id_ruta = "ruta".id_ruta
 		)
 	select 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje , "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion
 				,"guia".fecha_guia
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente 
 				,case 
@@ -2252,7 +2347,8 @@ as
 	from 
 				guia_tei as "guia"
 	group by 
-				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota ,"guia".no_viaje 
+				 "guia".id_area ,"guia".id_unidad ,"guia".id_configuracionviaje ,"guia".id_tipo_operacion ,"guia".id_fraccion ,"guia".id_flota 
+				,"guia".no_viaje, "guia".num_guia , "guia".id_ruta ,"guia".id_origen ,"guia".desc_ruta, "guia".monto_retencion  
 				,"guia".fecha_guia 
 				,"guia".mes ,"guia".f_despachado ,"guia".cliente
 				,"guia".kms_viaje,"guia".kms_real

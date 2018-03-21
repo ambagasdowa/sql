@@ -513,7 +513,7 @@ select
 -- =============================================== from hir do -- Latest -- ====================================================== --
 -- =============================================================================================================================== --
 -- /**This is the ultimate and working  Wed Jul 12 18:28:06 CDT 2017 */
-
+-- this going to be 2016
 
 with "aps" as (
     select
@@ -579,12 +579,134 @@ group by
 		,"aps".VendId
 		,"aps".FiscYr,"aps".PerPost,"aps".ZAPBatNbr
 
+		
+-- =============================================================================================================================== -- 
+-- ===============================================    Working From hir   ========================================================= --
+-- =============================================== from hir do -- Latest -- ====================================================== --
+-- =============================================================================================================================== --
+-- /**This is the ultimate and working  Wed Jul 12 18:28:06 CDT 2017 */
+-- this going to be 2015
+use sistemas;
+
+IF OBJECT_ID ('electroconta', 'V') IS NOT NULL
+    DROP VIEW electroconta;
+-- now build the view
+create view electroconta
+--with encryption
+as
+with "aps" as (
+    select
+                row_number() over(partition by "ap".CpnyId,"ap".BatNbr,"ap".User1,"ap".VendId,"ap".tstamp order by "ap".tstamp) as "index"
+                ,"tb2".ZUUID
+                ,"ap".ExtRefNbr
+                ,"tb2".ZInvcNbr as 'ZZInvcNbr'
+                ,"tb2".ZAPRefno as 'ZZAPRefno'
+                ,"ap".CuryTranAmt
+                ,"ap".CuryTaxAmt00
+                ,"ap".CuryTaxAmt01
+                ,"tb2".ZCuryRcptCtrlAmt as 'zcrcpAmmt'
+                ,"ap".TranDesc
+                ,"ap".CpnyId,"ap".BatNbr,"ap".User1,"ap".VendId,"ap".tstamp as 'ap.tstamp'
+                ,"ap".FiscYr,"ap".PerPost
+                ,"tb2".ZAPBatNbr
+    from
+                sistemas.dbo.importtotbkv3 as "tb2" --> xls file -> validaciones 2016
+        left join
+                integraapp.dbo.APTran as "ap" on "ap".JrnlType = 'AP' -- and "ap".TaxId00 = 'IVA 16'
+            and
+                isnumeric(SUBSTRING("ap".VendId,1,3)) = 0 --> jajajaja ... and this why ??
+            and
+                "ap".User1 <> 'GLOBAL'
+            and
+                "ap".BatNbr = "tb2".ZAPBatNbr and "ap".CpnyID = "tb2".ZCpnyId collate SQL_Latin1_General_CP1_CI_AS
+            and
+                "ap".VendId = "tb2".ZVendId collate SQL_Latin1_General_CP1_CI_AS --> Redeem! collate for solomon
+            and
+            	"ap".LineType = 'R'
+)
+select 	
+		"aps"."index","aps".ZUUID,"aps".ExtRefNbr,"aps".ZZInvcNbr,"aps".ZZAPRefno
+		,sum("aps".CuryTranAmt) as 'CuryTranAmt'
+		,sum("aps".CuryTaxAmt00) as 'CuryTaxAmt00'
+		,sum("aps".CuryTaxAmt01) as 'CuryTaxAmt01'
+		,"aps".zcrcpAmmt 
+		,"aps".CpnyId,"aps".BatNbr
+		,"aps".VendId
+		,"aps".FiscYr,"aps".PerPost,"aps".ZAPBatNbr
+from 
+		"aps"
+where
+        "aps"."index" = 1
+group by 
+		"aps"."index","aps".ZUUID,"aps".ExtRefNbr,"aps".ZZInvcNbr,"aps".ZZAPRefno
+		,"aps".zcrcpAmmt 
+		,"aps".CpnyId,"aps".BatNbr
+		,"aps".VendId
+		,"aps".FiscYr,"aps".PerPost,"aps".ZAPBatNbr
+
+		
+		
+		
+		select year(ZRcptDate) , count(id) from sistemas.dbo.importtotbkv3 group by year(ZRcptDate)
+	
+		
+		
+		
+--- 
+	
+		-- 12334
+		select count(ZAPBatNbr) from sistemas.dbo.electroconta_2015  
+		-- 17508
+		select count(ZAPBatNbr) from sistemas.dbo.electroconta_2015_test  
+		
+	
+
+-- whe need use the TranClass as T = Tax  or lineType = 'T' and lineRef = null|''  and catch TranAmt
+
+		select (CuryTranAmt*1.16) as 'total' , * from sistemas.dbo.electroconta_2015 where BatNbr = '141110'
+
+		select (CuryTranAmt*1.16) as 'total' , * from sistemas.dbo.electroconta_2015_test where BatNbr = '141110'
+		
+		select * from integraapp.dbo.Aptran where BatNbr = '141110'
+		
+		
+			select 
+					"aps".BatNbr,"aps".RefNbr,"aps".CpnyID
+--					,"aps".CuryTranAmt,"aps".CuryTaxAmt01,"aps".TranClass,"aps".LineType,"aps".LineRef
+					,sum("aps".CuryTranAmt),sum("aps".CuryTaxAmt01)--,"aps".TranClass
+					,"aps".LineType--,"aps".LineRef
+			from 
+					integraapp.dbo.Aptran as "aps" 
+			where 
+					"aps".BatNbr = '141110'
+				and "aps".LineType = 'R'
+			inner join 
+					integraapp.dbo.Aptran as "tran"
+				on 
+					"aps".BatNbr = "tran".BatNbr and "aps".CpnyID = "tran".CpnyID
+				and 
+					"aps".RefNbr = "tran".RefNbr and "tran".LineType = 'T'
+			group by
+					"aps".BatNbr,"aps".RefNbr,"aps".CpnyID
+--					,"aps".CuryTranAmt,"aps".CuryTaxAmt01,"aps".TranClass,"aps".LineType,"aps".LineRef
+--					,"aps".TranClass
+					,"aps".LineType--,"aps".LineRef
+--					,"tran".LineType
+
+		
+		
+		
+		select OrigDocAmt,* from integraapp.dbo.APDoc where BatNbr = '141110'
+		
+		
 -- =============================================================================================================================== --
 -- ===============================================     Working Done   =  ========================================================= --
 -- =============================================================================================================================== --
 
-select count(*) from sistemas.dbo.validaciones2
 		
+select count(*) from sistemas.dbo.validaciones2
+
+select * from sistemas.dbo.importtotbkv3
 		
 		
 

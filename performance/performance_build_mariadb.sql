@@ -48,14 +48,30 @@ CREATE TABLE performance_customers ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;
 -- ==================================     Performance References(Facturas) View    ==================================== --
 -- ==================================================================================================================== --
 
-
+use portal_apps
 -- drop table `portal_apps`.performance_references
 -- CREATE TABLE performance_references CHARACTER SET utf8 COLLATE utf8_general_ci ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
-CREATE TABLE performance_references DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+CREATE TABLE performance_references DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC'
+-- SRCDEF='select * from sistemas.dbo.performance_references where year(ElaboracionFactura) in (year(dateadd(year,-1,cast(CURRENT_TIMESTAMP as date))),year(current_timestamp))'
+;
 -- select * from portal_apps.performance_references
 -- OR utf8_unicode_ci
 -- DEFAULT CHARSET=latin1
 -- the issue for a charset conversion is in the latin1
+
+--    Testing of performance 
+-- use portal_apps
+-- drop table performance_references_test 
+-- use portal_apps
+-- CREATE TABLE performance_references_test 
+-- DEFAULT CHARSET=latin1 ENGINE=CONNECT 
+-- TABNAME=performance_references
+-- CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' 
+-- table_type='ODBC'
+-- -- memory=2
+-- SRCDEF='select * from sistemas.dbo.performance_references where year(ElaboracionFactura) in (year(dateadd(year,-1,cast(CURRENT_TIMESTAMP as date))),year(current_timestamp))'
+-- ;
+
 
 -- ==================================================================================================================== --	
 -- ==================================     Performance References(Viajes) View    ==================================== --
@@ -67,6 +83,28 @@ CREATE TABLE performance_references DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNEC
 CREATE TABLE performance_trips DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
 
 -- select * from `portal_apps`.performance_trips
+
+-- ==================================================================================================================== --	
+-- ==================================     Performance (Fractions) View    ==================================== --
+-- ==================================================================================================================== --
+
+-- use `portal_apps`
+-- drop table `portal_apps`.performance_fractions
+
+CREATE TABLE performance_fractions DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
+-- select * from `portal_apps`.performance_fractions
+
+-- ==================================================================================================================== --	
+-- ==================================     Performance (Clasifications) View    ==================================== --
+-- ==================================================================================================================== --
+
+-- use `portal_apps`
+-- drop table `portal_apps`.performance_catalogs
+
+CREATE TABLE performance_catalogs DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
+-- select * from `portal_apps`.performance_catalogs
 
 -- ==================================================================================================================== --	
 -- ===================================     Performance Control(Facturas) View    ====================================== --
@@ -111,18 +149,30 @@ select
 		,`reference`.Flete
 		,`reference`.Referencia
 		,`reference`.Lote
+		,`reference`.Total
 		,`reference`.ElaboracionFactura
 		,`facturas`.id as 'performance_facturas_id'
 		,`facturas`.performance_references_id
 		,`facturas`.performance_bsus_id
-		,`facturas`.entregaFacturaCliente
+		,`facturas`.entregaFacturaCliente -- 1
 		,ifnull(abs(datediff(`reference`.ElaboracionFactura,`facturas`.entregaFacturaCliente)), 0) as 'deliver'
-		,`facturas`.aprobacionFactura
+		,`facturas`.aprobacionFactura     -- 2
 		,ifnull(abs(datediff(`facturas`.entregaFacturaCliente,`facturas`.aprobacionFactura)),0) as 'proved'
-		,ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) as 'fechaPromesaPago'
+		,ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) as 'fechaPromesaPago'  -- is not a editable field
 		,ifnull(abs(datediff(`facturas`.aprobacionFactura, ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0) )),0) as 'promise'
-		,`facturas`.fechaPago
-		,ifnull(abs(datediff(ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0),`facturas`.fechaPago)),0) as 'payment'
+-- 		,`facturas`.fechaPago
+		,ifnull(`facturas`.fechaPago,`reference`.paymentDate) as 'fechaPago' -- 3
+		,ifnull(abs(datediff(ifnull(adddate(`facturas`.aprobacionFactura,`reference`.diasCredito),0),ifnull(`facturas`.fechaPago,`reference`.paymentDate))),0) as 'payment'
+		,`reference`.Cuenta
+		,`reference`.CuentaDesc
+		,`reference`.Clasificacion
+		,( -- if zero then all field is complete
+			select (
+				(`facturas`.entregaFacturaCliente is null) + 
+				(`facturas`.aprobacionFactura is null) + 
+				(ifnull(`facturas`.fechaPago,`reference`.paymentDate) is null)
+		 	)
+		 ) as 'dmon'
 from
 		`portal_apps`.performance_references as `reference`
 	left join 
@@ -133,8 +183,81 @@ from
 		`reference`.performance_customers_id = `facturas`.performance_customers_id
 	and 
 		`reference`.Empresa = `facturas`.performance_bsus_id
+	and
+		`facturas`.status = '1'
 		
+		
+		select * from portal_apps.performance_facturas where id = '80'
+		
+	
+		
+		-- CHECK THIS
+		select * from portal_apps.performance_viajes where performance_num_guia_id = 'OO-046636'
+	
+		select  id,internal_id,num_guia,recepcionEvidencias,fecha_modifico,entregaEvidenciasCliente
+				,validacionEvidenciasCliente,created,modified
+		from portal_apps.performance_view_viajes where num_guia = 'OO-046643'
+		
+		select  id,internal_id,num_guia,recepcionEvidencias,fecha_modifico,entregaEvidenciasCliente
+				,validacionEvidenciasCliente,created,modified
+		from portal_apps.performance_view_viajes where internal_id = 90
+		
+		
+		select * from portal_users.users where id = 120
+		
+	
 
+		
+	select * from portal_apps.performance_view_facturas 
+		where 
+				performance_customers_id = 'DLO990908D79' 
+			and
+				ElaboracionFactura = '2018-01-11'
+			and 
+				Empresa = 'TBKGDL'
+
+
+
+
+	select * from portal_apps.performance_facturas where performance_references_id in (
+			select id 
+			from portal_apps.performance_view_facturas 
+			where 
+				performance_customers_id = 'DLO990908D79' 
+			and
+				ElaboracionFactura = '2018-01-11'
+			and 
+				Empresa = 'TBKGDL'
+	)
+	
+
+	
+	
+				
+	select * from portal_apps.performance_view_facturas where id in ('058048','058054','058064')
+	
+	select * from portal_apps.performance_facturas where performance_references_id in ('058048','058054','058064')
+	
+	
+
+			
+-- ==================================================================================================================== --	
+-- =================================     Performance Percent(Facturas) Year    ====================================== --
+-- ==================================================================================================================== --
+-- View Facturas By Year
+-- use portal_apps
+-- TODO : in Progress
+create or replace view `performance_view_facturas_years`
+as		
+select 
+-- 		ROW_NUMBER() OVER (PARTITION BY performance_customers_id ORDER BY Empresa DESC) AS row_index,
+		performance_customers_id,Empresa,Nombre,round(sum(Total),2) as 'Monto',clasificacion 
+from 
+		`portal_apps`.performance_view_facturas where year(ElaboracionFactura) = year(now())
+group by 
+		performance_customers_id,Empresa,Nombre,clasificacion
+		
+-- select * from `portal_apps`.performance_view_facturas_years where facturas 
 
 -- ==================================================================================================================== --	
 -- ===================================     Performance Control(Viajes) table    ====================================== --
@@ -193,10 +316,11 @@ as
 			,`trips`.fecha_ingreso    				-- init [not prom]
 			,`trips`.fecha_guia		  				-- end
 			,ifnull(timestampdiff(day,`trips`.fecha_ingreso,`trips`.fecha_guia), 0) as 'end'			
-			,`viaje`.recepcionEvidencias			-- reception
-			,ifnull(timestampdiff(day,`trips`.fecha_guia,`viaje`.recepcionEvidencias), 0) as 'reception'			
+-- 			,`viaje`.recepcionEvidencias			-- reception
+			,ifnull(`viaje`.recepcionEvidencias,`trips`.fecha_modifico) as 'recepcionEvidencias'
+			,ifnull(timestampdiff(day,`trips`.fecha_guia,ifnull(`viaje`.recepcionEvidencias,`trips`.fecha_modifico)), 0) as 'reception'			
 			,`trips`.fecha_modifico   				-- aceptance
-			,ifnull(timestampdiff(day,`viaje`.recepcionEvidencias,`trips`.fecha_modifico), 0) as 'aceptance'			
+			,ifnull(timestampdiff(day,ifnull(`viaje`.recepcionEvidencias,`trips`.fecha_modifico),`trips`.fecha_modifico), 0) as 'aceptance'			
 			,`viaje`.entregaEvidenciasCliente		-- deliver
 			,ifnull(timestampdiff(day,`trips`.fecha_modifico,`viaje`.entregaEvidenciasCliente), 0) as 'deliver'			
 			,`viaje`.validacionEvidenciasCliente	-- validation
@@ -236,26 +360,12 @@ as
 			`trips`.company = `viaje`.projections_corporations_id 
 		and 
 			`trips`.id_area = `viaje`.id_area
+		and
+			`viaje`.status = 1
 
 
---  select * from `portal_apps`.`performance_view_viajes` where fecha_guia between '2017-11-21' and '2017-11-22' and area = 'GUADALAJARA'
+-- ==================================================================================================================================
  
---  select * from `portal_apps`.`performance_view_viajes` where no_viaje = '81765' and num_guia = 'OG-091856' and no_guia = '102259'
- -- ==================================================================================================================================
- 
- select 
- 		* 
- from 
- 		`portal_apps`.`performance_view_viajes` 
- where 
- 		fecha_guia between '2017-11-21' and '2017-11-22' 
- 	and 
- 		area in ('GUADALAJARA','LA PAZ')
- 	and 
- 		num_guia = 'OG-091856'
-  
-  
-
 -- ==================================================================================================================== --	
 -- ===================================     year view selector    ====================================== --
 -- ==================================================================================================================== --
@@ -306,47 +416,25 @@ from
 
 	
 	
-select * from `portal_apps`.performance_bsus
+-- select * from `portal_apps`.performance_bsus
+
+-- ==================================================================================================================== --	
+-- ===================================     Catalog View    ====================================== --
+-- ==================================================================================================================== --
+	
+use `portal_apps`
+show tables
+
+create or replace view `performance_view_catalogs`
+as
+select 
+		clasification 
+from 
+		`portal_apps`.performance_catalogs
+group by
+		clasification
 	
 -- =================== TEST =========================== --
-
--- search bsu 
-
--- select * from mssql_integradb.general_view_bussiness_units
-
-
-
-use portal_apps
-show variables like "character_set_database";
-SHOW FULL COLUMNS FROM `portal_apps`.performance_references;
-
-use portal_users
-SHOW FULL COLUMNS FROM `portal_users`.users;
-
-select
-	*
-from
-	portal_apps.performance_references
-where
-		Empresa = 'TEICUA'
-	and 
-		year(ElaboracionFactura)= '2017'
-	and 
-		month(ElaboracionFactura)= '10'
-	and 
-		day((ElaboracionFactura)) = '24'
-	
--- 	
--- 	
--- 	SELECT NULLIF(0,2);
--- 	
--- 	select ifnull(null,0);
-
-		
-		select * from portal_users.users where username like '%mun%'
-		
-		select * from portal_users.groups 
-		
 		
 use portal_apps
 
