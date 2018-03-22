@@ -4,6 +4,9 @@
   *
   */
 
+
+create database cakephp
+
 show databases;
 use cakephp;
 
@@ -14,7 +17,7 @@ use cakephp;
   -- ==============================================   Casillas   ================================================= --
   -- ============================================================================================================= --
 
-  create or replace table `casillas`(
+  create or replace table `xmf_casillas`(
    `id` 						int unsigned not null auto_increment,
    `name` 						char(50) not null,
    `description` 				char(150) not null,
@@ -44,16 +47,17 @@ use cakephp;
    `created` 					datetime,
    `modified` 					datetime,
     primary key (`id`),
-    unique key (name)          -- avoid duplicates [optional]
+    unique key (`name`)          -- avoid duplicates [optional]
   ) engine=InnoDB default charset=utf8mb4 ;
 
-insert into casillas values 
+insert into `xmf_casillas` values 
 						 (null,'CB201','',1,1,1,'Solidaridad','','','',null,null,null,'','','',null,null,null,now(),now())
+						,(null,'CB202','',1,1,1,'Solidaridad','','','',null,null,null,'','','',null,null,null,now(),now())
 						,(null,'CB206','',1,1,1,'Solidaridad','','','',null,null,null,'','','',null,null,null,now(),now())
 ;
 
 -- test
---  select * from `cakephp`.`casillas`
+--  select * from `cakephp`.`xmf_casillas`
 -- truncate `cakephp`.`casillas`
   -- ============================================================================================================= --
   -- =================================   Proposal of Par/Func Status Precense      =============================== --
@@ -62,7 +66,7 @@ insert into casillas values
 
   -- =================================   Partidos Catalog    =============================== --
 
-  CREATE TABLE `partidos`(
+  create or replace table `xmf_partidos`(
    `id` 			  int unsigned not null auto_increment,
    `nombre`           TEXT DEFAULT NULL, -- coal1, coal2 ....
    `formula`          TEXT DEFAULT NULL, -- Coaliciones
@@ -74,12 +78,12 @@ insert into casillas values
    `modified`         datetime,
     primary key (`id`)
    )engine=InnoDB default charset=utf8mb4;
-  ALTER TABLE `partidos` COMMENT = 'INFORMACION PARTIDOS';
+  ALTER TABLE `xmf_partidos` COMMENT = 'INFORMACION PARTIDOS';
 --   ALTER TABLE `partidos`
 --     ADD PRIMARY KEY (`id`);
 --   ALTER TABLE `partidos`
 --   MODIFY `id` unsigned INT(11) NOT NULL AUTO_INCREMENT;
-insert into `partidos` values
+insert into `xmf_partidos` values
                              (null,'PAN','pan',0,0,null,'',now(),now())
                             ,(null,'PRI','pri',0,0,null,'',now(),now())
                             ,(null,'PRD','prd',0,0,null,'',now(),now())
@@ -99,13 +103,13 @@ insert into `partidos` values
                             ,(null,'Pve-Panal','for_pve_panal',1,1,14,'',now(),now())
                             ;
 -- test 
--- select * from `cakephp`.`partidos`
+-- select * from `cakephp`.`xmf_partidos`
   -- =================================   Partidos Precense Status    =============================== --
 
-	create table partidos_references (
+	create or replace table `xmf_partidos_references` (
 	   `id` 			int unsigned not null auto_increment,
-	   `casillas_id` 	int unsigned not null ,
-	   `partidos_id` 	int unsigned not null ,
+	   `xmf_casillas_id` 	int unsigned not null ,
+	   `xmf_partidos_id` 	int unsigned not null ,
 	   `is_present`  	boolean null,
 	   `description` 	char(150) not null,   
 	   `created` 		datetime,
@@ -113,17 +117,17 @@ insert into `partidos` values
 	    primary key (`id`)
 	) engine=InnoDB default charset=utf8mb4;
 
-	insert into `partidos_references` values 
+	insert into `xmf_partidos_references` values 
 											 	 (null,1,1,1,'',now(),now())
 											 	,(null,1,2,1,'',now(),now())
 											 	,(null,1,10,1,'',now(),now())
 											 	,(null,2,1,1,'',now(),now())
 	;
--- select * from partidos_references
+-- select * from xmf_partidos_references
 -- truncate table partidos_references
   -- =================================   Funcionarios Catalog    =============================== --
 
-	create table `funcionarios` (
+	create or replace table `xmf_funcionarios` (
 	  `id` 					int unsigned not null auto_increment,
 	  `funcionario`        	char(50) null,
 	  `description`        	text null,
@@ -131,7 +135,7 @@ insert into `partidos` values
 	  `modified`           	datetime,
 	   primary key(`id`)
 	)engine=InnoDB default charset=utf8mb4;
-	insert into funcionarios values
+	insert into `xmf_funcionarios` values
 	                               (null,'Presidente','',now(),now())
 	                              ,(null,'Secretario','',now(),now())
 	                              ,(null,'Escrutador1','',now(),now())
@@ -140,79 +144,101 @@ insert into `partidos` values
 	                              ,(null,'Suplente2','',now(),now())
 	                              ,(null,'Suplente3','',now(),now());
 
--- select * from `cakephp`.`funcionarios`
+-- select * from `cakephp`.`xmf_funcionarios`
+
   -- =================================   Funcionarios Precense Status    =============================== --
   
-	create table funcionarios_references (
-	   `id` 				int unsigned not null auto_increment,
-	   `casillas_id` 		int unsigned not null ,
-	   `funcionarios_id` 	int unsigned not null ,
-	   `is_present`  		boolean null,
-	   `description` 		char(150) not null,   
-	   `created` 			datetime,
-	   `modified` 			datetime,
+	create or replace table `xmf_funcionarios_references` (
+	   `id` 					int unsigned not null auto_increment,
+	   `xmf_casillas_id` 		int unsigned not null ,
+	   `xmf_funcionarios_id` 	int unsigned not null ,
+	   `is_present`  			boolean null,
+	   `description` 			char(150) not null,   
+	   `created` 				datetime,
+	   `modified` 				datetime,
 	    primary key (`id`)
 	) engine=InnoDB default charset=utf8mb4;
 
-	insert into `funcionarios_references` values 
+	insert into `xmf_funcionarios_references` values 
 											 	 (null,1,1,1,'',now(),now())
 											 	,(null,1,2,1,'',now(),now())
 											 	,(null,1,7,1,'',now(),now())										 	
 	;
--- select * from cakephp.funcionarios_references
+-- select * from cakephp.xmf_funcionarios_references
 
  -- =================================   View of Precense Status    =============================== --
 
-create or replace view precense_status as 
-
+create or replace view `xmf_precense_status` 
+as 
 		select 
 				 `prt`.id
-				,`prt`.casillas_id
-				,`prt`.partidos_id
+				,`prt`.xmf_casillas_id
+				,`prt`.xmf_partidos_id
 				,`prt`.is_present
 				,`prt`.description
 				,`part`.nombre		as `nombre`
 				,`part`.formula		as `descripcion`
 		from 
-				`cakephp`.`partidos_references` as `prt` 
+				`cakephp`.`xmf_partidos_references` as `prt` 
 		inner join 
-				`cakephp`.`partidos` as `part` on `prt`.partidos_id = `part`.id
+				`cakephp`.`xmf_partidos` as `part` on `prt`.xmf_partidos_id = `part`.id
 		union all
 		select 
 				 `func`.id
-				,`func`.casillas_id
-				,`func`.funcionarios_id
+				,`func`.xmf_casillas_id
+				,`func`.xmf_funcionarios_id
 				,`func`.is_present
 				,`func`.description
 				,`funk`.funcionario as `nombre`
 				,`funk`.description as `descripcion`
 		from 
-				`cakephp`.`funcionarios_references` as `func` 
+				`cakephp`.`xmf_funcionarios_references` as `func` 
 		inner join
-				`cakephp`.`funcionarios` as `funk` on `func`.funcionarios_id = `funk`.id
+				`cakephp`.`xmf_funcionarios` as `funk` on `func`.xmf_funcionarios_id = `funk`.id
 
--- select * from `cakephp`.`precense_status`
+-- select * from `cakephp`.`xmf_precense_status`
 
--- SELECT TABLE_NAME,IS_UPDATABLE FROM INFORMATION_SCHEMA.VIEWS;
+
+-- =================================   View of All Functioners    =============================== --		
+
+create or replace view `xmf_precenses` as 
+		select 
+				 `part`.id
+				,`part`.nombre		as `nombre`
+				,`part`.formula		as `descripcion`
+		from 
+				`cakephp`.`xmf_partidos` as `part`
+		where 
+				`part`.is_coalicion = 0 and `part`.has_parent = 0
+		union all
+		select 
+				 `funk`.id
+				,`funk`.funcionario as `nombre`
+				,`funk`.description as `descripcion`
+		from 
+				`cakephp`.`xmf_funcionarios` as `funk`
 	
 				
-				
+-- select * from `cakephp`.`xmf_precenses`				
 
-  CREATE TABLE `incidencias`(  -- this comes from a Catalog
+-- ============================================================================================== --
+
+
+  CREATE TABLE `xmf_incidencias`(  -- this comes from a Catalog
   `id` INT(11) NOT NULL,
   `titulo` TEXT DEFAULT NULL,
   `descripcion` TEXT DEFAULT NULL
   `created` DATETIME,
   `modified` DATETIME
   );
-  ALTER TABLE `incidencias` COMMENT = 'TIPO INCIDENCIAS';
-  ALTER TABLE `incidencias`
+  ALTER TABLE `xmf_incidencias` COMMENT = 'TIPO INCIDENCIAS';
+  ALTER TABLE `xmf_incidencias`
     ADD PRIMARY KEY (`id`);
-  ALTER TABLE `incidencias`
+  ALTER TABLE `xmf_incidencias`
   MODIFY `id` unsigned INT(11) NOT NULL AUTO_INCREMENT;
 
 
-  CREATE TABLE `partidos_incidencias`(
+  CREATE TABLE `xmf_partidos_incidencias`(
   `id` INT(11) NOT NULL,
   `casillas_id` INT(11) DEFAULT NULL,
   `partidos_id` INT(11) DEFAULT NULL,
@@ -221,12 +247,12 @@ create or replace view precense_status as
   `created` DATETIME,
   `modified` DATETIME
   );
-  ALTER TABLE `partidos_incidencias` COMMENT = 'INFORMACION DE CASILLA - INCIDENCIAS';
+  ALTER TABLE `xmf_partidos_incidencias` COMMENT = 'INFORMACION DE CASILLA - INCIDENCIAS';
 
-  ALTER TABLE `partidos_incidencias`
+  ALTER TABLE `xmf_partidos_incidencias`
     ADD PRIMARY KEY (`id`);
 
-  ALTER TABLE `partidos_incidencias`
+  ALTER TABLE `xmf_partidos_incidencias`
   MODIFY `id` unsigned INT(11) NOT NULL AUTO_INCREMENT;
 
   -- ============================================================================================================= --
@@ -240,45 +266,66 @@ create or replace view precense_status as
 --   primary key (`id`);
 -- )engine=InnoDB default charset=utf8mb4;
 
+-- ================================ Config Level of auth ================================== --
+
 -- set config set the level by role
-create table `validations_configs` (
+create table `xmf_validations_configs` (
   `id` 				unsigned INT(11) not null auto_increment,
   `top_level` 		tinyint not null ,           -- at least 2 levels of validation and zero means unlimited
   `role_id` 		char(36) null default null ,
-  `created` 		DATETIME,
-  `modified` 		DATETIME,
-  primary key (`id`);
+  `created` 		datetime,
+  `modified` 		datetime,
+  primary key (`id`)
 )engine=InnoDB default charset=utf8mb4;
 
--- set the config by report
-create table `validations` (
+-- ================================ show in a reports view ================================== --
+
+-- set the config by report this is one record updatable
+create table `xmf_validations` (
   `id`                  int unsigned not null auto_increment,
   `reports_id`			int unsigned not null ,  					-- fk to reports
   `level`               tinyint not null ,                        	-- set the level , ex: 1st or 2nd but the insert are top of config:top_level
   `level_validation`    boolean default null,                    	-- the level is validate 0|1 ,then just sum for a true validation
-  primary key (`id`);
+  `created` 			datetime,
+  `modified` 			datetime,
+  primary key (`id`)
 )engine=InnoDB default charset=utf8mb4;
 -- example
 -- level => 1 and level_validation => true
 -- level => 1 and level_validation => true
 -- set the value in users $this->Auth('User')['reports']['validations]['ReportId{n}' => true , 'ReportId{n+1}' =>false ] ;
 
+-- ================================ just in case ================================== --
 
-create table `tipo_votaciones` (
-  `id`                 unsigned INT(11) not null auto_increment,
+create or replace table `xmf_validations_logs` (
+  `id`                  		int unsigned not null auto_increment,
+  `xmf_reports_id`				int unsigned not null ,  					-- fk to reports
+  `xmf_validations_id`			int unsigned not null ,  					-- fk to reports
+  `xmf_validations_configs_id`	int unsigned not null ,  					-- fk to reports
+  `level`               		tinyint not null ,                        	-- set the level , ex: 1st or 2nd but the insert are top of config:top_level
+  `level_validation`    		boolean default null,                    	-- the level is validate 0|1 ,then just sum for a true validation
+  `created` 					datetime,
+  `modified`		 			datetime,
+  primary key (`id`)
+)engine=InnoDB default charset=utf8mb4;
+
+
+create table `xmf_tipo_votaciones` (
+  `id`                 int unsigned not null auto_increment,
   `tipo`               char(50) null,
   `description`        text null,
   `created`            DATETIME,
   `modified`           DATETIME,
-  primary key (`id`);
+  primary key (`id`)
 )engine=InnoDB default charset=utf8mb4;
-insert into tipo_votaciones(`tipo`,`description`,`created`,`modified` )
+insert into `xmf_tipo_votaciones` (`tipo`,`description`,`created`,`modified` )
                     values
                     	   ('Presidente','',now(),now())
                           ,('Senador','',now(),now())
                           ,('Diputado','',now(),now())
                           ,('Ayuntamiento','',now(),now());
 
+select * from `cakephp`.`xmf_tipo_votaciones`
 
  -- ============================================================================================================= --
  -- =======================================   Proposal of reports =============================================== --
@@ -290,77 +337,151 @@ insert into tipo_votaciones(`tipo`,`description`,`created`,`modified` )
  -- 4th cierre y flujo final votantes-promovidos , people in tail
  -- last results captura resultados finales
 
-	create table `reports_definitions` (
+
+	create or replace table `xmf_reports_definitions` (
 	  `id`                 int unsigned not null auto_increment,
 	  `name`               char(50) null,
 	  `description`        text null,
 	  `created`            DATETIME,
 	  `modified`           DATETIME,
-	  primary key (`id`);
+	  primary key (`id`)
 	)engine=InnoDB default charset=utf8mb4;
 
-	insert into `reports_definitions` values 
+	insert into `xmf_reports_definitions` values 
 												 (null,'first','reporte_primero',now(),now())
 												,(null,'second','reporte_segundo',now(),now())
 												,(null,'third','reporte_tercero',now(),now())
 												,(null,'fourth','reporte_final',now(),now())
 												;
+select * from `cakephp`.`xmf_reports_definitions`
 
-	create or replace `reports_view_definitions`(
-	  `id`                 		int unsigned not null auto_increment,	
-	  `reports_definitions_id`  int unsigned not null ,
-	  `field_name`		   		char null,
-	  `description`        		text null,
-	  `created`            		datetime,
-	  `modified`          		datetime,
+	create or replace table `xmf_reports_view_definitions`(
+	  `id`                 			int unsigned not null auto_increment,	
+	  `xmf_reports_definitions_id`  int unsigned not null ,
+	  `field_name`		   			char null,
+	  `description`        			text null,
+	  `created`            			datetime,
+	  `modified`          			datetime,
 	  primary key (`id`);
 	)engine=InnoDB default charset=utf8mb4;
 
 
 
 -- set join with roles table 
-	create or replace table `reports_controls` (
-      `id` 						int unsigned not null auto_increment ,
-      `report_id`				int unsigned not null ,
-      `user_id`					int unsigned not null ,
-      `role_id`					int unsigned not null ,
-      `is_user_config`			boolean null default false ,
-      `is_role_config`			boolean null default true ,
-      `validations_id`			int unsigned not null ,
-	  `created`            		datetime,
-	  `modified`           		datetime,
+	create or replace table `xmf_reports_controls` (
+      `id` 							int unsigned not null auto_increment ,
+      `xmf_reports_id`				int unsigned not null ,
+      `xmf_users_id`				int unsigned not null ,
+      `xmf_roles_id`				int unsigned not null ,
+      `is_user_config`				boolean null default false ,
+      `is_role_config`				boolean null default true ,
+      `xmf_validations_id`			int unsigned not null ,
+	  `created`          	  		datetime,
+	  `modified`           			datetime,
        primary key (`id`)
     )engine=InnoDB default charset=utf8mb4;
 
 -- when save need activate cascade 
-    create table `reports` (
-      `id` 						int unsigned not null auto_increment,
-      `reports_controls_id`		int unsigned not null ,  -- fk to define the report validity
-      `reports_definitions_id`	int unsigned not null ,  -- fk to define the report [reports x reports_definitions]
-      `casilla_id` 				int unsigned not null ,  -- fk with casillas [reports x reports_definitions x casillas]
-      `partido_id`				int unsigned not null ,  -- fk with partidos so this [reports x reports_definitions x reports_definitions x casillas x partidos]
-      `tipo_votaciones_id`		int unsigned not null ,  -- fk with tipo_votaciones  [reports x reports_definitions x casillas x partidos x tipoVotacion]     
-	  `created`            		datetime,
-	  `modified`           		datetime,
+    create table `xmf_reports` (
+      `id` 							int unsigned not null auto_increment,
+      `xmf_reports_controls_id`		int unsigned not null ,  -- fk to define the report validity
+      `xmf_reports_definitions_id`	int unsigned not null ,  -- fk to define the report [reports x reports_definitions]
+      `xmf_casillas_id` 			int unsigned not null ,  -- fk with casillas [reports x reports_definitions x casillas]
+      `xmf_partidos_id`				int unsigned not null ,  -- fk with partidos so this [reports x reports_definitions x reports_definitions x casillas x partidos]
+      `xmf_tipo_votaciones_id`		int unsigned not null ,  -- fk with tipo_votaciones  [reports x reports_definitions x casillas x partidos x tipoVotacion]     
+	  `created`            			datetime,
+	  `modified`           			datetime,
        primary key (`id`)
     )engine=InnoDB default charset=utf8mb4;
 
+
+
     -- Content the updatable data of reports
-    create table reports_complements (
+    create or replace table `xmf_votes` (
       -- set the updatable fields in reports when in view take the max id or datetime
-      `id` 						int unsigned not null auto_increment,
-      `reports_id`				int unsigned not null ,  -- fk to reports
-      `votes`					int unsigned not null ,  -- total of votes 
-	  `created`            		datetime,
-	  `modified`           		datetime,
+      `id` 							int unsigned not null auto_increment,
+      `xmf_casillas_id`				int unsigned not null ,  -- casillas
+      `xmf_tipo_votaciones_id`		int unsigned not null ,  -- tipoVotaciones
+      `xmf_partidos_id`				int unsigned not null ,  -- partidos
+      `votes`						int unsigned not null ,  -- votes 
+	  `created`         	   		datetime,
+	  `modified`           			datetime,
        primary key (`id`)
-    );
+    )engine=InnoDB default charset=utf8mb4;
+
+	insert into `cakephp`.`xmf_votes` values 
+												  (null,1,1,1,200,now(),now())
+												 ,(null,1,2,1,50,now(),now())
+												 ,(null,2,1,1,201,now(),now());
+
+
+create or replace view `xmf_reaper`
+as
+	select 
+ 			 `cas`.id as 'casillas_index'
+			,`cas`.name
+			,`cas`.description
+			,`cas`.rgl_id,abo_id
+			,`cas`.cap_id
+			,`cas`.municipio
+			,`cas`.seccion
+			,`cas`.clave_distrito
+			,`cas`.clave_agrupamiento
+			,`cas`.tipo_basica
+			,`cas`.tipo_contigua
+			,`cas`.tipo_especial
+			,`cas`.urbana
+			,`cas`.distrito
+			,`cas`.locacion
+			,`cas`.hora_instalacion
+			,`cas`.hora_inicio
+			,`cas`.hora_cierre
+-- 			,`cas`.created
+-- 			,`cas`.modified
+-- 			,`partition`.id
+			,`partition`.nombre
+			,`partition`.formula
+			,`partition`.is_coalicion
+			,`partition`.has_parent
+			,`partition`.parent_id
+			,`partition`.description
+-- 			,`partition`.created
+-- 			,`partition`.modified
+-- 			,`tvt`.id
+			,`tvt`.tipo
+			,`tvt`.description
+-- 			,`tvt`.created
+-- 			,`tvt`.modified
+			,`vts`.id						-- this id is the most 
+			,`vts`.xmf_casillas_id
+			,`vts`.xmf_tipo_votaciones_id
+			,`vts`.xmf_partidos_id
+			,`vts`.votes
+-- 			,`vts`.created
+-- 			,`vts`.modified
+	from 
+			`cakephp`.`xmf_casillas` as `cas`
+	inner join 
+			`cakephp`.`xmf_partidos` as `partition`
+	inner join
+			`cakephp`.`xmf_tipo_votaciones` as `tvt`
+	left join 
+			`cakephp`.`xmf_votes` as `vts` on `cas`.id = `vts`.xmf_casillas_id 
+		and 
+			`vts`.xmf_tipo_votaciones_id = `tvt`.id 
+		and 
+			`vts`.xmf_partidos_id = `partition`.id
+	where 
+			`cas`.id = 1
+
+
+
+select * from information_schema.VIEWS
+
 
 
 -- 	protoReport
-
-	select * from `cakephp`.`casillas`
-	inner join `cakephp`.`partidos`
+-- use cakephp
 
     -- content the fists summary data of the main reports and using coalesce(reportes_complementos) for a clean update
     create view for first_reports (
@@ -496,3 +617,87 @@ insert into tipo_votaciones(`tipo`,`description`,`created`,`modified` )
   DESC `reporte_segundo_tercero`;
   DESC `reporte_cierre`;
   DESC `resultados_finales`;
+
+
+-- =============================== laboratory ======================================== --
+
+create or replace TABLE products
+(
+    prod_id INT NOT NULL,
+    prod_name VARCHAR(50) NOT NULL,
+    PRIMARY KEY (prod_id)
+);
+
+insert into products
+values(1, 'Shoes'),
+(2, 'Pants'),
+(3, 'Shirt');
+ 
+create or replace TABLE reps
+(
+  rep_id INT NOT NULL,
+  rep_name VARCHAR(50) NOT NULL,
+  PRIMARY KEY (rep_id)
+);
+
+insert into reps (rep_id, rep_name)
+values (1, 'John'), (2, 'Sally'), (3, 'Joe'), (4, 'Bob');
+ 
+create or replace TABLE sales
+(
+  prod_id INT NOT NULL,
+  rep_id INT NOT NULL,
+  sale_date datetime not null,
+  quantity int not null,
+  PRIMARY KEY (prod_id, rep_id, sale_date),
+  FOREIGN KEY (prod_id) REFERENCES products(prod_id),
+  FOREIGN KEY (rep_id) REFERENCES reps(rep_id)
+);
+
+insert into sales (prod_id, rep_id, sale_date, quantity)
+values 
+  (1, 1, '2013-05-16', 20),
+  (1, 1, '2013-06-19', 2),
+  (2, 1, '2013-07-03', 5),
+  (3, 1, '2013-08-22', 27),
+  (3, 2, '2013-06-27', 500),
+  (3, 2, '2013-01-07', 150),
+  (1, 2, '2013-05-01', 89),
+  (2, 2, '2013-02-14', 23),
+  (1, 3, '2013-01-29', 19),
+  (3, 3, '2013-03-06', 13),
+  (2, 3, '2013-04-18', 1),
+  (2, 3, '2013-08-03', 78),
+  (2, 3, '2013-07-22', 69);
+
+
+SET @SQL = NULL
+SELECT
+  GROUP_CONCAT(DISTINCT
+    CONCAT(
+      'sum(case when Date_format(s.sale_date, ''%Y-%M'') = ''',
+      dt,
+      ''' then s.quantity else 0 end) AS `',
+      dt, '`'
+    )
+  ) INTO @SQL
+FROM
+(
+  SELECT Date_format(s.sale_date, '%Y-%M') AS dt
+  FROM sales s
+  ORDER BY s.sale_date
+) d
+ 
+SET @SQL 
+  = CONCAT('SELECT r.rep_name, ', @SQL, ' 
+            from reps r
+            inner join sales s
+              on r.rep_id = s.rep_id
+            inner join products p
+              on s.prod_id = p.prod_id
+            group by r.rep_name;')
+ 
+PREPARE stmt FROM @SQL
+EXECUTE stmt
+DEALLOCATE PREPARE stmt
+
