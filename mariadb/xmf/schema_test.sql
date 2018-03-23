@@ -420,7 +420,7 @@ as
 	select 
  			 `cas`.id as 'casillas_index'
 			,`cas`.name
-			,`cas`.description
+-- 			,`cas`.description
 			,`cas`.rgl_id,abo_id
 			,`cas`.cap_id
 			,`cas`.municipio
@@ -444,12 +444,12 @@ as
 			,`partition`.is_coalicion
 			,`partition`.has_parent
 			,`partition`.parent_id
-			,`partition`.description
+-- 			,`partition`.description
 -- 			,`partition`.created
 -- 			,`partition`.modified
 -- 			,`tvt`.id
 			,`tvt`.tipo
-			,`tvt`.description
+-- 			,`tvt`.description
 -- 			,`tvt`.created
 -- 			,`tvt`.modified
 			,`vts`.id						-- this id is the most 
@@ -475,6 +475,11 @@ as
 			`cas`.id = 1
 
 
+-- select * from `cakephp`.`xmf_reaper`
+-- 
+-- select * from `cakephp`.`xmf_votes`
+-- 
+-- update `cakephp`.`xmf_reaper` set votes = 52 where id = 3
 
 select * from information_schema.VIEWS
 

@@ -44,6 +44,10 @@ order by
 select * from sistemas.dbo.importtotbk
 where Folio like '%004836%'
 
+select * from sistemas.dbo.electrocontaeminitdas
+where 
+Folio like '%004836%'
+
 -- electroconta
 
 
