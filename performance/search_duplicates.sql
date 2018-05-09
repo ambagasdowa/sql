@@ -1,116 +1,122 @@
+
+
+show databases;
+use portal_apps
+
+
+
 -- search for DUPLICATES
-with recursive `dup` as (  
+with `dup` as (  
 select 
-		Lote,Referencia
-		-- ,row_number() over(partition by Lote,Referencia, order by Lote) as 'index'
+		 Lote,Referencia
+		,performance_facturas_id
+-- 		,Folio,Empresa,ElaboracionFactura,aprobacionFactura,fechaPromesaPago,fechaPago
+		,row_number() over (partition by Lote,Referencia order by Lote) as 'index'
 from `portal_apps`.performance_view_facturas
 )
-select * from `dup` where `index` > 1
-
-
-SELECT
-    Lote,
-    Referencia,
-	Empresa,    
-    @currentRow := @currentRow + 1 AS rowNumber
-FROM `portal_apps`.performance_view_facturas
-JOIN (SELECT @currentRow := 0) row
-
-with recursive dup as (
-SELECT
-    @row_number:=CASE
-        WHEN @customer_no = Referencia THEN @row_number + 1
-        ELSE 1
-    END AS num,
-    @customer_no:=Referencia as RefNum,
-    performance_facturas_id,
-    Lote,
-    Referencia,
-    Empresa
-FROM
-    `portal_apps`.performance_view_facturas
+select
+		Lote,Referencia,performance_facturas_id,`index`
+from 	`dup` as `duplicate`
 where 
-	performance_facturas_id is not null
+		`duplicate`.`index` > 1
+group by
+	
+		Lote,Referencia,performance_facturas_id
+		
+	
+		
+		
+select * from portal_apps.performance_view_facturas where Lote  ='075161' and Referencia = '059215'
+
+-- select * from `portal_apps`.performance_facturas where performance_references_id = '059215'
+
+select * from `portal_apps`.performance_facturas where id in (
+1291,
+1285,
+1102,
+1360,
+1362,
+1678,
+1679,
+1681,
+1683,
+1685,
+1687
 )
-select * from dup where num > 1
+		
+		
 
- 	
-
--- 060876
--- 060877
--- 060878
--- 060926
--- 060933
-
--- search 058324 	074193
-
--- batch => 059195 , refer => 059195
-
-select * from `portal_apps`.performance_view_facturas where Lote = '075141' and Referencia = '059195' -- and Empresa = 'TBKORI'
-
-select * from `portal_apps`.performance_facturas where performance_references_id = '060568'
-
-
-
-
-select * from `portal_apps`.performance_facturas where id  	in (
-			'674' ,'676' -- '673'
-			,'679' 
-			,'3' ,'4'
-			,'611' ,'638' ,'526' ,'614' ,'619' ,'630' ,'635' ,'644' ,'646' ,'177' ,'713' ,'717' ,'718' ,'135' ,'715')
-
-
+select * from `portal_apps`.performance_facturas where id in (
+ 1703
+,1689
+,1705
+,1690
+,1709
+,1624
+,1626
+,1693
+,1707
+,1711
+,1695
+,1713
+,1697
+,1699
+,1700
+,1716
+,1717
+)
 	
-			
--- =================== Viajes ================================ --
+	update `portal_apps`.performance_facturas set status = 0 where id in (1703
+,1689
+,1705
+,1690
+,1709
+,1624
+,1626
+,1693
+,1707
+,1711
+,1695
+,1713
+,1697
+,1699
+,1700
+,1716
+,1717
+-- 
+,1291
+,1285
+,1102
+,1360
+,1362
+,1678
+,1679
+,1681
+,1683
+,1685
+,1687
+)
 
-select * from portal_apps.performance_trips where num_guia = 'OO-048040'
-
-select * from portal_apps.performance_viajes where performance_num_guia_id = 'OO-048040'
-
-select * from portal_apps.performance_view_viajes where num_guia = 'OO-048040'
-			
-			
-			
-			
-select * from 
--- update 
-portal_apps.performance_viajes where id in (53,54,55,56,57,58,62)
 
 
-select * from portal_apps.performance_view_viajes
-where internal_id in (53,54,55,56,57,58,62)
+
+select * from `portal_apps`.performance_view_viajes
 
 
-			
-			
-SELECT
-    @row_number:=CASE
-        WHEN @customer_no = no_guia THEN @row_number + 1
-        ELSE 1
-    END AS num,
-    @customer_no:=no_guia as NoGuia,
-    internal_id,
-    num_guia,
-    no_viaje,
-    id_area,
-    company
-FROM
-    `portal_apps`.performance_view_viajes
+-- search for DUPLICATES
+with `dup` as (  
+select 
+		
+		 num_guia,area,company
+		,row_number() over (partition by num_guia,area,company order by num_guia) as 'index'
+from `portal_apps`.performance_view_viajes
+)
+select
+		num_guia,area,company,`index`
+from 	`dup` as `duplicate`
 where 
-	internal_id is not null
-	
-	
-	
-	select * from portal_apps.performance_facturas
-	
-	select * from portal_apps.performance_viajes
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		`duplicate`.`index` > 1
+group by
+		num_guia,area,company
+
+

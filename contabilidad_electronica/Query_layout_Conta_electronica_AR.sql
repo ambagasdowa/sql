@@ -32,7 +32,7 @@ where
 	and a.JrnlType = 'AR'
 	and b.user5 = 'S'
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
---	and b.User6 like '%004836%'
+	and b.User6 like '%004836%'
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 order by
 	b.DocType
@@ -43,7 +43,7 @@ select * from sistemas.dbo.importtotbk
 where Folio like '%004836%'
 
 -- 47139
-select * from sistemas.dbo.electrocontaeminitdas
+select count(Tipo) from sistemas.dbo.electrocontaeminitdas
 
 -- ================= First Test ===================== --
 -- 47136
@@ -59,7 +59,7 @@ left join
 				a.CpnyID as Company,
 				b.RefNbr as Documento,
 				b.BankAcct as Cuenta,
-				b.CuryOrigDocAmt as Monto,
+				b.CuryOrigDocAmt as Monto,0
 				Modulo = 'AR',
 				LineRef = 0,
 				case
@@ -90,8 +90,8 @@ left join
 --				b.DocType
 		)	as "solomon" on "elec".EstadoPago = "solomon".Factura collate SQL_Latin1_General_CP1_CI_AS
 			and "elec".Total = "solomon".Monto
-	where 
-Folio like '%004836%'
+		order by
+			"solomon".Monto asc
 
 -- electroconta
 

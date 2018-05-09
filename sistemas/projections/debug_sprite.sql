@@ -39,6 +39,7 @@
 		from INFORMATION_SCHEMA.TABLES 
 		where TABLE_NAME like 'projections_%' order by TABLE_TYPE
 		
+		
 		select * from sistemas.dbo.projections_dissmiss_cancelations -- canceled Cportes
 		
 		select * from sistemas.dbo.projections_view_indicators_periods order by mes,cyear -- get monthly closed, accepted and dissmiss data

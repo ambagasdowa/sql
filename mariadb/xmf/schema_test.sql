@@ -4,6 +4,20 @@
   *
   */
 
+use cakephp
+
+select * from cakephp.users
+
+
+select * from cakephp.roles
+
+
+select id,username,role_id from cakephp.users
+
+
+
+
+
 drop database cakephp
 create database cakephp
 
@@ -172,8 +186,9 @@ select * from `xmf_presences_references`
 
 create or replace view `xmf_presences` 
 as 
-select 
- 			 `cas`.id as 'casillas_index'
+select
+			 @rownum := @rownum + 1 AS rank,
+ 			,`cas`.id as 'casillas_index'
 			,`cas`.name
 			,`cas`.rgl_id,abo_id
 			,`cas`.cap_id
@@ -204,7 +219,7 @@ select
 			`cakephp`.`xmf_funcionarios_presence_status` as `status`
 			on
 			`cas`.id = `status`.xmf_casillas_id and `party`.id = `status`.xmf_partidos_id
-
+	,(select @rownum := 0) r
 
 --  select * from cakephp.`xmf_presences` 
 
@@ -479,6 +494,8 @@ select * from `cakephp`.`xmf_reports_view_definitions`
  -- =======================================   Updatable Votes View  ============================================= --
  -- ============================================================================================================= --
  
+use xmf_casillas
+
 create or replace view `xmf_reaper` 
 as
 	select 
@@ -536,8 +553,6 @@ as
 			`vts`.xmf_tipo_votaciones_id = `tvt`.id 
 		and 
 			`vts`.xmf_partidos_id = `partition`.id
--- 	where 
--- 			`cas`.id = 1
 
 
 
@@ -546,7 +561,6 @@ as
 -- select * from `cakephp`.`xmf_reaper`where casillas_index = 1
 -- 
 -- select * from `cakephp`.`xmf_view_incidencias`
-
 
 			
 			
@@ -694,84 +708,3 @@ select TABLE_NAME,IS_UPDATABLE from information_schema.VIEWS
 
 
 -- =============================== laboratory ======================================== --
-
-create or replace TABLE products
-(
-    prod_id INT NOT NULL,
-    prod_name VARCHAR(50) NOT NULL,
-    PRIMARY KEY (prod_id)
-);
-
-insert into products
-values(1, 'Shoes'),
-(2, 'Pants'),
-(3, 'Shirt');
- 
-create or replace TABLE reps
-(
-  rep_id INT NOT NULL,
-  rep_name VARCHAR(50) NOT NULL,
-  PRIMARY KEY (rep_id)
-);
-
-insert into reps (rep_id, rep_name)
-values (1, 'John'), (2, 'Sally'), (3, 'Joe'), (4, 'Bob');
- 
-create or replace TABLE sales
-(
-  prod_id INT NOT NULL,
-  rep_id INT NOT NULL,
-  sale_date datetime not null,
-  quantity int not null,
-  PRIMARY KEY (prod_id, rep_id, sale_date),
-  FOREIGN KEY (prod_id) REFERENCES products(prod_id),
-  FOREIGN KEY (rep_id) REFERENCES reps(rep_id)
-);
-
-insert into sales (prod_id, rep_id, sale_date, quantity)
-values 
-  (1, 1, '2013-05-16', 20),
-  (1, 1, '2013-06-19', 2),
-  (2, 1, '2013-07-03', 5),
-  (3, 1, '2013-08-22', 27),
-  (3, 2, '2013-06-27', 500),
-  (3, 2, '2013-01-07', 150),
-  (1, 2, '2013-05-01', 89),
-  (2, 2, '2013-02-14', 23),
-  (1, 3, '2013-01-29', 19),
-  (3, 3, '2013-03-06', 13),
-  (2, 3, '2013-04-18', 1),
-  (2, 3, '2013-08-03', 78),
-  (2, 3, '2013-07-22', 69);
-
-
-SET @SQL = NULL
-SELECT
-  GROUP_CONCAT(DISTINCT
-    CONCAT(
-      'sum(case when Date_format(s.sale_date, ''%Y-%M'') = ''',
-      dt,
-      ''' then s.quantity else 0 end) AS `',
-      dt, '`'
-    )
-  ) INTO @SQL
-FROM
-(
-  SELECT Date_format(s.sale_date, '%Y-%M') AS dt
-  FROM sales s
-  ORDER BY s.sale_date
-) d
- 
-SET @SQL 
-  = CONCAT('SELECT r.rep_name, ', @SQL, ' 
-            from reps r
-            inner join sales s
-              on r.rep_id = s.rep_id
-            inner join products p
-              on s.prod_id = p.prod_id
-            group by r.rep_name;')
- 
-PREPARE stmt FROM @SQL
-EXECUTE stmt
-DEALLOCATE PREPARE stmt
-

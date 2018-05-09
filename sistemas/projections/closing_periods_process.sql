@@ -13,7 +13,7 @@
 -- ====================================      CERRAR PËRIODOS          =========================================== --
 -- ============================================================================================================== --
 			
--- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '1','0','1','0','0';
+-- exec sistemas.dbo.sp_build_xd3e_getFullCompanyOperations '3','0','1','0','0';
 
 
 -- @route_file sp_xd3e_getFullCompanyOperations_v1.0.7.sql

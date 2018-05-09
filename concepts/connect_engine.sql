@@ -41,6 +41,32 @@ install soname 'ha_connect.so';
 
 -- CREATE TABLE connect_table ENGINE=CONNECT table_type=odbc CONNECTION='DSN=odbclarsa';
 
+
+
+
+-- Original driver of mssql
+CREATE table casetas_iave_periods ENGINE=CONNECT CONNECTION='DSN=MssqlWork;Database=sistemas;Uid=zam;Pwd=lis;' table_type=odbc;
+create or replace TABLE performance_trips DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=MssqlWork;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
+create or replace TABLE projections_view_indicators_periods_full_fleets DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=MssqlWork;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
+create or replace TABLE projections_view_indicators_periods_full_fleets DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+-- 
+
+
+select * from mssql.performance_trips
+
+select * from portal_apps.performance_trips
+
+
+
+select * from mssql.projections_view_indicators_periods_full_fleets
+
+
+
+
+
+
 CREATE TABLE general_area ENGINE=CONNECT CONNECTION='DSN=odbclarsa;UID=sa;PWD=effeta;Database=macuspanadb;' table_type=odbc;
 
 CREATE TABLE trafico_guia ENGINE=CONNECT CONNECTION='DSN=odbclarsa;UID=sa;PWD=effeta;Database=macuspanadb;' table_type=odbc;

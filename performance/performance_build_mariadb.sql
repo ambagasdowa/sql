@@ -80,7 +80,7 @@ CREATE TABLE performance_references DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNEC
 -- use `portal_apps`
 -- drop table `portal_apps`.performance_trips
 
-CREATE TABLE performance_trips DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+create or replace TABLE performance_trips DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
 
 -- select * from `portal_apps`.performance_trips
 
@@ -91,7 +91,7 @@ CREATE TABLE performance_trips DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION=
 -- use `portal_apps`
 -- drop table `portal_apps`.performance_fractions
 
-CREATE TABLE performance_fractions DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+CREATE or replace TABLE performance_fractions DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
 
 -- select * from `portal_apps`.performance_fractions
 
@@ -102,7 +102,7 @@ CREATE TABLE performance_fractions DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECT
 -- use `portal_apps`
 -- drop table `portal_apps`.performance_catalogs
 
-CREATE TABLE performance_catalogs DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+create or replace TABLE performance_catalogs DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
 
 -- select * from `portal_apps`.performance_catalogs
 
