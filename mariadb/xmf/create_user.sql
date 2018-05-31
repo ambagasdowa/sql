@@ -23,3 +23,11 @@ GRANT ALL PRIVILEGES ON *.* TO cakephp@'localhost' -- with grant options;
 flush privileges;
 
 
+create or replace user `ambagasdowa`@`localhost` IDENTIFIED by 'pass';
+grant usage on ambagasdowa.* to ambagasdowa@localhost identified by 'pass';
+grant select, insert, update, delete, drop, alter, create , create temporary tables on ambagasdowa.* to ambagasdowa@localhost;
+grant file on *.* to 'ambagasdowa'@'localhost';
+flush privileges;
+SHOW GRANTS FOR 'ambagasdowa'@'localhost';
+GRANT ALL PRIVILEGES ON *.* TO ambagasdowa@'localhost' with grant option;
+flush privileges;

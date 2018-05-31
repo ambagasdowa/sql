@@ -74,6 +74,7 @@ select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,t
 use teisasaldossys
 select (size*8) as FileSizeKB,((size*8)/1024) as MB,((size*8)/1024)/1024 as GB,type_desc,name,max_size,physical_name from sys.database_files
 
+
 ALTER DATABASE teisasaldossys SET RECOVERY SIMPLE
 	DBCC SHRINKFILE('integrasys_Log', 0, TRUNCATEONLY)
 ALTER DATABASE teisasaldossys SET RECOVERY FULL;

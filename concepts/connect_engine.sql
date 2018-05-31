@@ -55,7 +55,7 @@ create or replace TABLE projections_view_indicators_periods_full_fleets DEFAULT 
 
 
 select * from mssql.performance_trips
-
+	
 select * from portal_apps.performance_trips
 
 

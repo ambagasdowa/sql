@@ -137,6 +137,7 @@ select * from `portal_apps`.`performance_facturas`
 -- ==================================================================================================================== --
 -- Add Facturas Dashboard
 -- use portal_apps
+-- drop table `performance_view_facturas`
 
 create or replace view `performance_view_facturas`
 as
@@ -298,6 +299,8 @@ CREATE TABLE IF NOT EXISTS `performance_viajes` (
 use `portal_apps`
 show tables
 
+-- drop table `performance_view_viajes`
+
 create or replace view `performance_view_viajes`
 as
 	select 
@@ -369,6 +372,8 @@ as
 -- ==================================================================================================================== --	
 -- ===================================     year view selector    ====================================== --
 -- ==================================================================================================================== --
+-- drop table performance_years
+			
 create or replace view `performance_years`
 as
 select 
@@ -384,9 +389,24 @@ group by
  -- SELECT @rownum:=@rownum+1 as id, performance_months.*
 -- FROM (SELECT @rownum:=0) r, performance_months;
 	
+	
+
+-- ==================================================================================================================== --	
+-- =================================     Performance Dashboard(Facturas) View    ====================================== --
+-- ==================================================================================================================== --
+create database mssql_integradb	
+use mssql_integradb
+
+create or replace TABLE generals_month_translations DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
+create or replace TABLE general_view_bussiness_units DEFAULT CHARSET=latin1 ENGINE=CONNECT CONNECTION='DSN=odbcintegradb;UID=zam;PWD=lis;Database=sistemas;' table_type='ODBC';
+
 -- ==================================================================================================================== --	
 -- ===================================     month View    ====================================== --
 -- ==================================================================================================================== --
+-- drop table performance_months
+use portal_apps
+
 create or replace view `performance_months`
 as
 select 
@@ -399,7 +419,7 @@ from
 -- ===================================     Bsu View    ====================================== --
 -- ==================================================================================================================== --
 
-	
+-- drop table `performance_bsus`
 create or replace view `performance_bsus`
 as
 select 
@@ -424,6 +444,9 @@ from
 	
 use `portal_apps`
 show tables
+
+
+-- drop table `performance_view_catalogs`
 
 create or replace view `performance_view_catalogs`
 as
