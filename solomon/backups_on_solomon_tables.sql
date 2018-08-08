@@ -53,9 +53,9 @@ set ansi_padding off
 --		from 
 --				integrasys.dbo.AccessDetRights
 				
-select * from sistemas.dbo.solomon_accessdetrights_users as solusr where solusr.solomon_control_backups_id = 1 and UserId like 'ADRIAN%' and substring(ScreenNumber,1,2) = 'AP'
+select * from sistemas.dbo.solomon_accessdetrights_users as solusr where solusr.solomon_control_backups_id = 1 and UserId like 'ALEJANDRA%' and substring(ScreenNumber,1,2) = 'AP'
 
-select * from integrasys.dbo.AccessDetRights where UserId like 'ADRIAN%' and substring(ScreenNumber,1,2) = 'AP'
+select * from integrasys.dbo.AccessDetRights where UserId like 'ALEJANDRA%' and substring(ScreenNumber,1,2) = 'AD'
 
 select * from integrasys.dbo.AccessModule
 
@@ -64,6 +64,37 @@ select * from integrasys.dbo.AcctSub
 select * from integrasys.dbo.Access order by UserId -- online users
 
 select * from integrasys.dbo.AccessRights -- define users
+
+
+select * from Integrasys.dbo.QQUserAccessRightView where "Dynamics SL User ID" = 'ALEJANDRA.VAZQUEZC' and Screen = 'FEGRW01'
+union all
+select * from Integrasys.dbo.QQUserAccessRightView where "Dynamics SL User ID" = 'VIANEY.JOSEE' and Screen = 'FEGRW01'
+
+select * from Integrasys.dbo.QueryViewCatalog where  "Related Business Module" = 'FE'
+
+select * from Integrasys.dbo.RptControl
+
+select * from Integrasys.dbo.Access
+
+select * from Integrasys.dbo.Modules where ModuleID = 'FE'
+
+select * from Integrasys.dbo.QVCatalog
+
+
+select * from Integrasys.dbo.QQUserAccessRightView
+
+
+-- not equal
+select * from integrasys.dbo.AccessDetRights where UserId = 'ALEJANDRA.VAZQUEZC' and CompanyID in ('TBKORI','GSTFYS') 
+union all
+select * from integrasys.dbo.AccessDetRights where UserId = 'VIANEY.JOSEE' and CompanyID in ('TBKORI','GSTFYS')
+
+
+select * from Integrasys.dbo.Screen where Module = 'FE'
+
+select * from Integrasys.dbo.vp_Screen_5Char where Module = 'FE'
+
+
 
 
 

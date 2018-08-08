@@ -19,7 +19,7 @@ select
 from 
 	sistemas.dbo.projections_view_full_company_indicators
 where 
-	year(fecha_guia) = '2018' and month(fecha_guia) = '2' 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
 	and fecha_guia <= dateadd(day,-1,cast(current_timestamp as date)) and fraccion <> 'GRANEL' and area = 'ORIZABA'
 union all
 select 
@@ -27,10 +27,43 @@ select
 from 
 	sistemas.dbo.operations_view_full_company_indicators
 where 
-	year(fecha_guia) = '2018' and month(fecha_guia) = '2' 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
 	and fraccion <> 'GRANEL' and area = 'ORIZABA'
 
+-- Ramos Arizpe
+select 
+	sum(peso) as 'peso',sum(subtotal) as 'subtotal', count(Area) as 'records','legacy' as 'query' 
+from 
+	"bonampakdb"."dbo"."bon_view_get_acepted_subtons_ramos"
+where 
+	year(fecha_guia) = '2018' and month(fecha_guia)= '2' and "Tipo Carga" <> 'GRANEL'
+--
+union all
+select 
+	sum(peso) as 'peso',sum(subtotal) as 'subtotal', count(id_area) as 'records' ,'yesterday' as 'query' 
+from 
+	sistemas.dbo.projections_view_full_company_indicators
+where 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
+	and fecha_guia <= dateadd(day,-1,cast(current_timestamp as date)) and fraccion <> 'GRANEL' and area = 'RAMOS ARIZPE'
+union all
+select 
+	sum(peso) as 'peso',sum(subtotal) as 'subtotal', count(id_area) as 'records' ,'newBuild' as 'query' 
+from 
+	sistemas.dbo.operations_view_full_company_indicators
+where 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
+	and fraccion <> 'GRANEL' and area = 'RAMOS ARIZPE'
 
+
+	
+use sistemas
+select * from sistemas.dbo.projections_view_full_company_indicators where num_guia in ('OO-052352','OO-052329')
+
+select * from "sistemas"."dbo"."operations_view_full_company_indicators" where num_guia in ('OO-052352','OO-052329')
+
+select dateadd(day,-1,cast(current_timestamp as date))	
+	
 -- Macuspana --
 
 select 
@@ -64,7 +97,7 @@ select
 from 
 	sistemas.dbo.projections_view_full_company_indicators
 where 
-	year(fecha_guia) = '2018' and month(fecha_guia) = '2' 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
 	and fecha_guia <= dateadd(day,-1,cast(current_timestamp as date)) and fraccion <> 'GRANEL' and area = 'CUAUTITLAN'
 union all
 select 
@@ -72,7 +105,7 @@ select
 from 
 	sistemas.dbo.operations_view_full_company_indicators
 where 
-	year(fecha_guia) = '2018' and month(fecha_guia) = '2' 
+	year(fecha_guia) = '2018' and month(fecha_guia) = '7' 
 	and fraccion <> 'GRANEL' and area = 'CUAUTITLAN'
 
 	
@@ -254,9 +287,9 @@ as
 	from 
 			sistemas.dbo.projections_view_full_indicators_tbk_periods
 	where
-			year(f_despachado) in (select cyear from sistemas.dbo.operations_year_selectors)
+			year(fecha_guia) in (select cyear from sistemas.dbo.operations_year_selectors)
 		and
-			f_despachado <= dateadd(day,-1,cast(current_timestamp as date))
+			cast(fecha_guia as date) <= dateadd(day,-1,cast(current_timestamp as date))
 	union all
 	select 
 			 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion
@@ -319,9 +352,9 @@ as
 	from 
 			sistemas.dbo.projections_view_full_indicators_atm_periods
 	where
-			year(f_despachado) in (select cyear from sistemas.dbo.operations_year_selectors)
+			year(fecha_guia) in (select cyear from sistemas.dbo.operations_year_selectors)
 		and
-			f_despachado <= dateadd(day,-1,cast(current_timestamp as date))
+			cast(fecha_guia as date) <= dateadd(day,-1,cast(current_timestamp as date))
 	union all
 	select 
 			 id_area,id_unidad,id_configuracionviaje,id_tipo_operacion
@@ -384,9 +417,9 @@ as
 	from 
 			sistemas.dbo.projections_view_full_indicators_tei_periods
 	where
-			year(f_despachado) in (select cyear from sistemas.dbo.operations_year_selectors)
+			year(fecha_guia) in (select cyear from sistemas.dbo.operations_year_selectors)
 		and
-			f_despachado <= dateadd(day,-1,cast(current_timestamp as date))
+			cast(fecha_guia as date) <= dateadd(day,-1,cast(current_timestamp as date))
 ) 
 	
 -- ==================== DISPATCH ===================================== --

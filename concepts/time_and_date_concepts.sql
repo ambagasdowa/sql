@@ -275,7 +275,7 @@ WHERE   WorkingDay = 'Y'
 
 
 
-select * from NOM2001.dbo.getPayroll where nombre like 'carlos%'
+
 		
 ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -291,7 +291,13 @@ declare @nyear as int
     select DATEADD(month,@mes-1,DATEADD(year,@nyear-1900,0)) as 'First' /*First*/
 
     select DATEADD(day,-1,DATEADD(month,@mes,DATEADD(year,@nyear-1900,0))) as 'Last' /*Last*/
+
     
+SELECT DATEPART(week, '2018-01-01 '), DATEPART(weekday, '2007-04-21') ,datename(dw,'2007-04-21') -- week ,dayofweek and name
+
+
+SELECT DATENAME(dw,GETDATE()) -- Friday
+SELECT DATEPART(dw,GETDATE()) -- 6
 
 
 -- how many sundays has
@@ -301,6 +307,7 @@ declare @fend as date
 
 set @fini = '2017-08-01'
 set @fend = '2017-08-18'
+
 
 select (datediff(day,@fini,@fend)-DATEPART(dw,@fend)+8)/7 as 'Sundays'
 

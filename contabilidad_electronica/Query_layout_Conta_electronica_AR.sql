@@ -62,7 +62,7 @@ where
 
 -- electroconta
 
-use integraapp	
+use integraapp;	
 
 			
 with "slr" as (
@@ -117,9 +117,61 @@ from
 where 
 		"slr".[Estado SAT] <> 'Cancelado'
 			
+--////////////////////////////			
 			
-			
-			
+with "slr" as (
+	
+select 
+		* 
+from 
+		sistemas.dbo.electrocontaeminitdas as "elec"
+full join 
+		(
+			select
+				a.perpost,
+				cast(a.BatNbr as char(12)) as Lote,
+				b.CustId as RFC,
+				a.CpnyID as Company,
+				cast(b.RefNbr as char(12)) as Documento,
+				b.BankAcct as Cuenta,
+				b.CuryOrigDocAmt as Monto,
+				Modulo = 'AR',
+				LineRef = 0,
+				case
+					a.CuryId
+					when 'MN' then 'MXN'
+					when 'USD' then 'USD'
+					when 'EUR' then 'EUR'
+				end as MonedaSL,
+				CuryRate = 1,
+				'I' as "SlTipo",
+				b.User6 as Factura,
+				b.User2 as 'x',
+				b.DocType as TipoDocto
+			from
+				integraapp.dbo.Batch a
+			inner join integraapp.dbo.ARDoc b on
+				b.BatNbr = a.BatNbr
+			where
+				a.PerPost > '201506'
+				and a.Status = 'P'
+				and b.DocType in ('IN','CM','DM')
+				and a.JrnlType = 'AR'
+				and b.user5 = 'S'
+		)as "solomon" 
+	on 
+			"elec".EstadoPago = "solomon".Factura collate SQL_Latin1_General_CP1_CI_AS
+	and 
+			"elec".Total = "solomon".Monto
+)
+select 
+		* 
+from 
+		"slr" 
+where 
+		"slr".[Estado SAT] <> 'Cancelado'
+	
+--///////////////////////////			
 select
 	a.perpost,
 	a.BatNbr as Lote,

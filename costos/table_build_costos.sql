@@ -630,7 +630,7 @@ create view reporter_view_gltran_account_rows_tbks
 					(
 							cost.segmentb is not null and cost.segmenta is not null -- when mode is equal then omit this and use the next case else use the limit defined in the or clause
 				    	and
-						   	substring(gl.Sub,10,6)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
+						   	substring(gl.Sub,10,2)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
 					)
 	--			--condition 2
 					or
@@ -706,7 +706,7 @@ create view reporter_view_gltran_account_rows_not_tbks
 					(
 							cost.segmentb is not null and cost.segmenta is not null -- when mode is equal then omit this and use the next case else use the limit defined in the or clause
 				    	and
-						   	substring(gl.Sub,10,6)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
+						   	substring(gl.Sub,10,2)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
 					)
 	--			--condition 2
 					or
@@ -786,7 +786,7 @@ create view reporter_view_gltran_account_rows_teiexs
 					(
 							cost.segmentb is not null and cost.segmenta is not null -- when mode is equal then omit this and use the next case else use the limit defined in the or clause
 				    	and
-						   	substring(gl.Sub,10,6)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
+						   	substring(gl.Sub,10,2)  between replace(cost.segmenta,'?',' ') and replace(cost.segmentb,'?',' ')
 					)
 	--			--condition 2
 					or
